@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 2.6)
+
+project (ngrestjsontest CXX)
+
+set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+FILE(GLOB NGRESTJSONTEST_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+
+add_executable(ngrestjsontest ${NGRESTJSONTEST_SOURCES})
+
+target_compile_features(ngrestjsontest PRIVATE cxx_range_for)
+target_link_libraries(ngrestjsontest ngrestutils ngrestjson)
