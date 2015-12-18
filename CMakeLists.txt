@@ -1,10 +1,18 @@
 cmake_minimum_required (VERSION 2.6)
 project (ngrest)
 
-#set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+include(CheckCXXCompilerFlag)
 
-#set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-#set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+check_cxx_compiler_flag(-Wl,--no-undefined HAS_NO_UNDEFINED)
+if (HAS_NO_UNDEFINED)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
+endif()
+
+check_cxx_compiler_flag(-pedantic HAS_PEDANTIC)
+if (HAS_PEDANTIC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--no-undefined")
+endif()
+
 
 set(PROJECT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/deploy)
 set(PROJECT_INCLUDE_DIR ${PROJECT_DEPLOY_DIR}/include)

@@ -3,4 +3,5 @@ project (tests)
 
 add_subdirectory(json)
 add_subdirectory(json-benchmark)
+add_subdirectory(deployment)
 

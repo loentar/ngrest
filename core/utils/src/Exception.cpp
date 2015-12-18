@@ -1,22 +1,16 @@
-#include <stdlib.h>
-#include <string.h>
+//#include <stdlib.h>
+//#include <string.h>
 //#include "StackTracer.h"
 #include "Exception.h"
 
 namespace ngrest
 {
 
-Exception::Exception(const char* fileLine, const char* function, const char* description_):
-    description(fileLine)
+Exception::Exception(const char* fileLine_, const char* function_, const std::string& description_):
+    fileLine(fileLine_),
+    function(function_),
+    description(description_)
 {
-    description.append(function).append(": ").append(description_);
-}
-
-Exception::Exception(const char* fileLine, const char* function, const std::string& description_):
-    description(fileLine)
-{
-    description.append(function).append(": ").append(description_);
-
     //    static short nEnableStackTracing = -1;
     //    if (nEnableStackTracing == -1)
     //    {
@@ -44,7 +38,6 @@ Exception::Exception(const char* fileLine, const char* function, const std::stri
     //      StackTracer::GetStackTraceStr(sStack);
     //      m_sDescr.append("\nTraced stack:\n").append(sStack);
     //    }
-
 }
 
 }

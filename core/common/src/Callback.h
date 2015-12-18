@@ -3,13 +3,15 @@
 
 namespace ngrest {
 
-template <typename R, typename E>
+class Exception;
+
+template <typename R>
 class Callback
 {
 public:
     virtual ~Callback() {}
-    virtual void onSuccess(R result) = 0;
-    virtual void onError(E error) = 0;
+    virtual void success(R result) = 0;
+    virtual void error(const Exception& error) = 0;
 };
 
 } // namespace ngrest

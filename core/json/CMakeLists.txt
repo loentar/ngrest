@@ -11,3 +11,4 @@ file(COPY ${NGRESTJSON_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/json/)
 add_library(ngrestjson SHARED ${NGRESTJSON_SOURCES})
 
 target_compile_features(ngrestjson PRIVATE cxx_range_for)
+target_link_libraries(ngrestjson ngrestutils ngrestcommon)

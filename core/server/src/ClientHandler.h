@@ -9,31 +9,29 @@ namespace ngrest {
 
 class Exception;
 class Engine;
-struct Request;
-struct ClientData;
-class HttpResponse;
-class HttpResponseCallbackHandler;
+class Transport;
+struct MessageData;
+struct ClientInfo;
 
 class ClientHandler: public ClientCallback
 {
 public:
-    ClientHandler(Engine& engine);
+    ClientHandler(Engine& engine, Transport& transport);
 
     virtual void connected(int fd, const sockaddr* addr) override;
     virtual void disconnected(int fd) override;
     virtual void error(int fd) override;
     virtual bool readyRead(int fd) override;
 
-private:
-    void parseHttpHeader(char* buffer, Request* client);
-    void processRequest(int clientFd, Request* client);
-    void processResponse(int clientFd, Request* request, const HttpResponse* response);
-    void processError(int clientFd, Request* request, const Exception& error);
+    void parseHttpHeader(char* buffer, MessageData* messageData);
+    void processRequest(int clientFd, MessageData* messageData);
+    void processResponse(int clientFd, MessageData* messageData);
+    void processError(int clientFd, MessageData* messageData, const Exception& error);
 
 private:
-    std::unordered_map<int, ClientData*> clients;
+    std::unordered_map<int, ClientInfo*> clients;
     Engine& engine;
-    friend class HttpResponseCallbackHandler;
+    Transport& transport;
 };
 
 }

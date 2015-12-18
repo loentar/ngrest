@@ -13,28 +13,28 @@
 
 //! throw specific exception
 #define NGREST_THROW(EXCEPTION_CLASS, DESCRIPTION) \
-  throw EXCEPTION_CLASS(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
+    throw EXCEPTION_CLASS(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
 
 //! throw assert exception
 #define NGREST_THROW_ASSERT(DESCRIPTION) \
-  throw ::ngrest::AssertException(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
+    throw ::ngrest::AssertException(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
 
 //! assert expression
 #define NGREST_ASSERT(EXPRESSION, DESCRIPTION) \
-  if (!(EXPRESSION)) NGREST_THROW_ASSERT(DESCRIPTION)
+    if (!(EXPRESSION)) NGREST_THROW_ASSERT(DESCRIPTION)
 
 //! assert parameter
 #define NGREST_ASSERT_PARAM(EXPRESSION) \
-  if (!(EXPRESSION)) NGREST_THROW_ASSERT("Invalid argument: (" #EXPRESSION ")")
+    if (!(EXPRESSION)) NGREST_THROW_ASSERT("Invalid argument: (" #EXPRESSION ")")
 
 //! assert parameter
 #define NGREST_ASSERT_NULL(EXPRESSION) \
-  if (!(EXPRESSION)) NGREST_THROW_ASSERT(#EXPRESSION " is null!")
+    if (!(EXPRESSION)) NGREST_THROW_ASSERT(#EXPRESSION " is null!")
 
 //! debug assert expression
 #ifdef _DEBUG
 #define NGREST_DEBUG_ASSERT(EXPRESSION, DESCRIPTION) \
-  if (!(EXPRESSION)) \
+    if (!(EXPRESSION)) \
     NGREST_THROW_ASSERT(DESCRIPTION + std::string(". Debug assertion failed: (" #EXPRESSION ")"))
 #else
 #define NGREST_DEBUG_ASSERT(EXPRESSION, DESCRIPTION)
@@ -42,48 +42,41 @@
 
 //! catch all exceptions
 #define NGREST_CATCH_ALL\
-  catch (const ::ngrest::Exception& rException)\
-  {\
+    catch (const ::ngrest::Exception& rException)\
+{\
     ::ngrest::LogError() << "Exception: \n" << rException.what();\
-  }\
-  catch (const std::exception& rException) \
-  {\
+    }\
+    catch (const std::exception& rException) \
+{\
     ::ngrest::LogError() << "std::exception: \n" << rException.what();\
-  }\
-  catch (...) \
-  {\
+    }\
+    catch (...) \
+{\
     ::ngrest::LogError() << "unknown exception"; \
-  }
+    }
 
 //! catch all exceptions and write description
 #define NGREST_CATCH_ALL_DESCR(DESCRIPTION)\
-  catch (const ::ngrest::Exception& rException)\
-  {\
+    catch (const ::ngrest::Exception& rException)\
+{\
     ::ngrest::LogError() << (DESCRIPTION) << "\nException: \n" << rException.what();\
-  }\
-  catch (const std::exception& rException) \
-  {\
+    }\
+    catch (const std::exception& rException) \
+{\
     ::ngrest::LogError() << (DESCRIPTION) << "\nstd::exception: \n" << rException.what();\
-  }\
-  catch (...) \
-  {\
+    }\
+    catch (...) \
+{\
     ::ngrest::LogError() << (DESCRIPTION) << "\nunknown exception"; \
-  }
+    }
 
 namespace ngrest
 {
 
-  //! base ngrest exception class
-  class NGREST_UTILS_EXPORT Exception: public std::exception
-  {
-  public:
-    //! exception constructor
-    /*! \param  fileLine source file name and line number
-        \param  function function signature
-        \param  description description
-      */
-    Exception(const char* fileLine, const char* function, const char* description);
-
+//! base ngrest exception class
+class NGREST_UTILS_EXPORT Exception: public std::exception
+{
+public:
     //! exception constructor
     /*! \param  fileLine source file name and line number
         \param  function function signature
@@ -101,7 +94,7 @@ namespace ngrest
       */
     inline virtual const char* what() const throw()
     {
-      return description.c_str();
+        return description.c_str();
     }
 
     //! get description of exception thrown
@@ -109,27 +102,45 @@ namespace ngrest
       */
     inline virtual const std::string& strWhat() const throw()
     {
-      return description;
+        return description;
     }
 
-  private:
-    std::string description; //!< description
-  };
+    //! get source file and line where exception was raised
+    /*! \return source file and line
+      */
+    inline const char* getFileLine() const
+    {
+        return fileLine;
+    }
 
-  //! assert exception class
-  class AssertException: public Exception
-  {
-  public:
+    //! get function name where exception was raised
+    /*! \return function name
+      */
+    inline const char* getFunction() const
+    {
+        return function;
+    }
+
+private:
+    const char* fileLine;    //!< stored statically
+    const char* function;    //!< stored statically
+    std::string description; //!< description
+};
+
+//! assert exception class
+class AssertException: public Exception
+{
+public:
     //! exception constructor
     /*! \param  fileLine - source file name and line number
         \param  function - function signature
         \param  sDescr - description
       */
     inline AssertException(const char* fileLine, const char* function, const std::string& sDescr):
-      Exception(fileLine, function, sDescr)
+        Exception(fileLine, function, sDescr)
     {
     }
-  };
+};
 
 }
 

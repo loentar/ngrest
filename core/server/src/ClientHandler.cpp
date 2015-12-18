@@ -10,7 +10,8 @@
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/fromcstring.h>
 #include <ngrest/utils/tocstring.h>
-#include <ngrest/engine/HttpCommon.h>
+#include <ngrest/common/Message.h>
+#include <ngrest/common/HttpMessage.h>
 #include <ngrest/engine/Engine.h>
 
 #include "strutils.h"
@@ -21,68 +22,74 @@
 
 namespace ngrest {
 
-struct Request
+struct MessageData
 {
+    MessageContext context;
     MemPool poolStr;
-    MemPool poolBin;
+    MemPool poolBody;
+    bool usePoolBody = false;
     bool isChunked = false;
     long contentLength = -1;
     uint64_t httpBodyOffset = 0;
     uint64_t httpBodyRemaining = -1;
 //    uint64_t currentChunkRemaining = 0;
-    HttpRequest httpRequest;
     bool processing = false;
 
-    Request():
+    MessageData(Transport* transport):
         poolStr(2048),
-        poolBin(512)
+        poolBody(1024)
     {
+        context.transport = transport;
+        context.request = context.pool.alloc<HttpRequest>();
+        context.response = context.pool.alloc<HttpResponse>();
     }
 };
 
-struct ClientData
+struct ClientInfo
 {
     char host[NI_MAXHOST];
     char port[NI_MAXSERV];
+    bool deleteLater = false;
 
-    std::list<Request*> requests;
+    std::list<MessageData*> requests;
 };
 
 
-class HttpResponseCallbackHandler: public HttpResponseCallback
+class ClientHandlerCallback: public MessageCallback
 {
 public:
-    HttpResponseCallbackHandler(ClientHandler* handler_, int clientFd_, Request* request_):
-        handler(handler_), clientFd(clientFd_), request(request_)
+    ClientHandlerCallback(ClientHandler* handler_, int clientFd_, MessageData* messageData_):
+        handler(handler_), clientFd(clientFd_), messageData(messageData_)
     {
     }
 
-    void onSuccess(const HttpResponse* response)
+    void success(MessageContext* context)
     {
-        handler->processResponse(clientFd, request, response);
+        NGREST_ASSERT_PARAM(context == &messageData->context);
+        handler->processResponse(clientFd, messageData);
     }
 
-    void onError(const Exception& error)
+    void error(const Exception& error)
     {
-        handler->processError(clientFd, request, error);
+        handler->processError(clientFd, messageData, error);
     }
 
     ClientHandler* handler;
     int clientFd;
-    Request* request;
+    MessageData* messageData;
 };
 
 
-ClientHandler::ClientHandler(Engine& engine_):
-    engine(engine_)
+ClientHandler::ClientHandler(Engine& engine_, Transport& transport_):
+    engine(engine_), transport(transport_)
 {
 }
 
 void ClientHandler::connected(int fd, const sockaddr* addr)
 {
-    ClientData*& client = clients[fd];
+    ClientInfo*& client = clients[fd];
     if (client == nullptr) {
-        client = new ClientData();
+        client = new ClientInfo();
 
         int res = getnameinfo(addr, sizeof(*addr),
                               client->host, sizeof(client->host),
@@ -102,7 +109,12 @@ void ClientHandler::connected(int fd, const sockaddr* addr)
 
 void ClientHandler::disconnected(int fd)
 {
-    delete clients[fd];
+    ClientInfo* clientInfo = clients[fd];
+    if (clientInfo->requests.empty()) {
+        delete clientInfo;
+    } else {
+        clientInfo->deleteLater = true;
+    }
     clients.erase(fd);
 }
 
@@ -113,31 +125,34 @@ void ClientHandler::error(int fd)
 
 bool ClientHandler::readyRead(int fd)
 {
-    ClientData* clientData = clients[fd];
+    ClientInfo* clientData = clients[fd];
     if (clientData == nullptr) {
         LogError() << "failed to find client #" << fd;
         return false;
     }
 
-    Request* request;
+    MessageData* messageData;
+
     if (clientData->requests.empty()) {
-        request = new Request();
-        clientData->requests.push_back(request);
+        messageData = new MessageData(&transport);
+        clientData->requests.push_back(messageData);
     } else {
-        request = clientData->requests.back();
-        NGREST_ASSERT_NULL(request);
-        if (request->processing) {
+        messageData = clientData->requests.back();
+        NGREST_ASSERT_NULL(messageData);
+        if (messageData->processing) {
             // request is finished to read and now processing.
             // creating new request
-            request = new Request();
-            clientData->requests.push_back(request);
+            messageData = new MessageData(&transport);
+            clientData->requests.push_back(messageData);
         }
     }
 
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+    MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
     for (;;) {
-        uint64_t sizeToRead = (request->httpBodyRemaining != -1)
-                ? request->httpBodyRemaining : TRY_BLOCK_SIZE;
-        char* buffer = request->poolStr.grow(sizeToRead);
+        uint64_t sizeToRead = (messageData->httpBodyRemaining != -1)
+                ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
+        char* buffer = pool.grow(sizeToRead);
         ssize_t count = ::read(fd, buffer, sizeToRead);
         if (count == 0) {
             // EOF. The remote has closed the connection.
@@ -154,34 +169,34 @@ bool ClientHandler::readyRead(int fd)
             }
 
             // all available data read
-            request->poolStr.shrinkLastChunk(sizeToRead);
+            pool.shrinkLastChunk(sizeToRead);
             break;
         }
 
         if (count < sizeToRead)
-            request->poolStr.shrinkLastChunk(sizeToRead - count);
+            pool.shrinkLastChunk(sizeToRead - count);
 
-        if (request->httpBodyRemaining != -1)
-            request->httpBodyRemaining -= count;
+        if (messageData->httpBodyRemaining != -1)
+            messageData->httpBodyRemaining -= count;
 
-        if (request->httpBodyOffset == 0) {
-            const char* startFind = ((buffer - 3) > request->poolStr.getLastChunk()->buffer)
+        if (messageData->httpBodyOffset == 0) {
+            const char* startFind = ((buffer - 3) > pool.getLastChunk()->buffer)
                     ? (buffer - 3) : buffer;
             // will not be found if HTTP header size will be 4095-4097!
             const char* pos = strnstr(startFind, "\r\n\r\n", count);
             if (pos) {
-                uint64_t httpHeaderSize = request->poolStr.getSize()
-                        - request->poolStr.getLastChunk()->size + (pos - buffer);
-                request->httpBodyOffset = httpHeaderSize + 4;
+                uint64_t httpHeaderSize = pool.getSize()
+                        - pool.getLastChunk()->size + (pos - buffer);
+                messageData->httpBodyOffset = httpHeaderSize + 4;
 
-                MemPool::Chunk* chunk = request->poolStr.flatten();
+                MemPool::Chunk* chunk = pool.flatten();
 
                 // parse HTTP header
                 chunk->buffer[httpHeaderSize + 2] = '\0';
                 chunk->buffer[httpHeaderSize + 3] = '\0';
-                parseHttpHeader(chunk->buffer, request);
+                parseHttpHeader(chunk->buffer, messageData);
 
-                const HttpHeader* headerEncoding = request->httpRequest.getHeader("transfer-encoding");
+                const Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
                 if (headerEncoding && !strcmp(headerEncoding->value, "chunked")) {
                     // FIXME: add support for chunked encoding
                     NGREST_THROW_ASSERT("Chunked encoding is not yet supported");
@@ -205,29 +220,41 @@ bool ClientHandler::readyRead(int fd)
  sequence
  0
  */
-                    request->isChunked = true;
+                    messageData->isChunked = true;
                 } else {
-                    const HttpHeader* headerLength = request->httpRequest.getHeader("content-length");
+                    const Header* headerLength = httpRequest->getHeader("content-length");
                     if (headerLength) {
-                        NGREST_ASSERT(fromCString(headerLength->value, request->contentLength),
+                        NGREST_ASSERT(fromCString(headerLength->value, messageData->contentLength),
                                       "Failed to get content length of request");
-                        NGREST_ASSERT(request->contentLength < MAX_REQUEST_SIZE,
+                        NGREST_ASSERT(messageData->contentLength < MAX_REQUEST_SIZE,
                                       "Request is too large!");
-                        const uint64_t totalRequestLength = request->httpBodyOffset +
-                                request->contentLength;
-                        request->httpBodyRemaining = totalRequestLength -
-                                request->poolStr.getSize();
-                        request->poolStr.reserve(totalRequestLength + 1);
+                        const uint64_t totalRequestLength = messageData->httpBodyOffset +
+                                messageData->contentLength;
+                        messageData->httpBodyRemaining = totalRequestLength - pool.getSize();
+                        messageData->poolBody.reserve(totalRequestLength + 1);
+
+                        // if we didn't receive the whole body yet
+                        // store received part of body to another pool to avoid
+                        // Header* pointers damage on poolStr->flatten
+                        if (messageData->httpBodyRemaining) {
+                            // copy already received part of data to poolBody
+                            messageData->poolBody.putData(chunk->buffer + messageData->httpBodyOffset,
+                                                          chunk->size - messageData->httpBodyOffset);
+                            messageData->usePoolBody = true;
+                        }
+                    } else {
+                        // message has no body and ready to process now
+                        messageData->httpBodyRemaining = 0;
                     }
                 }
 
             }
         }
 
-        if (request->httpBodyRemaining == 0) {
-            request->httpRequest.clientHost = clientData->host;
-            request->httpRequest.clientPort = clientData->port;
-            processRequest(fd, request);
+        if (messageData->httpBodyRemaining == 0) {
+            httpRequest->clientHost = clientData->host;
+            httpRequest->clientPort = clientData->port;
+            processRequest(fd, messageData);
             break;
         }
     }
@@ -235,7 +262,7 @@ bool ClientHandler::readyRead(int fd)
     return true;
 }
 
-void ClientHandler::parseHttpHeader(char* buffer, Request* client)
+void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
 {
     char* curr = buffer;
 
@@ -243,26 +270,28 @@ void ClientHandler::parseHttpHeader(char* buffer, Request* client)
 
     const char* method = token(curr);
     NGREST_ASSERT(method >= buffer, "Failed to get HTTP method");
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+    NGREST_ASSERT_NULL(httpRequest);
 
     if (!strcmp(method, "POST")) {
-        client->httpRequest.method = HTTP_METHOD_POST;
+        httpRequest->method = HttpMethod::POST;
     } else if (!strcmp(method, "GET")) {
-        client->httpRequest.method = HTTP_METHOD_GET;
+        httpRequest->method = HttpMethod::GET;
     } else if (!strcmp(method, "PUT")) {
-        client->httpRequest.method = HTTP_METHOD_PUT;
+        httpRequest->method = HttpMethod::PUT;
     } else if (!strcmp(method, "DELETE")) {
-        client->httpRequest.method = HTTP_METHOD_DELETE;
+        httpRequest->method = HttpMethod::DELETE;
     } else {
-        client->httpRequest.method = HTTP_METHOD_UNKNOWN;
+        httpRequest->method = HttpMethod::UNKNOWN;
     }
-    client->httpRequest.methodStr = method;
+    httpRequest->methodStr = method;
 
 
     // parse request url
 
     skipWs(curr);
-    client->httpRequest.url = token(curr);
-    NGREST_ASSERT(client->httpRequest.url > buffer, "Failed to get request URL");
+    httpRequest->path = token(curr);
+    NGREST_ASSERT(httpRequest->path > buffer, "Failed to get request URL");
 
     // seek to the first http header
     NGREST_ASSERT(seekTo(curr, '\n'), "Failed to seek to first HTTP header");
@@ -271,7 +300,7 @@ void ClientHandler::parseHttpHeader(char* buffer, Request* client)
 
     // read http headers
 
-    HttpHeader* lastHeader = nullptr;
+    Header* lastHeader = nullptr;
     while (*curr != '\0') {
         char* name = token(curr, ':');
         NGREST_ASSERT(*curr, "Failed to parse HTTP header: unable to read name");
@@ -281,11 +310,11 @@ void ClientHandler::parseHttpHeader(char* buffer, Request* client)
         NGREST_ASSERT(*curr, "Failed to parse HTTP header: unable to read value");
         char* value = token(curr, '\n');
         trimRight(value, curr - 2);
-        HttpHeader* header = client->poolBin.alloc<HttpHeader>();
+        Header* header = messageData->context.pool.alloc<Header>();
         header->name = name;
         header->value = value;
         if (lastHeader == nullptr) {
-            client->httpRequest.headers = header;
+            httpRequest->headers = header;
         } else {
             lastHeader->next = header;
         }
@@ -293,20 +322,32 @@ void ClientHandler::parseHttpHeader(char* buffer, Request* client)
     }
 }
 
-void ClientHandler::processRequest(int clientFd, Request* request)
+void ClientHandler::processRequest(int clientFd, MessageData* messageData)
 {
-    request->processing = true;
-    MemPool::Chunk* chunk = request->poolStr.flatten();
-    NGREST_ASSERT(request->httpBodyOffset <= chunk->size, "Request > size");
-    request->httpRequest.body = chunk->buffer + request->httpBodyOffset;
-    request->httpRequest.bodySize = chunk->size - request->httpBodyOffset;
-//    const HttpHeader* headerContentType = client->request.getHeader("content-type");
+    messageData->processing = true;
 
-    LogDebug() << "Request: " << request->httpRequest.methodStr << " " << request->httpRequest.url;
-    LogDebug() << request->httpRequest.body;
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+    NGREST_ASSERT_NULL(httpRequest);
 
-    HttpResponseCallbackHandler* callback = new HttpResponseCallbackHandler(this, clientFd, request);
-    engine.processRequest(&request->httpRequest, callback);
+    if (messageData->usePoolBody) {
+        // handle body from poolBody with zero offset
+        MemPool::Chunk* chunk = messageData->poolStr.flatten();
+        httpRequest->bodySize = chunk->size;
+        httpRequest->body = chunk->buffer;
+    } else {
+        // handle body from poolStr with offset
+        NGREST_ASSERT_NULL(messageData->poolStr.getChunkCount() == 1); // should never happen
+
+        const MemPool::Chunk* chunk = messageData->poolStr.getLastChunk(); // already flat
+        NGREST_ASSERT(messageData->httpBodyOffset <= chunk->size, "Request > size");
+        httpRequest->bodySize = chunk->size - messageData->httpBodyOffset;
+        if (httpRequest->bodySize)
+            httpRequest->body = chunk->buffer + messageData->httpBodyOffset;
+    }
+
+    messageData->context.callback = messageData->context.pool
+            .alloc<ClientHandlerCallback>(this, clientFd, messageData);
+    engine.dispatchMessage(&messageData->context);
 }
 
 inline void writeHttpHeader(MemPool& pool, const char* name, const char* value)
@@ -317,7 +358,7 @@ inline void writeHttpHeader(MemPool& pool, const char* name, const char* value)
     pool.putData("\r\n", 2);
 }
 
-void ClientHandler::processResponse(int clientFd, Request* request, const HttpResponse* response)
+void ClientHandler::processResponse(int clientFd, MessageData* messageData)
 {
     auto it = clients.find(clientFd);
     if (it == clients.end()) {
@@ -325,36 +366,37 @@ void ClientHandler::processResponse(int clientFd, Request* request, const HttpRe
         return;
     }
 
-    ClientData* clientData = it->second;
-    NGREST_ASSERT_NULL(clientData);
+    ClientInfo* clientInfo = it->second;
+    NGREST_ASSERT_NULL(clientInfo);
 
-    clientData->requests.remove(request);
-    request->poolStr.reset();
+    clientInfo->requests.remove(messageData);
+    messageData->poolStr.reset();
 
     // build response
-    request->poolStr.putData("HTTP/1.1 ", 9);
-    request->poolStr.putCString(HttpStatusInfo::httpStatusToString(
+    HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
+    messageData->poolStr.putData("HTTP/1.1 ", 9);
+    messageData->poolStr.putCString(HttpStatusInfo::httpStatusToString(
                                     static_cast<HttpStatus>(response->statusCode)));
-    request->poolStr.putData("\r\n", 2);
-    for (const HttpHeader* header = response->headers; header; header = header->next)
-        writeHttpHeader(request->poolStr, header->name, header->value);
+    messageData->poolStr.putData("\r\n", 2);
+    for (const Header* header = response->headers; header; header = header->next)
+        writeHttpHeader(messageData->poolStr, header->name, header->value);
 
     // server
-    writeHttpHeader(request->poolStr, "Server", "ngrest");
+    writeHttpHeader(messageData->poolStr, "Server", "ngrest");
 
     // content-length
     uint64_t bodySize = response->poolBody.getSize();
-    const int buffSize = 256;
+    const int buffSize = 32;
     char buff[buffSize];
     NGREST_ASSERT(toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
-    writeHttpHeader(request->poolStr, "Content-Length", buff);
+    writeHttpHeader(messageData->poolStr, "Content-Length", buff);
 
     // split body
-    request->poolStr.putData("\r\n", 2);
+    messageData->poolStr.putData("\r\n", 2);
 
     // write header to client
-    const MemPool::Chunk* chunk = request->poolStr.getChunks();
-    for (int i = 0, l = request->poolStr.getChunkCount(); i < l; ++i, ++chunk) {
+    const MemPool::Chunk* chunk = messageData->poolStr.getChunks();
+    for (int i = 0, l = messageData->poolStr.getChunkCount(); i < l; ++i, ++chunk) {
         ::write(clientFd, chunk->buffer, chunk->size);
     }
 
@@ -364,20 +406,28 @@ void ClientHandler::processResponse(int clientFd, Request* request, const HttpRe
         ::write(clientFd, chunk->buffer, chunk->size);
     }
 
-    delete request;
+    LogDebug() << "Request handling finished";
+
+    delete messageData;
+
+    // delayed deleting ClientInfo after all requests are processed
+    if (clientInfo->deleteLater && clientInfo->requests.empty())
+        delete clientInfo;
 
     // response is to be freed by engine
 }
 
-void ClientHandler::processError(int clientFd, Request* request, const Exception& error)
+void ClientHandler::processError(int clientFd, MessageData* messageData, const Exception& error)
 {
-    HttpResponse response;
-    response.statusCode = HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
-    HttpHeader headerContentType("Content-Type", "text/plain");
-    response.headers = &headerContentType;
-    response.poolBody.reset();
-    response.poolBody.putCString(error.what());
-    processResponse(clientFd, request, &response);
+    LogDebug() << "Error while handling request " << messageData->context.request->path;
+
+    HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
+    response->statusCode = HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
+    Header headerContentType("Content-Type", "text/plain");
+    response->headers = &headerContentType;
+    response->poolBody.reset();
+    response->poolBody.putCString(error.what());
+    processResponse(clientFd, messageData);
 }
 
 }

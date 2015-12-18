@@ -1,24 +1,20 @@
 #ifndef NGREST_ENGINE_H
 #define NGREST_ENGINE_H
 
-#include <ngrest/utils/Callback.h>
-
 namespace ngrest {
 
-struct HttpRequest;
-struct HttpResponse;
-class Exception;
-
-class HttpResponseCallback: public Callback<const HttpResponse*, const Exception&>
-{
-};
+struct MessageContext;
+class Deployment;
 
 class Engine
 {
 public:
-    Engine();
+    Engine(Deployment& deployment);
 
-    void processRequest(HttpRequest* request, HttpResponseCallback* callback);
+    void dispatchMessage(MessageContext* context);
+
+private:
+    Deployment& deployment;
 };
 
 } // namespace ngrest

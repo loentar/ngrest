@@ -12,7 +12,7 @@
 
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/MemPool.h>
-#include <ngrest/json/JsonTypes.h>
+#include <ngrest/common/ObjectModel.h>
 #include <ngrest/json/JsonReader.h>
 #include <ngrest/json/JsonWriter.h>
 
@@ -89,7 +89,7 @@ int main()
 
         start = getTime();
         ngrest::MemPool poolJson;
-        ngrest::json::Node* root = ngrest::json::JsonReader::read(chunk->buffer, poolJson);
+        ngrest::Node* root = ngrest::json::JsonReader::read(chunk->buffer, poolJson);
 
         mid = getTime();
 

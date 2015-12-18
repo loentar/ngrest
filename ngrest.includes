@@ -7,3 +7,6 @@ common/utils
 core/server/src
 core/engine/src
 core/utils/src
+core/common/src
+../ngrest-build/deploy/include/ngrest/common/src
+tests/deployment/src

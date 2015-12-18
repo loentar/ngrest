@@ -8,7 +8,7 @@
 
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/MemPool.h>
-#include <ngrest/json/JsonTypes.h>
+#include <ngrest/common/ObjectModel.h>
 #include <ngrest/json/JsonReader.h>
 #include <ngrest/json/JsonWriter.h>
 
@@ -38,7 +38,7 @@ int main()
         for (int t = 0; t < testsCount; ++t) {
             ngrest::MemPool pool;
             ngrest::MemPool poolOut;
-            ngrest::json::Node* root = ngrest::json::JsonReader::read(tests[t], pool);
+            ngrest::Node* root = ngrest::json::JsonReader::read(tests[t], pool);
 
             ngrest::json::JsonWriter::write(root, poolOut, 2);
 

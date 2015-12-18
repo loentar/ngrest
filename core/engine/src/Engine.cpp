@@ -1,62 +1,67 @@
-#include <string.h>
-#include <string>
-
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/Log.h>
+#include <ngrest/common/Message.h>
 
-#include <ngrest/json/JsonReader.h>
-#include <ngrest/json/JsonWriter.h>
-#include <ngrest/json/JsonTypes.h>
-
+#include "Deployment.h"
+#include "Transport.h"
 #include "Engine.h"
-#include "HttpCommon.h"
 
 namespace ngrest {
 
-Engine::Engine()
+// replace callback to write response with appropriate transport
+class EngineHookCallback: public MessageCallback
 {
+public:
+    EngineHookCallback(MessageContext* context_):
+        context(context_), origCallback(context_->callback)
+    {
+        context->callback = this;
+    }
 
+    void success(MessageContext* context)
+    {
+        context->transport->writeResponse(context->pool, context->request, context->response);
+        context->callback = origCallback;
+        context->callback->success(context);
+    }
+
+    void error(const Exception& error)
+    {
+        context->callback = origCallback;
+        context->callback->error(error);
+    }
+
+    MessageContext* const context;
+    MessageCallback* const origCallback;
+};
+
+
+Engine::Engine(Deployment& deployment_):
+    deployment(deployment_)
+{
 }
 
-void Engine::processRequest(HttpRequest* request, HttpResponseCallback* callback)
+void Engine::dispatchMessage(MessageContext* context)
 {
+    NGREST_ASSERT_PARAM(context);
+    NGREST_ASSERT_NULL(context->request);
+    NGREST_ASSERT_NULL(context->response);
+    NGREST_ASSERT_NULL(context->callback);
+
     try {
-        LogDebug() << "Request URL: " << request->url;
+        // this will replace context callback and restore it after dispatching the message
+        context->pool.alloc<EngineHookCallback>(context);
 
-        const HttpHeader* contentType = request->getHeader("content-type");
-        NGREST_ASSERT(contentType, "Content-Type header is missing!");
-
-        if (!strcmp(contentType->value, "application/json")) {
-            // JSON request
-            if (request->body != nullptr) {
-                MemPool poolJsonIn;
-                json::Node* root = json::JsonReader::read(request->body, poolJsonIn);
-                NGREST_ASSERT(root, "Failed to read request"); // should never throw
-
-                // FIXME: handle
-                if (root->type == json::TypeObject) {
-                    json::Object* obj = static_cast<json::Object*>(root);
-
-                    LogDebug() << "firstChild: " << obj->firstChild->name;
-                }
-                // FIXME: end handle
-            }
-        } else {
-            NGREST_THROW_ASSERT(std::string("Can't handle content type: ") + contentType->value);
+        if (context->request->body) {
+            context->request->node = context->transport->parseRequest(context->pool, context->request);
+            NGREST_ASSERT(context->request->node, "Failed to read request"); // should never throw
         }
 
-
-//        MemPool poolJsonOut;
-
-        HttpResponse resp;
-        HttpHeader headerContentType("Content-Type", "application/json");
-        resp.headers = &headerContentType;
-        resp.poolBody.putCString("{\"response\": \"This is a test response\"}");
-        callback->onSuccess(&resp);
+        deployment.dispatchMessage(context);
     } catch (const Exception& err) {
-        callback->onError(err);
+        LogWarning() << /*err.getFileLine() << " " << */err.getFunction() << " : " << err.what();
+        context->callback->error(err);
     }
-    delete callback;
 }
 
 } // namespace ngrest

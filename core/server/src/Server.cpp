@@ -88,7 +88,7 @@ int Server::exec()
                 /* An error has occured on this fd, or the socket is not
                  ready for reading(why were we notified then?) */
                 fprintf(stderr, "epoll error\n");
-                if (callback != nullptr)
+                if (callback)
                     callback->error(events[i].data.fd);
                 close(events[i].data.fd);
             } else if (fdServer == events[i].data.fd) {
@@ -211,7 +211,7 @@ bool Server::handleIncomingConnection()
         if (res == -1)
             perror("epoll_ctl");
 
-        if (callback != nullptr)
+        if (callback)
             callback->connected(event->data.fd, &in_addr);
     }
 
@@ -220,7 +220,7 @@ bool Server::handleIncomingConnection()
 
 bool Server::handleRequest(int index)
 {
-    if (callback != nullptr)
+    if (callback)
         return callback->readyRead(events[index].data.fd);
 
 //    int fd = events[index].data.fd;

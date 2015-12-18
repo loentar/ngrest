@@ -10,6 +10,8 @@
 #include "Server.h"
 #include "ClientHandler.h"
 
+#include "TestDeploymentWrapper.h"
+
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
               << "  -p        port number to use (default: 9099)" << std::endl
@@ -48,6 +50,20 @@ int main(int argc, char* argv[])
 
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
+
+
+    /*
+    test with:
+    async mode:
+      curl -i -X GET -H "Content-Type:application/json" 'http://localhost:9098/td/sync?value=Hello_world'
+
+    sync mode:
+      curl -i -X GET -H "Content-Type:application/json" 'http://localhost:9098/td/async/Hello_world'
+    */
+
+    ngrest::TestDeploymentWrapper testWrapper;
+
+    deployment.registerService(&testWrapper);
 
     return server.exec();
 }

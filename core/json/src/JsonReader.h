@@ -4,10 +4,9 @@
 namespace ngrest {
 
 class MemPool;
+class Node;
 
 namespace json {
-
-class Node;
 
 class JsonReader {
 public:

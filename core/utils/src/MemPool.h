@@ -59,6 +59,7 @@ public:
     }
 
     char* putCString(const char* string, bool terminate = false);
+    char* putCString(const char* string, uint64_t size, bool terminate = false);
     char* putData(const char* data, uint64_t size);
 
     inline Chunk const* getChunks() const

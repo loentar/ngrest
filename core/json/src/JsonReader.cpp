@@ -3,7 +3,8 @@
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/MemPool.h>
 
-#include "JsonTypes.h"
+#include <ngrest/common/ObjectModel.h>
+
 #include "JsonReader.h"
 
 namespace ngrest {
@@ -99,7 +100,7 @@ public:
             return readObject();
 
         case '"': // string
-            return pool.alloc<Value>(ValueTypeString, tokenString());
+            return pool.alloc<Value>(ValueType::String, tokenString());
         }
 
         // number or special value
@@ -108,20 +109,20 @@ public:
 
         // number
         if ((*token >= '0' && *token <= '9') || *token == '-')
-            return pool.alloc<Value>(ValueTypeNumber, token);
+            return pool.alloc<Value>(ValueType::Number, token);
 
         if (!strncmp(token, "true", len) || !strncmp(token, "false", len))
-            return pool.alloc<Value>(ValueTypeBoolean, token);
+            return pool.alloc<Value>(ValueType::Boolean, token);
 
         // handle undefined, NaN, null
         if (!strncmp(token, "null", len))
-            return pool.alloc<Value>(ValueTypeNull);
+            return pool.alloc<Value>(ValueType::Null);
 
         if (!strncmp(token, "undefined", len))
-            return pool.alloc<Value>(ValueTypeUndefined);
+            return pool.alloc<Value>(ValueType::Undefined);
 
         if (!strncmp(token, "NaN", len))
-            return pool.alloc<Value>(ValueTypeNaN);
+            return pool.alloc<Value>(ValueType::NaN);
 
         NGREST_THROW_ASSERT("Unexpected token");
     }
@@ -167,19 +168,19 @@ public:
             }
             prevLinkedNode = linkedNode;
 
-            valueEnd = (linkedNode->node->type == TypeValue) ? curr : nullptr;
+            valueEnd = (linkedNode->node->type == NodeType::Value) ? curr : nullptr;
             skipWs();
             NGREST_ASSERT(*curr != '\0', "Unexpected EOF while reading array");
 
             if (*curr == ']') {
                 // terminate token
-                if (valueEnd != nullptr)
+                if (valueEnd)
                     *valueEnd = '\0';
                 ++curr;
                 return array;
             }
             NGREST_ASSERT(*curr == ',', "Missing ',' while reading array");
-            if (valueEnd != nullptr)
+            if (valueEnd)
                 *valueEnd = '\0';
             ++curr;
         }
@@ -220,18 +221,18 @@ public:
             }
             prevNamedNode = namedNode;
 
-            valueEnd = (namedNode->node->type == TypeValue) ? curr : nullptr;
+            valueEnd = (namedNode->node->type == NodeType::Value) ? curr : nullptr;
             skipWs();
             NGREST_ASSERT(*curr != '\0', "Unexpected EOF while reading object");
 
             if (*curr == '}') {
-                if (valueEnd != nullptr)
+                if (valueEnd)
                     *valueEnd = '\0';
                 ++curr;
                 return object;
             }
             NGREST_ASSERT(*curr == ',', "Missing ',' while reading object");
-            if (valueEnd != nullptr)
+            if (valueEnd)
                 *valueEnd = '\0';
             ++curr;
             skipWs();

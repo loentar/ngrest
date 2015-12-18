@@ -47,6 +47,14 @@ char* MemPool::putCString(const char* string, bool terminate)
     return putData(string, strlen(string) + (terminate ? 1 : 0));
 }
 
+char* MemPool::putCString(const char* string, uint64_t size, bool terminate)
+{
+    char* res = putData(string, size);
+    if (terminate)
+        putChar('\0');
+    return res;
+}
+
 char* MemPool::putData(const char* data, uint64_t size)
 {
     return reinterpret_cast<char*>(memcpy(grow(size), data, size));

@@ -3,7 +3,8 @@
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/MemPool.h>
 
-#include "JsonTypes.h"
+#include <ngrest/common/ObjectModel.h>
+
 #include "JsonWriter.h"
 
 namespace ngrest {
@@ -24,10 +25,10 @@ public:
     {
         switch (node->type) {
 
-        case TypeObject: {
+        case NodeType::Object: {
             const Object* object = static_cast<const Object*>(node);
             pool.putChar('{');
-            for (const NamedNode* child = object->firstChild; child != nullptr; child = child->nextSibling) {
+            for (const NamedNode* child = object->firstChild; child; child = child->nextSibling) {
                 if (child != object->firstChild)
                     pool.putChar(',');
                 pool.putChar('"');
@@ -40,10 +41,10 @@ public:
             break;
         }
 
-        case TypeArray: {
+        case NodeType::Array: {
             const Array* array = static_cast<const Array*>(node);
             pool.putChar('[');
-            for (const LinkedNode* child = array->firstChild; child != nullptr; child = child->nextSibling) {
+            for (const LinkedNode* child = array->firstChild; child; child = child->nextSibling) {
                 if (child != array->firstChild)
                     pool.putChar(',');
                 writeNode(child->node);
@@ -52,29 +53,29 @@ public:
             break;
         }
 
-        case TypeValue: {
+        case NodeType::Value: {
             const Value* value = static_cast<const Value*>(node);
             switch (value->valueType) {
-            case ValueTypeUndefined:
+            case ValueType::Undefined:
                 pool.putData("undefined", 9);
                 break;
 
-            case ValueTypeNull:
+            case ValueType::Null:
                 pool.putData("null", 4);
                 break;
 
-            case ValueTypeNaN:
+            case ValueType::NaN:
                 pool.putData("NaN", 3);
                 break;
 
-            case ValueTypeString:
+            case ValueType::String:
                 pool.putChar('"');
                 pool.putCString(value->value);
                 pool.putChar('"');
                 break;
 
-            case ValueTypeNumber:
-            case ValueTypeBoolean:
+            case ValueType::Number:
+            case ValueType::Boolean:
                 pool.putCString(value->value);
                 break;
             }
