@@ -10,8 +10,8 @@
 #define ngrest_snprintf snprintf
 #endif
 
-namespace ngrest
-{
+namespace ngrest {
+
 typedef char byte;
 typedef unsigned char unsignedByte;
 

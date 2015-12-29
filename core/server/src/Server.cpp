@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
+#include <sys/ioctl.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -78,6 +79,13 @@ void Server::setClientCallback(ClientCallback* callback)
 
 int Server::exec()
 {
+    if (!callback) {
+        LogError() << "Client callback is not set!";
+        return EXIT_FAILURE;
+    }
+
+    LogInfo() << "Simple NGREST server started on port " << port << ".";
+
     /* The event loop */
     while (!isStopping) {
         int n = epoll_wait(fdEpoll, events, MAXEVENTS, -1);
@@ -101,7 +109,7 @@ int Server::exec()
                  completely, as we are running in edge-triggered mode
                  and won't get a notification again for the same
                  data. */
-                handleRequest(i);
+                handleRequest(events[i].data.fd);
             }
         }
     }
@@ -127,13 +135,13 @@ int Server::createServerSocket(const std::string& port)
     hints.ai_socktype = SOCK_STREAM; /* We want a TCP socket */
     hints.ai_flags = AI_PASSIVE;     /* All interfaces */
 
-    int res = getaddrinfo(NULL, port.c_str(), &hints, &addr);
+    int res = getaddrinfo(nullptr, port.c_str(), &hints, &addr);
     if (res != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(res));
         return -1;
     }
 
-    for (curr = addr; curr != NULL; curr = curr->ai_next) {
+    for (curr = addr; curr != nullptr; curr = curr->ai_next) {
         sock = socket(curr->ai_family, curr->ai_socktype, curr->ai_protocol);
         if (sock == -1)
             continue;
@@ -152,12 +160,12 @@ int Server::createServerSocket(const std::string& port)
 
     freeaddrinfo(addr);
 
-    if (curr == NULL) {
+    if (curr == nullptr) {
         fprintf(stderr, "Could not bind\n");
         return -1;
     }
 
-    LogInfo() << "Simple NGREST server started on port " << port << ".";
+    this->port = port;
 
     return sock;
 }
@@ -184,9 +192,9 @@ bool Server::setupNonblock(int fd)
 bool Server::handleIncomingConnection()
 {
     while (!isStopping) {
-        struct sockaddr in_addr;
-        socklen_t in_len = sizeof(in_addr);
-        int fdIn = accept(fdServer, &in_addr, &in_len);
+        struct sockaddr inAddr;
+        socklen_t inLen = sizeof(inAddr);
+        int fdIn = accept(fdServer, &inAddr, &inLen);
         if (fdIn == -1) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                 /* We have processed all incoming connections. */
@@ -211,59 +219,29 @@ bool Server::handleIncomingConnection()
         if (res == -1)
             perror("epoll_ctl");
 
-        if (callback)
-            callback->connected(event->data.fd, &in_addr);
+        callback->connected(event->data.fd, &inAddr);
     }
 
     return true;
 }
 
-bool Server::handleRequest(int index)
+void Server::handleRequest(int fd)
 {
-    if (callback)
-        return callback->readyRead(events[index].data.fd);
+    int64_t bytesAvail = 0;
+    int res = ioctl(fd, FIONREAD, &bytesAvail);
+    // ioctlsocket(socket, FIONREAD, &bytesAvail)
 
-//    int fd = events[index].data.fd;
-//    bool done = false;
-//    while (!isStopping) {
-//        ssize_t count;
-//        char buf[512];
+    // if res = 0, the query is ok, trust bytesAvail
+    // else if there are some bytes to read or the query is failed - we will try to read
+    if (res || bytesAvail) {
+        if (callback->readyRead(fd))
+            return;
+    } else {
+        LogDebug() << "client #" << fd << " closed connection";
+    }
 
-//        count = read(fd, buf, sizeof(buf));
-//        if (count == -1) {
-//            /* If errno == EAGAIN, that means we have read all
-//             data. So go back to the main loop. */
-//            if (errno != EAGAIN) {
-//                perror("read");
-//                done = true;
-//            }
-//            break;
-//        }
-
-//        if (count == 0) {
-//            /* EOF. The remote has closed the connection. */
-//            done = true;
-//            break;
-//        }
-
-//        /* Write the buffer to standard output */
-//        int res = write(1, buf, count);
-//        if (res == -1) {
-//            perror("write");
-//            return false;
-//        }
-//    }
-
-//    if (done) {
-//        printf("Closed connection on descriptor %d\n",
-//                fd);
-
-//        /* Closing the descriptor will make epoll remove it
-//         from the set of descriptors which are monitored. */
-//        close(fd);
-//    }
-
-    return true;
+    close(fd); // disconnect client in case of errors
+    callback->disconnected(fd);
 }
 
 }

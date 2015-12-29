@@ -3,6 +3,7 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/engine/Engine.h>
+#include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
 
@@ -10,7 +11,7 @@
 #include "Server.h"
 #include "ClientHandler.h"
 
-#include "TestDeploymentWrapper.h"
+#include "TestServiceGroup.h"
 
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
@@ -33,9 +34,10 @@ int main(int argc, char* argv[])
     }
 
     static ngrest::Server server;
-    ngrest::Deployment deployment;
+    ngrest::ServiceDispatcher dispatcher;
+    ngrest::Deployment deployment(dispatcher);
     ngrest::HttpTransport transport;
-    ngrest::Engine engine(deployment);
+    ngrest::Engine engine(dispatcher);
     ngrest::ClientHandler clientHandler(engine, transport);
 
     server.setClientCallback(&clientHandler);
@@ -61,9 +63,8 @@ int main(int argc, char* argv[])
       curl -i -X GET -H "Content-Type:application/json" 'http://localhost:9098/td/async/Hello_world'
     */
 
-    ngrest::TestDeploymentWrapper testWrapper;
-
-    deployment.registerService(&testWrapper);
+    ngrest::TestServiceGroup group;
+    deployment.deployStatic(&group);
 
     return server.exec();
 }

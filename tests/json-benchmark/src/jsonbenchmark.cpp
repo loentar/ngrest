@@ -17,9 +17,10 @@
 #include <ngrest/json/JsonWriter.h>
 
 
-inline unsigned long long getTime() {
+inline unsigned long long getTime()
+{
     struct timeval now;
-    gettimeofday(&now, NULL);
+    gettimeofday(&now, nullptr);
     return now.tv_sec * 1000 + now.tv_usec / 1000;
 }
 
@@ -64,8 +65,7 @@ int main()
         struct json_tokener* tokener = json_tokener_new();
 
         json_object* json_obj = json_tokener_parse_ex(tokener, chunk->buffer, chunk->size);
-        if (tokener->err != json_tokener_success)
-        {
+        if (tokener->err != json_tokener_success) {
             std::cerr << "FAILED" << std::endl;
         }
         json_tokener_free(tokener);

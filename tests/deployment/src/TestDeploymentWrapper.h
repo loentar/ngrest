@@ -13,9 +13,9 @@ public:
     TestDeploymentWrapper();
     ~TestDeploymentWrapper();
 
-    virtual Service* serviceImpl() override;
+    virtual Service* getServiceImpl() override;
     virtual void invoke(const OperationDescription* operation, MessageContext* context) override;
-    virtual const ServiceDescription* description() override;
+    virtual const ServiceDescription* getDescription() override;
 
 private:
     TestDeployment* service;

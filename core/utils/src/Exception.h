@@ -42,36 +42,25 @@
 
 //! catch all exceptions
 #define NGREST_CATCH_ALL\
-    catch (const ::ngrest::Exception& rException)\
-{\
-    ::ngrest::LogError() << "Exception: \n" << rException.what();\
-    }\
-    catch (const std::exception& rException) \
-{\
-    ::ngrest::LogError() << "std::exception: \n" << rException.what();\
-    }\
-    catch (...) \
-{\
-    ::ngrest::LogError() << "unknown exception"; \
+    catch (const ::ngrest::Exception& exception) {\
+        ::ngrest::LogError() << "Exception: \n" << exception.what();\
+    } catch (const std::exception& exception) {\
+        ::ngrest::LogError() << "std::exception: \n" << exception.what();\
+    } catch (...) {\
+        ::ngrest::LogError() << "unknown exception"; \
     }
 
 //! catch all exceptions and write description
 #define NGREST_CATCH_ALL_DESCR(DESCRIPTION)\
-    catch (const ::ngrest::Exception& rException)\
-{\
-    ::ngrest::LogError() << (DESCRIPTION) << "\nException: \n" << rException.what();\
-    }\
-    catch (const std::exception& rException) \
-{\
-    ::ngrest::LogError() << (DESCRIPTION) << "\nstd::exception: \n" << rException.what();\
-    }\
-    catch (...) \
-{\
-    ::ngrest::LogError() << (DESCRIPTION) << "\nunknown exception"; \
+    catch (const ::ngrest::Exception& exception) {\
+        ::ngrest::LogError() << (DESCRIPTION) << "\nException: \n" << exception.what();\
+    } catch (const std::exception& exception) {\
+        ::ngrest::LogError() << (DESCRIPTION) << "\nstd::exception: \n" << exception.what();\
+    } catch (...) {\
+        ::ngrest::LogError() << (DESCRIPTION) << "\nunknown exception"; \
     }
 
-namespace ngrest
-{
+namespace ngrest {
 
 //! base ngrest exception class
 class NGREST_UTILS_EXPORT Exception: public std::exception
@@ -134,10 +123,10 @@ public:
     //! exception constructor
     /*! \param  fileLine - source file name and line number
         \param  function - function signature
-        \param  sDescr - description
+        \param  description - description
       */
-    inline AssertException(const char* fileLine, const char* function, const std::string& sDescr):
-        Exception(fileLine, function, sDescr)
+    inline AssertException(const char* fileLine, const char* function, const std::string& description):
+        Exception(fileLine, function, description)
     {
     }
 };

@@ -20,7 +20,7 @@ TestDeploymentWrapper::~TestDeploymentWrapper()
     delete service;
 }
 
-Service* TestDeploymentWrapper::serviceImpl()
+Service* TestDeploymentWrapper::getServiceImpl()
 {
     return service;
 }
@@ -96,14 +96,14 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
             MessageContext* context;
         };
 
-        service->echoASync(value, context->pool.alloc<Callback_echoASync>(context));
+        service->echoASync(value, *context->pool.alloc<Callback_echoASync>(context));
 
     } else {
         NGREST_THROW_ASSERT("No operation " + operation->name + " found");
     }
 }
 
-const ServiceDescription* TestDeploymentWrapper::description()
+const ServiceDescription* TestDeploymentWrapper::getDescription()
 {
     static ServiceDescription description = {
         true,

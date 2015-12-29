@@ -8,5 +8,4 @@ FILE(GLOB NGRESTSERVICE_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 
 add_executable(ngrestservice ${NGRESTSERVICE_SOURCES})
 
-target_compile_features(ngrestservice PRIVATE cxx_range_for)
 target_link_libraries(ngrestservice ngrestutils ngrestjson)

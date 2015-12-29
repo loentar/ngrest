@@ -4,8 +4,7 @@
 #include <string>
 #include "tocstring.h"
 
-namespace ngrest
-{
+namespace ngrest {
 
 template<typename Type>
 std::string toString(Type value)
@@ -28,9 +27,9 @@ template<typename Type>
 std::string toString(Type value, bool* ok)
 {
     char buffer[NUM_TO_STR_BUFF_SIZE];
-    bool bIsOk = toCString(value, buffer, sizeof(buffer));
+    bool isOk = toCString(value, buffer, sizeof(buffer));
     if (ok)
-        *ok = bIsOk;
+        *ok = isOk;
     return buffer;
 }
 
@@ -48,7 +47,7 @@ std::string& toString(Type value, std::string& result, bool* ok)
 
 
 template<typename Type>
-std::string ToHexString(Type value)
+std::string toHexString(Type value)
 {
     char buffer[NUM_TO_STR_BUFF_SIZE];
     toHexCString(value, buffer, sizeof(buffer));

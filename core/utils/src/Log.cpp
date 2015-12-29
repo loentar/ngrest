@@ -12,8 +12,7 @@
 #include "tocstring.h"
 #include "Log.h"
 
-namespace ngrest
-{
+namespace ngrest {
 
 inline const char* baseName(const char* path)
 {
@@ -28,8 +27,8 @@ inline const char* baseName(const char* path)
 
 Log& Log::inst()
 {
-    static Log tInst;
-    return tInst;
+    static Log instance;
+    return instance;
 }
 
 Log::Log():
@@ -118,11 +117,10 @@ void Log::setLogStream(std::ostream* outStream)
 LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* function)
 {
     if (!stream || logLevel > level)
-        return LogStream(NULL);
+        return LogStream(nullptr);
 
     if ((verbosity & LogVerbosityLevel)) {
-        switch (logLevel)
-        {
+        switch (logLevel) {
         case LogLevelAlert:
             *stream << "ALERT ";
             break;

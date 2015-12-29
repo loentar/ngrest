@@ -4,8 +4,7 @@
 #ifndef NGREST_UTILS_FROMSTRING_H
 #define NGREST_UTILS_FROMSTRING_H
 
-namespace ngrest
-{
+namespace ngrest {
 
   template<typename Type>
   inline Type& fromString(const std::string& string, Type& value)

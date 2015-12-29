@@ -11,7 +11,7 @@ class TestDeployment: public ngrest::Service
 {
 public:
     std::string echoSync(const std::string& value);
-    void echoASync(const std::string& value, ngrest::Callback<const std::string&>* callback);
+    void echoASync(const std::string& value, ngrest::Callback<const std::string&>& callback);
 };
 
 } // namespace ngrest

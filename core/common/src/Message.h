@@ -46,8 +46,6 @@ struct Response
 
     Node* node;
 
-//    char* body = nullptr;
-//    uint64_t bodySize = 0;
     MemPool poolBody;
 };
 

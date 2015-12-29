@@ -11,5 +11,3 @@ file(COPY ${NGRESTENGINE_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/engi
 add_library(ngrestengine SHARED ${NGRESTENGINE_SOURCES})
 
 target_link_libraries(ngrestengine ngrestutils ngrestcommon ngrestjson)
-
-target_compile_features(ngrestengine PRIVATE cxx_range_for)

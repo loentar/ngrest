@@ -3,6 +3,7 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/engine/Engine.h>
+#include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
 
@@ -31,9 +32,10 @@ int main(int argc, char* argv[])
     }
 
     static ngrest::Server server;
-    ngrest::Deployment deployment;
+    ngrest::ServiceDispatcher dispatcher;
+    ngrest::Deployment deployment(dispatcher);
     ngrest::HttpTransport transport;
-    ngrest::Engine engine(deployment);
+    ngrest::Engine engine(dispatcher);
     ngrest::ClientHandler clientHandler(engine, transport);
 
     server.setClientCallback(&clientHandler);
@@ -48,6 +50,11 @@ int main(int argc, char* argv[])
 
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
+
+    deployment.deployAll();
+
+    // TODO: implement file system watcher to re-load service dynamically
+
 
     return server.exec();
 }

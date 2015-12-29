@@ -10,6 +10,7 @@
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/fromcstring.h>
 #include <ngrest/utils/tocstring.h>
+#include <ngrest/utils/ElapsedTimer.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/engine/Engine.h>
@@ -22,23 +23,30 @@
 
 namespace ngrest {
 
+static const uint64_t INVALID_VALUE = static_cast<uint64_t>(-1);
+
 struct MessageData
 {
+    ElapsedTimer timer;
+    uint64_t id;
     MessageContext context;
     MemPool poolStr;
     MemPool poolBody;
     bool usePoolBody = false;
     bool isChunked = false;
-    long contentLength = -1;
+    uint64_t contentLength = INVALID_VALUE;
     uint64_t httpBodyOffset = 0;
-    uint64_t httpBodyRemaining = -1;
+    uint64_t httpBodyRemaining = INVALID_VALUE;
 //    uint64_t currentChunkRemaining = 0;
     bool processing = false;
 
-    MessageData(Transport* transport):
+    MessageData(uint64_t id_, Transport* transport):
+        timer(true),
+        id(id_),
         poolStr(2048),
         poolBody(1024)
     {
+        LogDebug() << "Start handling request " << id;
         context.transport = transport;
         context.request = context.pool.alloc<HttpRequest>();
         context.response = context.pool.alloc<HttpResponse>();
@@ -134,7 +142,7 @@ bool ClientHandler::readyRead(int fd)
     MessageData* messageData;
 
     if (clientData->requests.empty()) {
-        messageData = new MessageData(&transport);
+        messageData = new MessageData(++lastId, &transport);
         clientData->requests.push_back(messageData);
     } else {
         messageData = clientData->requests.back();
@@ -142,7 +150,7 @@ bool ClientHandler::readyRead(int fd)
         if (messageData->processing) {
             // request is finished to read and now processing.
             // creating new request
-            messageData = new MessageData(&transport);
+            messageData = new MessageData(++lastId, &transport);
             clientData->requests.push_back(messageData);
         }
     }
@@ -150,13 +158,14 @@ bool ClientHandler::readyRead(int fd)
     HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
     MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
     for (;;) {
-        uint64_t sizeToRead = (messageData->httpBodyRemaining != -1)
+        uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
                 ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
         char* buffer = pool.grow(sizeToRead);
         ssize_t count = ::read(fd, buffer, sizeToRead);
         if (count == 0) {
+            // this should only happen in case of ioctl(fd, FIONREAD...) failure
             // EOF. The remote has closed the connection.
-            LogError() << "client #" << fd << " closed connection";
+            LogDebug() << "client #" << fd << " closed connection";
             return false;
         }
 
@@ -164,7 +173,7 @@ bool ClientHandler::readyRead(int fd)
             // some error
             if (errno != EAGAIN) {
                 LogError() << "failed to read block from client #" << fd
-                          << ": " << strerror(errno);
+                           << ": " << strerror(errno);
                 return false;
             }
 
@@ -173,10 +182,10 @@ bool ClientHandler::readyRead(int fd)
             break;
         }
 
-        if (count < sizeToRead)
+        if (count < static_cast<int64_t>(sizeToRead))
             pool.shrinkLastChunk(sizeToRead - count);
 
-        if (messageData->httpBodyRemaining != -1)
+        if (messageData->httpBodyRemaining != INVALID_VALUE)
             messageData->httpBodyRemaining -= count;
 
         if (messageData->httpBodyOffset == 0) {
@@ -406,7 +415,7 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
         ::write(clientFd, chunk->buffer, chunk->size);
     }
 
-    LogDebug() << "Request handling finished";
+    LogDebug() << "Request " << messageData->id << " handled in " << messageData->timer.elapsed() << " microsecond(s)";
 
     delete messageData;
 

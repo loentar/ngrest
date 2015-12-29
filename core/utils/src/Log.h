@@ -10,8 +10,8 @@
 #define NGREST_FILE_LINE __FILE__ "[" NGREST_TO_STRING(__LINE__) "] "
 #endif
 
-namespace ngrest
-{
+namespace ngrest {
+
 //! put data to log
 #define NGREST_LOG_WRITE(NGREST_LOG_LEVEL)\
     Log::inst().write(::ngrest::Log::NGREST_LOG_LEVEL, NGREST_FILE_LINE, __FUNCTION__)
@@ -52,11 +52,11 @@ namespace ngrest
 
 //! log enter/exit function message
 #define LogEntry() \
-    LogEntryScope tLogEntryScope(NGREST_FILE_LINE, __FUNCTION__);
+    LogEntryScope logEntryScope(NGREST_FILE_LINE, __FUNCTION__);
 
 //! log enter/exit function message with given level
 #define LogEntryL(NGREST_LOG_LEVEL) \
-    LogEntryScope tLogEntryScope(NGREST_FILE_LINE, __FUNCTION__, NGREST_LOG_LEVEL);
+    LogEntryScope logEntryScope(NGREST_FILE_LINE, __FUNCTION__, NGREST_LOG_LEVEL);
 
 
 //! Logger class
@@ -116,7 +116,7 @@ public:
     static Log& inst();
 
     //! set log stream to output messages
-    /*! \param  outStream - log stream (NULL - do not output)
+    /*! \param  outStream - log stream (nullptr - do not output)
     */
     void setLogStream(std::ostream* outStream);
 

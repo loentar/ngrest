@@ -14,12 +14,12 @@ public:
     ServiceWrapper();
     virtual ~ServiceWrapper();
 
-    virtual Service* serviceImpl() = 0;
+    virtual Service* getServiceImpl() = 0;
 
     virtual void invoke(const OperationDescription* operation, MessageContext* context) = 0;
 
     // server side service description
-    virtual const ServiceDescription* description() = 0;
+    virtual const ServiceDescription* getDescription() = 0;
 };
 
 } // namespace ngrest

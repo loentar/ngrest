@@ -1,0 +1,17 @@
+#ifndef NGREST_UTILS_PLUGINEXPORT_H
+#define NGREST_UTILS_PLUGINEXPORT_H
+
+#define NGREST_PLUGIN_EXPORTED_SYMBOL ngrestPlugin
+#define NGREST_PLUGIN_EXPORTED_SYMBOL_STR "ngrestPlugin"
+
+#ifdef WIN32
+#define NGREST_DECLARE_PLUGIN(Clasname) \
+    Clasname NGREST_PLUGIN_EXPORTED_SYMBOL; \
+    extern "C" NGREST_DLL_EXPORT void* ngrestGetPlugin() \
+{ return &NGREST_PLUGIN_EXPORTED_SYMBOL; }
+#else
+#define NGREST_DECLARE_PLUGIN(Clasname) \
+    Clasname NGREST_PLUGIN_EXPORTED_SYMBOL;
+#endif
+
+#endif // NGREST_UTILS_PLUGINEXPORT_H

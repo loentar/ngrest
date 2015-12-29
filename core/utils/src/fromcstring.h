@@ -20,8 +20,8 @@
 #define ngrest_strtold strtold
 #endif
 
-namespace ngrest
-{
+namespace ngrest {
+
 typedef char byte;
 typedef unsigned char unsignedByte;
 
@@ -42,35 +42,35 @@ inline bool fromCString(const char* string, bool& value)
 
 
 inline bool fromCString(const char* string, byte& value) {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<byte>(strtol(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, int& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<int>(strtol(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, short& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<short>(strtol(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = strtol(string, &end, 10);
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, long long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = ngrest_strtoll(string, &end, 10);
     return !end || *end == '\0';
 }
@@ -78,35 +78,35 @@ inline bool fromCString(const char* string, long long& value)
 
 inline bool fromCString(const char* string, unsignedByte& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsignedByte>(strtoul(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, unsigned int& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsigned int>(strtoul(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, unsigned short& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsigned short>(strtoul(string, &end, 10));
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, unsigned long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = strtoul(string, &end, 10);
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, unsigned long long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = ngrest_strtoull(string, &end, 10);
     return !end || *end == '\0';
 }
@@ -114,21 +114,21 @@ inline bool fromCString(const char* string, unsigned long long& value)
 
 inline bool fromCString(const char* string, float& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = ngrest_strtof(string, &end);
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, double& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = strtod(string, &end);
     return !end || *end == '\0';
 }
 
 inline bool fromCString(const char* string, long double& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = ngrest_strtold(string, &end);
     return !end || *end == '\0';
 }
@@ -137,41 +137,41 @@ template <typename Type>
 inline Type FromCStringDefault(const char* string, Type defaultValue)
 {
     Type result = 0;
-    return (string != NULL && fromCString(string, result)) ? result : defaultValue;
+    return (string != nullptr && fromCString(string, result)) ? result : defaultValue;
 }
 
 
 inline bool fromHexCString(const char* string, unsignedByte& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsignedByte>(strtoul(string, &end, 16));
     return !end || *end == '\0';
 }
 
 inline bool fromHexCString(const char* string, unsigned int& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsigned int>(strtoul(string, &end, 16));
     return !end || *end == '\0';
 }
 
 inline bool fromHexCString(const char* string, unsigned short& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = static_cast<unsigned short>(strtoul(string, &end, 16));
     return !end || *end == '\0';
 }
 
 inline bool fromHexCString(const char* string, unsigned long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = strtoul(string, &end, 16);
     return !end || *end == '\0';
 }
 
 inline bool fromHexCString(const char* string, unsigned long long& value)
 {
-    char* end = NULL;
+    char* end = nullptr;
     value = ngrest_strtoull(string, &end, 16);
     return !end || *end == '\0';
 }
@@ -180,7 +180,7 @@ template <typename Type>
 inline Type FromHexCStringDefault(const char* string, Type defaultValue)
 {
     Type result = 0;
-    return (string != NULL && fromHexCString(string, result)) ? result : defaultValue;
+    return (string != nullptr && fromHexCString(string, result)) ? result : defaultValue;
 }
 
 }

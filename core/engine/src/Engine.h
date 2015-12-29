@@ -4,17 +4,17 @@
 namespace ngrest {
 
 struct MessageContext;
-class Deployment;
+class ServiceDispatcher;
 
 class Engine
 {
 public:
-    Engine(Deployment& deployment);
+    Engine(ServiceDispatcher& dispatcher);
 
     void dispatchMessage(MessageContext* context);
 
 private:
-    Deployment& deployment;
+    ServiceDispatcher& dispatcher;
 };
 
 } // namespace ngrest

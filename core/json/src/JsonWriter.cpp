@@ -81,6 +81,11 @@ public:
             }
             break;
         }
+
+        case NodeType::NamedNode:
+        case NodeType::LinkedNode: {
+            NGREST_THROW_ASSERT("Cannot write Named or Linked node alone");
+        }
         }
     }
 };

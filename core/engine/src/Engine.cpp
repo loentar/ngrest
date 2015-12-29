@@ -2,7 +2,7 @@
 #include <ngrest/utils/Log.h>
 #include <ngrest/common/Message.h>
 
-#include "Deployment.h"
+#include "ServiceDispatcher.h"
 #include "Transport.h"
 #include "Engine.h"
 
@@ -36,8 +36,8 @@ public:
 };
 
 
-Engine::Engine(Deployment& deployment_):
-    deployment(deployment_)
+Engine::Engine(ServiceDispatcher& dispatcher_):
+    dispatcher(dispatcher_)
 {
 }
 
@@ -57,7 +57,7 @@ void Engine::dispatchMessage(MessageContext* context)
             NGREST_ASSERT(context->request->node, "Failed to read request"); // should never throw
         }
 
-        deployment.dispatchMessage(context);
+        dispatcher.dispatchMessage(context);
     } catch (const Exception& err) {
         LogWarning() << /*err.getFileLine() << " " << */err.getFunction() << " : " << err.what();
         context->callback->error(err);

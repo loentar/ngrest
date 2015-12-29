@@ -1,11 +1,11 @@
-#ifndef _NGREST_UTILS_LOGSTREAM_H_
-#define _NGREST_UTILS_LOGSTREAM_H_
+#ifndef NGREST_UTILS_LOGSTREAM_H
+#define NGREST_UTILS_LOGSTREAM_H
 
 #include <ostream>
 #include "ngrestutilsexport.h"
 
-namespace ngrest
-{
+namespace ngrest {
+
 // wsdl compat
 typedef char byte;
 typedef unsigned char unsignedByte;
@@ -43,8 +43,8 @@ public:
     }
 
 private:
-    friend LogStream& logEolOff(LogStream& rLogStream);
-    friend LogStream& LogEolOn(LogStream& rLogStream);
+    friend LogStream& logEolOff(LogStream& logStream);
+    friend LogStream& LogEolOn(LogStream& logStream);
 
 private:
     std::ostream* stream;
@@ -52,19 +52,19 @@ private:
 };
 
 //! disable carriage return
-inline LogStream& logEolOff(LogStream& rLogStream)
+inline LogStream& logEolOff(LogStream& logStream)
 {
-    rLogStream.writeEol = false;
-    return rLogStream;
+    logStream.writeEol = false;
+    return logStream;
 }
 
 //! enable carriage return
-inline LogStream& LogEolOn(LogStream& rLogStream)
+inline LogStream& LogEolOn(LogStream& logStream)
 {
-    rLogStream.writeEol = true;
-    return rLogStream;
+    logStream.writeEol = true;
+    return logStream;
 }
 
 } // namespace ngrest
 
-#endif // _NGREST_UTILS_LOGSTREAM_H_
+#endif // NGREST_UTILS_LOGSTREAM_H

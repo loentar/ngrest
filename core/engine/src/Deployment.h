@@ -1,26 +1,30 @@
 #ifndef NGREST_DEPLOYMENT_H
 #define NGREST_DEPLOYMENT_H
 
+#include <string>
+
 namespace ngrest {
 
-class ServiceWrapper;
-class Node;
-class MessageContext;
+class ServiceDispatcher;
+class ServiceGroup;
 
 class Deployment
 {
 public:
-    Deployment();
+    Deployment(ServiceDispatcher& dispatcher);
     ~Deployment();
 
-    void registerService(ServiceWrapper* wrapper);
-    void unregisterService(ServiceWrapper* wrapper);
+    void deployAll();
 
-    void dispatchMessage(MessageContext* context);
+    void deploy(const std::string& servicePath);
+    void undeploy(const std::string& servicePath);
+
+    void deployStatic(ServiceGroup* serviceGroup);
+    void undeployStatic(ServiceGroup* serviceGroup);
 
 private:
-    struct Impl;
-    Impl* const impl;
+    class Impl;
+    Impl* impl;
 };
 
 } // namespace ngrest

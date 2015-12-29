@@ -27,7 +27,7 @@ private:
     int createServerSocket(const std::string& port);
     bool setupNonblock(int fd);
     bool handleIncomingConnection();
-    bool handleRequest(int index);
+    void handleRequest(int fd);
 
 private:
     bool isStopping = false;
@@ -36,6 +36,7 @@ private:
     epoll_event* event = nullptr;
     epoll_event* events = nullptr;
     ClientCallback* callback = nullptr;
+    std::string port;
 };
 
 }

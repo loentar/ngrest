@@ -29,6 +29,7 @@ public:
     void processError(int clientFd, MessageData* messageData, const Exception& error);
 
 private:
+    uint64_t lastId = 0;
     std::unordered_map<int, ClientInfo*> clients;
     Engine& engine;
     Transport& transport;
