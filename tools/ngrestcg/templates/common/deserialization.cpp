@@ -1,15 +1,14 @@
 // DESERIALIZE: $(.nsName) $(.type)
-##indent +
 \
 ##switch $(.type)
 \
 ##case generic||string
     ::ngrest::ObjectModelUtils::getValue($($node), $($var));
 ##case enum
-    $($var) = $(.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue($($node), "$($var)"));
+    $($var) = $(.ns)$(.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue($($node), "$($name)"));
 ##case struct||typedef
-    const ::ngrest::NamedNode* $($var)Node = ::ngrest::ObjectModelUtils::getNamedChild(static_cast<const ::ngrest::Object*>($($node)), "$($var)", ::ngrest::NodeType::Object);
-    $(.nsName)Serializer::deserialize($($var)Node->node, $($var));
+    const ::ngrest::NamedNode* $($name)Node = ::ngrest::ObjectModelUtils::getNamedChild(static_cast<const ::ngrest::Object*>($($node)), "$($name)", ::ngrest::NodeType::Object);
+    $(.ns)$(.name.!replace/::/Serializer::/)Serializer::deserialize($($name)Node->node, $($var));
 ##case template
 \
     // count = $(.templateParams.$count) / $(.name)
@@ -19,57 +18,63 @@
 ##case vector||list
     NGREST_ASSERT_NULL($($node));
     NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Array, "Array node type expected");
-    const ::ngrest::Array* $($var)Arr = static_cast<const ::ngrest::Array*>($($node));
-    for (const ::ngrest::LinkedNode* $($var)Child = $($var)Arr->firstChild; $($var)Child; $($var)Child = $($var)Child->nextSibling) {
+    const ::ngrest::Array* $($name)Arr = static_cast<const ::ngrest::Array*>($($node));
+    for (const ::ngrest::LinkedNode* $($name)Child = $($name)Arr->firstChild; $($name)Child; $($name)Child = $($name)Child->nextSibling) {
 ##ifneq($(.templateParams.templateParam1.type),generic||enum)
         $($var).push_back($(.templateParams.templateParam1.nsName)());
-        $(.templateParams.templateParam1.nsName)& $($var)Item = $($var).back();
+        $(.templateParams.templateParam1.nsName)& $($name)Item = $($var).back();
 ##else
-        $(.templateParams.templateParam1.nsName) $($var)Item;
+        $(.templateParams.templateParam1.nsName) $($name)Item;
 ##endif
 \
 ##context $(.templateParams.templateParam1)
 ##pushvars
-##var node $($var)Child->node
-##var var $($var)Item
+##var node $($name)Child->node
+##var var $($name)Item
+##var name $($name)Item
+##indent +
 ##include "deserialization.cpp"
+##indent -
 ##popvars
 ##endcontext
 \
 ##ifeq($(.templateParams.templateParam1.type),generic||enum)
-        $($var).push_back($($var)Item);
+        $($var).push_back($($name)Item);
 ##endif
     }
 \
 ### /// map
 ##case map||unordered_map
     NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Object, "Object node type expected");
-    const ::ngrest::Object* $($var)Obj = static_cast<const ::ngrest::Object*>($($node));
-    for (const ::ngrest::NamedNode* $($var)Child = static_cast<const ::ngrest::NamedNode*>($($var)Obj->firstChild); $($var)Child; $($var)Child = $($var)Child->nextSibling) {
-        NGREST_ASSERT_NULL($($var)Child->name);
+    const ::ngrest::Object* $($name)Obj = static_cast<const ::ngrest::Object*>($($node));
+    for (const ::ngrest::NamedNode* $($name)Child = static_cast<const ::ngrest::NamedNode*>($($name)Obj->firstChild); $($name)Child; $($name)Child = $($name)Child->nextSibling) {
+        NGREST_ASSERT_NULL($($name)Child->name);
 ##switch $(.templateParams.templateParam1.type)
 ##case generic
-        $(.templateParams.templateParam1.nsName) $($var)Key;
-        NGREST_ASSERT(::ngrest::fromCString($($var)Child->name, $($var)Key), "Cannot deserialize key of $($var)");
+        $(.templateParams.templateParam1.nsName) $($name)Key;
+        NGREST_ASSERT(::ngrest::fromCString($($name)Child->name, $($name)Key), "Cannot deserialize key of $($var)");
 ##case enum
-        $(.templateParams.templateParam1.nsName) $($var)Key = $(param.dataType.templateParams.templateParam1.nsName)Serializer::fromCString($(param.name)Child->name);
+        $(.templateParams.templateParam1.nsName) $($name)Key = $(param.dataType.templateParams.templateParam1.nsName)Serializer::fromCString($(param.name)Child->name);
 ##case string
 ##default
 ##error Cannot deserialize $(.templateParams.templateParam1.nsName) as map key
 ##endswitch
 
-        $(.templateParams.templateParam2.nsName)& $($var)Value = $($var)\
+        $(.templateParams.templateParam2.nsName)& $($name)Value = $($var)\
 ##ifeq($(.templateParams.templateParam1.type),string)
-[$($var)Child->name];
+[$($name)Child->name];
 ##else
-[$($var)Key];
+[$($name)Key];
 ##endif
 \
 ##context $(.templateParams.templateParam2)
 ##pushvars
-##var node $($var)Child->node
-##var var $($var)Value
-##include <common/deserialization.cpp>
+##var node $($name)Child->node
+##var var $($name)Value
+##var name $($name)Value
+##indent +
+##include "deserialization.cpp"
+##indent -
 ##popvars
 ##endcontext
     } // for(NamedNode...
@@ -84,5 +89,4 @@
 ##error unsupported type $(.type) :: $(.nsName)
 ##endswitch
 \
-##indent -
 // END DESERIALIZE: $(.nsName) $(.type)

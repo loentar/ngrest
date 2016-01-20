@@ -107,6 +107,16 @@ ValType TestService::testEnum(ValType arg)
     return arg;
 }
 
+Test::TestEnum TestService::testNestedEnum(Test::TestEnum arg)
+{
+    return arg;
+}
+
+Test::Nested TestService::testNestedStruct(Test::Nested arg)
+{
+    return arg;
+}
+
 bool TestService::get() const
 {
     return true;

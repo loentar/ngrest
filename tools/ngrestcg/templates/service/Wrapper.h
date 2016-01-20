@@ -7,6 +7,9 @@
 
 #include <string>
 
+##var lastNs
+##var lastNsEnd
+\
 ##ifneq($(interface.services.$count),0)
 #include <ngrest/engine/ServiceWrapper.h>
 ##endif
@@ -24,7 +27,7 @@
 ##var serviceDllExport $($serviceDllExport.!append/ /)
 ##endif
 \
-$(service.startCppNs)
+##include <common/nsopt.cpp>
 
 class $(service.name);
 
@@ -45,12 +48,15 @@ private:
     $(service.name)* service;
 };
 
-$(service.endCppNs)
-
 ##endfor
-##endif // serializators
+##endif
 
-//##include <common/Serialization.h>
+### // serializers
+
+##include <common/enums.h>
+##include <common/typedefs.h>
+##include <common/structs.h>
+$($lastNsEnd)
 
 #endif // $(interface.nsName.!trimleft/:/.!toupper.!replace/::/_/)WRAPPER_H
 

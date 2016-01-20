@@ -27,10 +27,10 @@ result ? "true" : "false"\
 ##case string
         resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, result.c_str());
 ##case enum
-        resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.nsName)Serializer::toCString(result));
+        resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.ns)$(.name.!replace/::/Serializer::/)Serializer::toCString(result));
 ##case struct||typedef
         resultNode->node = context->pool.alloc< ::ngrest::Object>();
-        $(.nsName)Serializer::serialize(context, result, resultNode->node);
+        $(.ns)$(.name.!replace/::/Serializer::/)Serializer::serialize(context, result, resultNode->node);
 ##case template
 \
 // count = $(.templateParams.$count)
@@ -55,9 +55,9 @@ result ? "true" : "false"\
 ##var var (*it)
 ##var node resultArrayItem->node
 ##var name resultItem
-##indent +
+##indent +2
 ##include <common/serialization.cpp>
-##indent -
+##indent -2
 ##popvars
 ##endcontext
         }
@@ -83,7 +83,7 @@ result ? "true" : "false"\
 ##case string
 ##var inlineValue it->first.c_str()
 ##case enum
-##var inlineValue $(.templateParams.templateParam1.nsName)Serializer::toCString(it->first)
+##var inlineValue $(.templateParams.templateParam1.ns)$(.templateParams.templateParam1.name.!replace/::/Serializer::/)Serializer::toCString(it->first)
 ##default
 ##error Cannot serialize $(.templateParams.templateParam1) as response of $(service.name)/$(operation.name)
 ##endswitch
@@ -102,9 +102,9 @@ result ? "true" : "false"\
 ##var var it->second
 ##var node resultObjItem->node
 ##var name resultItem
-##indent +
+##indent +2
 ##include <common/serialization.cpp>
-##indent -
+##indent -2
 ##popvars
 ##endcontext
         }

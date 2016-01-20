@@ -24,10 +24,10 @@
 ##case generic||string
         ::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)", $(param.name));
 ##case enum
-        $(param.name) = $(param.dataType.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
+        $(param.name) = $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
 ##case struct||typedef
         const ::ngrest::NamedNode* $(param.name)Obj = ::ngrest::ObjectModelUtils::getNamedChild(request, "$(param.name)", ::ngrest::NodeType::Object);
-        $(param.dataType.nsName)Serializer::deserialize($(param.name)Obj->node, $(param.name));
+        $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::deserialize($(param.name)Obj->node, $(param.name));
 ##case template
 \
         // count = $(param.dataType.templateParams.$count)
@@ -58,7 +58,10 @@
 ##pushvars
 ##var var $(param.name)Item
 ##var node $(param.name)Child->node
+##var name $(param.name)Item
+##indent +2
 ##include <common/deserialization.cpp>
+##indent -2
 ##popvars
 ##endcontext
 \
@@ -95,7 +98,10 @@
 ##pushvars
 ##var var $(param.name)Value
 ##var node $(param.name)Child->node
+##var name $(param.name)Value
+##indent +2
 ##include <common/deserialization.cpp>
+##indent -2
 ##popvars
 ##endcontext
 \

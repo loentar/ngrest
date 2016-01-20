@@ -14,29 +14,6 @@
 #include <ngrest/common/Service.h>
 #include <ngrest/engine/ServiceDescription.h>
 ##endif
-\
-##foreach $(interface.structs) // headers for extern abstract types
-##ifeq($(struct.isExtern),false)
-##ifeq($(struct.options.*abstract),true||1)
-##var thisStructNsName $(struct.nsName)
-##var thisInterfaceNsName $(interface.nsName)
-##var isThisInterfaceincluded 0
-##foreach $(project.interfaces)
-##foreach $(interface.structs)
-##ifeq($(struct.parentNsName)-$(struct.isExtern),$($thisStructNsName)-false)
-##ifneq($(interface.nsName),$($thisInterfaceNsName))
-##ifeq($($isThisInterfaceincluded),0)
-#include "$(interface.filePath)$(interface.name)Wrapper.h"
-##var isThisInterfaceincluded 1
-##endif
-##endif
-##endif
-##endfor
-##endfor
-##endif
-##endif
-##endfor
-\
 #include "$(interface.filePath)$(interface.name)Wrapper.h"
 \
 ##var lastNs
@@ -44,6 +21,7 @@
 \
 ##include <common/enums.cpp>
 ##include <common/typedefs.cpp>
+##include <common/structs.cpp>
 
 ##ifneq($(interface.services.$count),0)
 ##foreach $(interface.services)
@@ -193,7 +171,6 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription()
 }
 
 
-$(service.endCppNs)
 ##endfor
+$($lastNsEnd)
 ##endif // ##ifneq($(interface.services.$count),0)
-

@@ -135,31 +135,45 @@ xml::Element& operator<<(xml::Element& elemDataTypes, const DataType& dataType)
     return elemDataTypes;
 }
 
+void writeParam(xml::Element& elemParams, xml::Element& elemParam, const Param& param)
+{
+    elemParam.createElement("name", param.name);
+    elemParam.createElement("description", param.description);
+    elemParam.createElement("details", param.details);
+
+    xml::Element& elemOptions = elemParam.createElement("options");
+    for (StringMap::const_iterator itOption = param.options.begin();
+         itOption != param.options.end(); ++itOption)
+        elemOptions.createElement(itOption->first, itOption->second);
+    elemParam.createElement("dataType") << param.dataType;
+
+    std::string value = elemParams.getValue();
+    if (!value.empty())
+        value += ", ";
+
+    dataTypeToString(value, param.dataType, true);
+    value += " " + param.name;
+    elemParams.setValue(value);
+}
+
 xml::Element& operator<<(xml::Element& elemParams, const Param& param)
 {
     if (param.name.size() != 0 && param.dataType.name != "void") {
         xml::Element& elemParam = elemParams.createElement("param", "");
-
-        elemParam.createElement("name", param.name);
-        elemParam.createElement("description", param.description);
-        elemParam.createElement("details", param.details);
-
-        xml::Element& elemOptions = elemParam.createElement("options");
-        for (StringMap::const_iterator itOption = param.options.begin();
-             itOption != param.options.end(); ++itOption)
-            elemOptions.createElement(itOption->first, itOption->second);
-        elemParam.createElement("dataType") << param.dataType;
-
-        std::string value = elemParams.getValue();
-        if (!value.empty())
-            value += ", ";
-
-        dataTypeToString(value, param.dataType, true);
-        value += " " + param.name;
-        elemParams.setValue(value);
+        writeParam(elemParams, elemParam, param);
     }
 
     return elemParams;
+}
+
+xml::Element& operator<<(xml::Element& elemFields, const Field& field)
+{
+    if (field.name.size() != 0 && field.dataType.name != "void") {
+        xml::Element& elemField = elemFields.createElement("field", "");
+        writeParam(elemFields, elemField, field);
+    }
+
+    return elemFields;
 }
 
 xml::Element& operator<<(xml::Element& elemOperations, const Operation& operation)
@@ -263,6 +277,7 @@ xml::Element& operator<<(xml::Element& elemEnums, const Enum& en)
                           (en.ownerName.empty() ? "" : (en.ownerName + "::")) + en.name);
     elemEnum.createElement("ns", en.ns);
     elemEnum.createElement("owner", en.ownerName);
+    elemEnum.createElement("ownerName", (en.ownerName.empty() ? "" : (en.ownerName + "::")) + en.name);
     elemEnum.createElement("description", en.description);
     elemEnum.createElement("details", en.details);
     elemEnum.createElement("isExtern", en.isExtern);
@@ -292,6 +307,9 @@ xml::Element& operator<<(xml::Element& elemStructs, const Struct& structure)
                             structure.name);
     elemStruct.createElement("ns", structure.ns);
     elemStruct.createElement("owner", structure.ownerName);
+    elemStruct.createElement("ownerName",
+                           (structure.ownerName.empty() ? "" : (structure.ownerName + "::")) +
+                           structure.name);
 
     // parent
     std::string::size_type pos = structure.parentName.find_last_of("::");

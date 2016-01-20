@@ -524,8 +524,10 @@ public:
             getDataType(typeName, dataType);
 
         if (dataType.type == DataType::Type::Unknown) {
-            const BaseType* baseType = getBaseType(typeName, interface, BaseType::Type::Any,
-                                                   parent);
+            const BaseType* baseType = getBaseType(typeName, interface, BaseType::Type::Any, parent);
+            if (!baseType)
+                baseType = getBaseType(currentNs + typeName, interface, BaseType::Type::Any, parent);
+
             if (baseType) {
                 dataType.type = (baseType->type == BaseType::Type::Struct)
                         ? DataType::Type::Struct : DataType::Type::Enum;
@@ -831,7 +833,7 @@ public:
                    interface.fileName, line);
 
         while (file.good() && !file.eof()) {
-            Param paramTmp;
+            Field field;
 
             skipWsOnly();
             while (readComment(tmp)) {
@@ -847,13 +849,13 @@ public:
                                 std::string value = tmp.substr(pos + 1);
                                 stringTrim(name);
                                 stringTrim(value);
-                                paramTmp.options[name] = value;
+                                field.options[name] = value;
                             }
                         }
                     } else if (tmp[0] == '!') {
                         // doxygen metacomment
-                        paramTmp.description = tmp.substr(1);
-                        stringTrim(paramTmp.description);
+                        field.description = tmp.substr(1);
+                        stringTrim(field.description);
                     }
                 }
                 skipWsOnly();
@@ -873,8 +875,8 @@ public:
 
                 parseEnum(en);
                 if (!en.isForward) {
-                    en.description = paramTmp.description;
-                    en.options = paramTmp.options;
+                    en.description = field.description;
+                    en.options = field.options;
                 }
 
                 continue;
@@ -901,17 +903,17 @@ public:
                     // nested struct
                     Struct& st = typeInList(structure.structs, name, currentNs, ownerName);
 
-                    st.options.insert(paramTmp.options.begin(), paramTmp.options.end());
+                    st.options.insert(field.options.begin(), field.options.end());
 
                     parseStruct(st);
                     if (!st.isForward)
-                        st.description = paramTmp.description;
+                        st.description = field.description;
 
                     continue;
                 }
 
                 // struct ::ns::Struct1 struct1;
-                paramTmp.dataType.prefix = token;
+                field.dataType.prefix = token;
                 token += " " + name;
             }
 
@@ -943,24 +945,24 @@ public:
                 CSP_ASSERT(nameBegin != std::string::npos, "Can't detect field name. in struct: "
                            + structure.name + " [" + tmp + "]", interface.fileName, line);
 
-                paramTmp.name = tmp.substr(nameBegin + 1);
+                field.name = tmp.substr(nameBegin + 1);
 
                 tmp.erase(nameBegin);
                 stringTrim(tmp);
 
-                parseDataType(tmp, paramTmp.dataType, &structure);
+                parseDataType(tmp, field.dataType, &structure);
 
                 skipWs();
                 file.get(ch);
                 if (ch == ';') {
-                    CSP_ASSERT(!paramTmp.dataType.isConst, "Struct operations must be non-const: " +
+                    CSP_ASSERT(!field.dataType.isConst, "Struct operations must be non-const: " +
                                structure.name, interface.fileName, line);
-                    CSP_ASSERT(!paramTmp.dataType.isRef, "Struct operations must be non-ref: " +
+                    CSP_ASSERT(!field.dataType.isRef, "Struct operations must be non-ref: " +
                                structure.name, interface.fileName, line);
 
-                    readDescrComment(paramTmp.description);
+                    readDescrComment(field.description);
 
-                    structure.fields.push_back(paramTmp);
+                    structure.fields.push_back(field);
                 } else {
                     isFunction = true;
                 }

@@ -1048,18 +1048,23 @@ public:
         stringReplace(includeFileName, "/", "\\", true);
 #endif
 
-        std::ifstream fsIncFile;
-        fsIncFile.open(includeFileName.c_str());
+        try {
+            std::ifstream fsIncFile;
+            fsIncFile.open(includeFileName.c_str());
 
-        NGREST_ASSERT(fsIncFile.good(), "can't include file: " + includeFileName);
+            NGREST_ASSERT(fsIncFile.good(), "can't include file: " + includeFileName);
 
-        std::string currInDir = inDir;
-        inDir = includeFileName.substr(0, includeFileName.find_last_of("/\\") + 1);
-        while (!fsIncFile.eof() && fsIncFile.good())
-            process(fsIncFile, fsOut, element);
-        inDir = currInDir;
+            std::string currInDir = inDir;
+            inDir = includeFileName.substr(0, includeFileName.find_last_of("/\\") + 1);
+            while (!fsIncFile.eof() && fsIncFile.good())
+                process(fsIncFile, fsOut, element);
+            inDir = currInDir;
 
-        fsIncFile.close();
+            fsIncFile.close();
+        } catch(...) {
+            LogError() << "While processing included file " << includeFileName;
+            throw;
+        }
     }
 
     void processIndent(const std::string& line)

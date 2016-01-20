@@ -31,6 +31,11 @@ struct Test
     Nested n;
 };
 
+struct TestChild: public Test
+{
+    bool isSomething;
+};
+
 typedef Test TestTypedef;
 typedef std::map<std::string, std::string> StringMap;
 
@@ -80,7 +85,8 @@ public:
 
     StringMap testTypedef(const StringMap& arg);
     ValType testEnum(ValType arg);
-
+    Test::TestEnum testNestedEnum(Test::TestEnum arg);
+    Test::Nested testNestedStruct(Test::Nested arg);
 };
 
 } // namespace ngrest
