@@ -135,6 +135,7 @@ tools/ngrestcg/templates/common/nsopt.cpp
 tools/ngrestcg/templates/common/serialization.cpp
 tools/ngrestcg/templates/common/serviceRequest.cpp
 tools/ngrestcg/templates/common/serviceResponse.cpp
+tools/ngrestcg/templates/common/typedefs.cpp
 tools/ngrestcg/templates/service/codegen.config
 tools/ngrestcg/templates/service/ServiceGroupImpl.cpp
 tools/ngrestcg/templates/service/ServiceGroupImpl.h

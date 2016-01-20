@@ -32,6 +32,7 @@ struct Test
 };
 
 typedef Test TestTypedef;
+typedef std::map<std::string, std::string> StringMap;
 
 enum ValType
 {
@@ -76,6 +77,10 @@ public:
     std::map<ValType, std::string> templMapEnum(const std::map<ValType, std::string>& arg);
     std::map<std::string, std::string> templMapStr(const std::map<std::string, std::string>& arg);
     std::map<std::string, std::map<std::string, std::string>> templMapStrMapStrStr(const std::map<std::string, std::map<std::string, std::string>>& arg);
+
+    StringMap testTypedef(const StringMap& arg);
+    ValType testEnum(ValType arg);
+
 };
 
 } // namespace ngrest

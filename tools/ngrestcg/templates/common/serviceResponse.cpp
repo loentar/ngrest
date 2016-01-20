@@ -27,10 +27,10 @@ result ? "true" : "false"\
 ##case string
         resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, result.c_str());
 ##case enum
-        $(.nsName)Serializer::serialize(context->pool, result, resultNode->node);
+        resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.nsName)Serializer::toCString(result));
 ##case struct||typedef
         resultNode->node = context->pool.alloc< ::ngrest::Object>();
-        $(.nsName)Serializer::serialize(context->pool, result, resultNode->node);
+        $(.nsName)Serializer::serialize(context, result, resultNode->node);
 ##case template
 \
 // count = $(.templateParams.$count)

@@ -43,6 +43,7 @@
 ##var lastNsEnd
 \
 ##include <common/enums.cpp>
+##include <common/typedefs.cpp>
 
 ##ifneq($(interface.services.$count),0)
 ##foreach $(interface.services)

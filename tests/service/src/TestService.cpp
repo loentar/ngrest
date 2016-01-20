@@ -97,6 +97,16 @@ std::map<std::string, std::map<std::string, std::string> > TestService::templMap
     return arg;
 }
 
+StringMap TestService::testTypedef(const StringMap& arg)
+{
+    return arg;
+}
+
+ValType TestService::testEnum(ValType arg)
+{
+    return arg;
+}
+
 bool TestService::get() const
 {
     return true;

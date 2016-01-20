@@ -24,7 +24,7 @@
 ##case generic||string
         ::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)", $(param.name));
 ##case enum
-        $(param.name) = $(.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
+        $(param.name) = $(param.dataType.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
 ##case struct||typedef
         const ::ngrest::NamedNode* $(param.name)Obj = ::ngrest::ObjectModelUtils::getNamedChild(request, "$(param.name)", ::ngrest::NodeType::Object);
         $(param.dataType.nsName)Serializer::deserialize($(param.name)Obj->node, $(param.name));

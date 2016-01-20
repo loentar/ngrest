@@ -27,7 +27,7 @@ $($var) ? "true" : "false"\
         $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.nsName)Serializer::toCString($($var));
 ##case struct||typedef
         $($node) = context->pool.alloc< ::ngrest::Object>();
-        $(.nsName)Serializer::serialize(context->pool, $($var), $($node));
+        $(.nsName)Serializer::serialize(context, $($var), $($node));
 ##case template
 \
 // count = $(.templateParams.$count)
