@@ -34,10 +34,15 @@ public:
 
     static inline void getChildValue(const Object* object, const char* name, std::string& value)
     {
+        value = getChildValue(object, name);
+    }
+
+    static inline const char* getChildValue(const Object* object, const char* name)
+    {
         const NamedNode* namedNode = getNamedChild(object, name, NodeType::Value);
         const char* valueStr = static_cast<const Value*>(namedNode->node)->value;
         NGREST_ASSERT(valueStr, "Failed to read parameter " + std::string(name) + " is null");
-        value = valueStr;
+        return valueStr;
     }
 
     template <typename Type>
@@ -54,12 +59,17 @@ public:
 
     static inline void getValue(const Node* node, std::string& value)
     {
+        value = getValue(node);
+    }
+
+    static inline const char* getValue(const Node* node)
+    {
         NGREST_ASSERT(node, "Failed to get value: value is null");
         NGREST_ASSERT(node->type == NodeType::Value,
                       "Failed to get value: node type does not match");
         const char* valueStr = static_cast<const Value*>(node)->value;
         NGREST_ASSERT_NULL(valueStr);
-        value = valueStr;
+        return valueStr;
     }
 };
 

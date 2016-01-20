@@ -19,6 +19,13 @@ struct Test
 //        Node* node;
     };
 
+    enum TestEnum
+    {
+        Some,
+        Values,
+        Here
+    };
+
     int a;
     std::string b;
     Nested n;

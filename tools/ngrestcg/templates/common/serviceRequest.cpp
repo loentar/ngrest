@@ -23,6 +23,8 @@
 \
 ##case generic||string
         ::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)", $(param.name));
+##case enum
+        $(param.name) = $(.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
 ##case struct||typedef
         const ::ngrest::NamedNode* $(param.name)Obj = ::ngrest::ObjectModelUtils::getNamedChild(request, "$(param.name)", ::ngrest::NodeType::Object);
         $(param.dataType.nsName)Serializer::deserialize($(param.name)Obj->node, $(param.name));
@@ -75,8 +77,7 @@
             $(param.dataType.templateParams.templateParam1.nsName) $(param.name)Key;
             NGREST_ASSERT(::ngrest::fromCString($(param.name)Child->name, $(param.name)Key), "Cannot deserialize key of $(param.name)");
 ##case enum
-            $(param.dataType.templateParams.templateParam1.nsName) $(param.name)Key;
-            $(param.dataType.templateParams.templateParam1.nsName)Serializer::deserialize($(param.name)Child->name, $(param.name)Key);
+            $(param.dataType.templateParams.templateParam1.nsName) $(param.name)Key = $(param.dataType.templateParams.templateParam1.nsName)Serializer::fromCString($(param.name)Child->name);
 ##case string
         // inline $(param.name)Child->name
 ##default

@@ -189,15 +189,15 @@ xml::Element& operator<<(xml::Element& elemOperations, const Operation& operatio
 }
 
 
-xml::Element& operator<<(xml::Element& elemEnumOperations, const Enum::Member& member)
+xml::Element& operator<<(xml::Element& elemEnumMembers, const Enum::Member& member)
 {
-    xml::Element& elemOperation = elemEnumOperations.createElement("operation");
+    xml::Element& elemOperation = elemEnumMembers.createElement("member");
 
     elemOperation.createElement("name", member.name);
     elemOperation.createElement("value", member.value);
     elemOperation.createElement("description", member.description);
 
-    return elemEnumOperations;
+    return elemEnumMembers;
 }
 
 void writeCppNs(xml::Element& node, const std::string& ns)

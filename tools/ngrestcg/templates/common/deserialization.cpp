@@ -5,6 +5,8 @@
 \
 ##case generic||string
         ::ngrest::ObjectModelUtils::getValue($($node), $($var));
+##case enum
+        $($var) = $(.nsName)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue($($node), "$($var)"));
 ##case struct||typedef
         const ::ngrest::NamedNode* $($var)Node = ::ngrest::ObjectModelUtils::getNamedChild(static_cast< ::ngrest::Object*>($($node)), "$($var)", ::ngrest::NodeType::Object);
         $(.nsName)Serializer::deserialize($($var)Node->node, $($var));
@@ -50,8 +52,7 @@
             $(.templateParams.templateParam1.nsName) $($var)Key;
             NGREST_ASSERT(::ngrest::fromCString($($var)Child->name, $($var)Key), "Cannot deserialize key of $($var)");
 ##case enum
-            $(.templateParams.templateParam1.nsName) $($var)Key;
-            $(param.dataType.templateParams.templateParam1.nsName)Serializer::deserialize($(param.name)Child->name, $(param.name)Key);
+            $(.templateParams.templateParam1.nsName) $($var)Key = $(param.dataType.templateParams.templateParam1.nsName)Serializer::fromCString($(param.name)Child->name);
 ##case string
 ##default
 ##error Cannot deserialize $(.templateParams.templateParam1.nsName) as map key

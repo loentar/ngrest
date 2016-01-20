@@ -24,7 +24,7 @@ $($var) ? "true" : "false"\
 ##case string
         $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $($var).c_str());
 ##case enum
-        $(.nsName)Serializer::serialize(context->pool, $($var), $($node));
+        $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.nsName)Serializer::toCString($($var));
 ##case struct||typedef
         $($node) = context->pool.alloc< ::ngrest::Object>();
         $(.nsName)Serializer::serialize(context->pool, $($var), $($node));

@@ -66,6 +66,8 @@ core/utils/src/MemPool.h
 core/utils/src/ngrestutilsexport.h
 core/utils/src/PluginExport.h
 core/utils/src/Plugin.h
+core/utils/src/Runtime.cpp
+core/utils/src/Runtime.h
 core/utils/src/stringutils.h
 core/utils/src/tocstring.h
 core/utils/src/tostring.h
@@ -128,6 +130,8 @@ tools/ngrestcg/src/main.cpp
 tools/ngrestcg/src/XmlGen.cpp
 tools/ngrestcg/src/XmlGen.h
 tools/ngrestcg/templates/common/deserialization.cpp
+tools/ngrestcg/templates/common/enums.cpp
+tools/ngrestcg/templates/common/nsopt.cpp
 tools/ngrestcg/templates/common/serialization.cpp
 tools/ngrestcg/templates/common/serviceRequest.cpp
 tools/ngrestcg/templates/common/serviceResponse.cpp
@@ -140,5 +144,3 @@ tools/parsers/CMakeLists.txt
 tools/parsers/cpp/CMakeLists.txt
 tools/parsers/cpp/src/CppParser.cpp
 tools/parsers/cpp/src/CppParser.h
-core/utils/src/Runtime.h
-core/utils/src/Runtime.cpp

@@ -4,7 +4,7 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/fromcstring.h>
-#include <ngrest/utils/tocstring.h>
+#include <ngrest/utils/tostring.h>
 #include <ngrest/utils/Exception.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/common/ObjectModelUtils.h>
@@ -38,13 +38,16 @@
 ##endfor
 \
 #include "$(interface.filePath)$(interface.name)Wrapper.h"
-
-//##include <common/Serialization.cpp>
+\
+##var lastNs
+##var lastNsEnd
+\
+##include <common/enums.cpp>
 
 ##ifneq($(interface.services.$count),0)
 ##foreach $(interface.services)
 
-$(service.startCppNs)
+##include <common/nsopt.cpp>
 
 $(service.name)Wrapper::$(service.name)Wrapper():
     service(new $(service.name)())
