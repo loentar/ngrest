@@ -18,7 +18,6 @@ struct OperationDescription
 
 struct ServiceDescription
 {
-    bool loadAtStartup;                            // load service on startup
     std::string name;                              // service name
     std::string location;                          // by default = name
     std::vector<OperationDescription> operations;  // service operations

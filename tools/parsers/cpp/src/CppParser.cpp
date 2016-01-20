@@ -279,11 +279,11 @@ public:
         }
 
         if (dataTypeName == "ngrest::Node" ||
-                (dataTypeName == "Node" && currentNs.substr(0, 9) == "::ngrest::")) {
+                (dataTypeName == "Node" && currentNs.substr(0, 10) == "::ngrest::")) {
             dataType.type = DataType::Type::DataObject;
         } else if (dataTypeName == "ngrest::MessageContext" || dataTypeName == "ngrest::Optional" ||
                    ((dataTypeName == "MessageContext" || dataTypeName == "Optional")
-                    && currentNs.substr(0, 9) == "::ngrest::")) {
+                    && currentNs.substr(0, 10) == "::ngrest::")) {
             dataType.type = DataType::Type::Generic; // supress unknown datatype warning
         } else if (dataTypeName == "bool" ||
                    dataTypeName == "char" ||
@@ -391,11 +391,10 @@ public:
     {
         const std::string::size_type templateSize = templ.size();
         std::string::size_type result = 0;
-        std::string::size_type tmp = 0;
         std::string token;
         for (std::string::size_type begin = 0, end = 0;
              end != std::string::npos; begin = end + 1) {
-            end = templ.find_first_of(",<>&", begin);
+            end = templ.find_first_of(",<>", begin);
             if (end == std::string::npos) {
                 token = templ.substr(begin);
             } else {
@@ -417,13 +416,6 @@ public:
                     }
                 }
 
-                // detect '&'
-                if ((end + 1) < templateSize) {
-                    tmp = templ.find_first_of(",>", end + 1);
-                    if (tmp != std::string::npos)
-                        end = tmp;
-                }
-
                 token = templ.substr(begin, end - begin);
             }
 
@@ -435,7 +427,7 @@ public:
             }
 
             if (templ[end] == '>') {
-                result = end;
+                result = end + 1;
                 break;
             }
         }
@@ -555,9 +547,37 @@ public:
     {
         param.description.erase();
 
-        // read param type and name
+        // detect templates
         std::string paramAndType;
-        readBefore(paramAndType, ",)");
+        int ltCount = 0;
+        int gtCount = 0;
+        for (;;) {
+            std::string tmp;
+            readBefore(tmp, ",)");
+            if (tmp.empty())
+                break;
+
+            for (std::string::iterator it = tmp.begin(), end = tmp.end(); it != end; ++it) {
+                switch (*it) {
+                case '<':
+                    ++ltCount;
+                    break;
+                case '>':
+                    ++gtCount;
+                    break;
+                }
+            }
+
+            paramAndType += tmp;
+
+            if (ltCount == gtCount)
+                break;
+
+            paramAndType += file.get();
+        }
+
+
+        // read param type and name
         stringTrim(paramAndType);
         std::string::size_type pos = paramAndType.find_last_of(" \n\r\t");
         CSP_ASSERT(pos != std::string::npos, "Can't get param name: [" + paramAndType + "]",
@@ -652,15 +672,11 @@ public:
         skipWs();
         file >> ch;
         if (ch == 'c') {
-            readStr(tmp, false);
+            readBefore(tmp, ";");
             if (tmp == "onst") // const
                 operation.isConst = true;
 
             skipWs();
-            file >> ch;
-        }
-        if (ch == '=') {
-            readBefore(tmp, ";");
             file >> ch;
         }
         CSP_ASSERT(ch == ';', "';' expected", interface.fileName, line);
@@ -1553,9 +1569,9 @@ void CppParser::process(const ParseSettings& parseSettings, Project& project)
         servicesCount += interface.services.size();
     }
 
-    StringMap::const_iterator itComponentNs = parseSettings.env.find("componentns");
-    if (itComponentNs != parseSettings.env.end()) {
-        project.ns = "::" + itComponentNs->second + "::";
+    StringMap::const_iterator itNs = parseSettings.env.find("projectns");
+    if (itNs != parseSettings.env.end()) {
+        project.ns = "::" + itNs->second + "::";
         stringReplace(project.ns, ".", "::", true);
     } else {
         // autodetect: take first defined namespace

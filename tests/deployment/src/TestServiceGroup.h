@@ -12,11 +12,12 @@ public:
 
     ~TestServiceGroup();
 
-    std::string getName() override;
+    const std::string& getName() const override;
 
-    const std::vector<ServiceWrapper*>& getServices() override;
+    const std::vector<ServiceWrapper*>& getServices() const override;
 
 private:
+    const std::string name;
     std::vector<ServiceWrapper*> services;
 };
 

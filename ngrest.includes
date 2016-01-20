@@ -3,3 +3,6 @@
 ../../../ngrest-build/deploy/include
 ../../../../ngrest-build/deploy/include
 ../../../../../ngrest-build/deploy/include
+core/common/src
+tools/ngrestcg/templates/common
+core/utils/src

@@ -167,7 +167,7 @@ struct NGREST_CODEGENPARSER_EXPORT Interface
 struct NGREST_CODEGENPARSER_EXPORT Project
 {
     std::string name;                   //!<  project name
-    std::string ns;                     //!<  component namespace
+    std::string ns;                     //!<  project namespace
     std::list<Interface> interfaces;    //!<  interface list
 };
 

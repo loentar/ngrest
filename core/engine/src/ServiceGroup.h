@@ -21,13 +21,13 @@ public:
      * @brief gets name of service group
      * @return name of service group
      */
-    virtual std::string getName() = 0;
+    virtual const std::string& getName() const = 0;
 
     /**
      * @brief get list of service wrappers provided by group
      * @return list of service wrappers
      */
-    virtual const std::vector<ServiceWrapper*>& getServices() = 0;
+    virtual const std::vector<ServiceWrapper*>& getServices() const = 0;
 };
 
 } // namespace ngrest

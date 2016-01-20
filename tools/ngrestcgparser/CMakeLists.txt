@@ -10,4 +10,4 @@ file(COPY ${NGRESTCGPARSER_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/co
 
 add_library(ngrestcgparser SHARED ${NGRESTCGPARSER_SOURCES})
 
-target_link_libraries(ngrestcgparser)
+target_link_libraries(ngrestcgparser ngrestutils)

@@ -8,6 +8,8 @@
 #include <ngrest/utils/File.h>
 #include <ngrest/utils/DynamicLibrary.h>
 #include <ngrest/utils/Plugin.h>
+#include <ngrest/utils/File.h>
+#include <ngrest/utils/Runtime.h>
 #include <ngrest/xml/Document.h>
 #include <ngrest/xml/Element.h>
 #include <ngrest/xml/XmlWriter.h>
@@ -33,7 +35,7 @@ void help()
                  "  -e              - Don't warn if Interface file(s) does not contain a service\n"
                  "  -d              - Define environment variables: -dvar1=value1,var2=2,var3\n"
                  "  -l[t|p]         - Display parsers(p) and/or templates(t) lists\n"
-                 "  -n<prj_name>    - Set project name (output file name for xml description)\n"
+                 "  -n<proj_name>   - Set project name and output file base for internal representation\n"
                  "  -x              - Write xml description\n"
                  "  -v              - Display current version and exit\n\n";
 }
@@ -45,10 +47,8 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    // FIXME: home
-    const char* ngrestHome = getenv("NGREST_HOME");
-    const std::string& codegenDir = !ngrestHome ? std::string("/usr/lib/ngrest/codegen") :
-                                                  std::string(ngrestHome) + "/lib/codegen";
+    const std::string& codegenDir = ::ngrest::Runtime::getApplicationDirPath()
+            + NGREST_PATH_SEPARATOR".." NGREST_PATH_SEPARATOR "lib" NGREST_PATH_SEPARATOR "codegen";
 
     ngrest::codegen::ParseSettings parseSettings;
     ngrest::codegen::Project project;
@@ -112,10 +112,26 @@ int main(int argc, const char* argv[])
 
             case 't':
                 templ = &argv[i][2];
+                if (templ.empty()) {
+                    if (++i >= argc) {
+                        std::cerr << "missing argument" << std::endl;
+                        help();
+                        return 1;
+                    }
+                    templ = argv[i];
+                }
                 break;
 
             case 'n':
                 project.name = &argv[i][2];
+                if (project.name.empty()) {
+                    if (++i >= argc) {
+                        std::cerr << "missing argument" << std::endl;
+                        help();
+                        return 1;
+                    }
+                    project.name = argv[i];
+                }
                 break;
 
             case 'x':
@@ -124,11 +140,6 @@ int main(int argc, const char* argv[])
 
             case 'u':
                 updateOnly = true;
-                break;
-
-            case 'w':
-                std::cerr << "WARNING: \"-w\" is obsolete flag, please use \"-pwsdl\"" << std::endl;
-                pluginName = "wsdl";
                 break;
 
             case 'e':
@@ -270,6 +281,7 @@ int main(int argc, const char* argv[])
         doc.getRootElement() << project;
 
         if (generateXml) {
+            ::ngrest::File(parseSettings.outDir).mkdirs();
             const std::string& irFileName = parseSettings.outDir + project.name + ".xml";
             std::cout << "Generating " << irFileName << std::endl;
             doc.getDeclaration().setEncoding("UTF-8");
@@ -280,9 +292,11 @@ int main(int argc, const char* argv[])
 
         if (!templ.empty()) {
             ngrest::LogDebug() << "template: " << templ;
+
+            NGREST_ASSERT(ngrest::File(templatesDir + templ).isDirectory(), "template [" + templ + "] not found");
+
             ngrest::codegen::CodeGen generator;
-            generator.start(templatesDir + templ + NGREST_PATH_SEPARATOR, parseSettings.outDir,
-                       doc.getRootElement(), updateOnly, env);
+            generator.start(templatesDir + templ, parseSettings.outDir, doc.getRootElement(), updateOnly, env);
         }
 
         return 0;

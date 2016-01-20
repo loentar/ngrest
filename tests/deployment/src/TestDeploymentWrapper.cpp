@@ -106,7 +106,6 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
 const ServiceDescription* TestDeploymentWrapper::getDescription()
 {
     static ServiceDescription description = {
-        true,
         "ngrest.TestDeployment",
         "td",
         {

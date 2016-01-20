@@ -5,7 +5,8 @@
 
 namespace ngrest {
 
-TestServiceGroup::TestServiceGroup()
+TestServiceGroup::TestServiceGroup():
+    name("test")
 {
     services = {{
         new ::ngrest::TestDeploymentWrapper()
@@ -19,12 +20,12 @@ TestServiceGroup::~TestServiceGroup()
     services.clear();
 }
 
-std::string TestServiceGroup::getName()
+const std::string& TestServiceGroup::getName() const
 {
-    return "test";
+    return name;
 }
 
-const std::vector<ServiceWrapper*>& TestServiceGroup::getServices()
+const std::vector<ServiceWrapper*>& TestServiceGroup::getServices() const
 {
     return services;
 }

@@ -1,16 +1,28 @@
 cmake_minimum_required(VERSION 2.6)
 
-project (ngrestdeployment CXX)
+project (ngresttestservice CXX)
 
-set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(NGRESTTESTSERVICE_HEADERS TestService.h)
 
-include_directories("${PROJECT_SOURCE_DIR}/../../../core/server/src/")
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(NGRESTTESTSERVICE_CODEGEN_DIR "${PROJECT_BINARY_DIR}/codegen")
 
-FILE(GLOB NGRESTDEPLOYMENT_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp ${PROJECT_SOURCE_DIR}/../../../core/server/src/*.cpp)
+PREPEND(NGRESTTESTSERVICE_HEADERS_PATHS ${PROJECT_SOURCE_DIR} ${NGRESTTESTSERVICE_HEADERS})
 
-list(REMOVE_ITEM NGRESTDEPLOYMENT_SOURCES ${PROJECT_SOURCE_DIR}/../../../core/server/src/main.cpp)
+CODEGEN_FILES(NGRESTTESTSERVICE_CODEGEN_SOURCES ${NGRESTTESTSERVICE_CODEGEN_DIR} ${NGRESTTESTSERVICE_HEADERS})
 
+add_custom_command(OUTPUT ${NGRESTTESTSERVICE_CODEGEN_SOURCES}
+    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ngrestcg -i "${PROJECT_SOURCE_DIR}" -o ${NGRESTTESTSERVICE_CODEGEN_DIR} -t service ${NGRESTTESTSERVICE_HEADERS} -x
+    DEPENDS ${NGRESTTESTSERVICE_HEADERS_PATHS}
+)
 
-add_executable(ngrestdeployment ${NGRESTDEPLOYMENT_SOURCES})
+file(GLOB NGRESTTESTSERVICE_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
 
-target_link_libraries(ngrestdeployment ngrestutils ngrestcommon ngrestjson ngrestengine)
+list(APPEND NGRESTTESTSERVICE_SOURCES ${NGRESTTESTSERVICE_CODEGEN_SOURCES})
+
+include_directories(${PROJECT_SOURCE_DIR})
+
+add_library(ngresttestservice MODULE ${NGRESTTESTSERVICE_SOURCES})
+
+target_link_libraries(ngresttestservice ngrestutils ngrestcommon ngrestjson ngrestengine)
+

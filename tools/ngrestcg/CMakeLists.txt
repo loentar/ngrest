@@ -8,6 +8,8 @@ FILE(GLOB NGRESTCG_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DVERSION_FULL=\\\"0.1\\\"")
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/templates DESTINATION "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/codegen/")
+
 add_executable(ngrestcg ${NGRESTCG_SOURCES})
 
 target_link_libraries(ngrestcg ngrestutils ngrestjson ngrestxml ngrestcgparser)

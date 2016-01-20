@@ -10,4 +10,4 @@ file(COPY ${NGRESTXML_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/xml/)
 
 add_library(ngrestxml SHARED ${NGRESTXML_SOURCES})
 
-target_link_libraries(ngrestxml dl)
+target_link_libraries(ngrestxml ngrestutils dl)

@@ -19,17 +19,25 @@
 #define NGREST_THROW_ASSERT(DESCRIPTION) \
     throw ::ngrest::AssertException(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
 
+#ifdef __GNUC__
+#define NGREST_LIKELY(EXPRESSION) __builtin_expect(!!(EXPRESSION), true)
+#define NGREST_UNLIKELY(EXPRESSION) __builtin_expect(!!(EXPRESSION), false)
+#else
+#define NGREST_LIKELY(EXPRESSION) (EXPRESSION)
+#define NGREST_UNLIKELY(EXPRESSION) (EXPRESSION)
+#endif
+
 //! assert expression
 #define NGREST_ASSERT(EXPRESSION, DESCRIPTION) \
-    if (!(EXPRESSION)) NGREST_THROW_ASSERT(DESCRIPTION)
+    if (NGREST_UNLIKELY(!(EXPRESSION))) NGREST_THROW_ASSERT(DESCRIPTION)
 
 //! assert parameter
 #define NGREST_ASSERT_PARAM(EXPRESSION) \
-    if (!(EXPRESSION)) NGREST_THROW_ASSERT("Invalid argument: (" #EXPRESSION ")")
+    if (NGREST_UNLIKELY(!(EXPRESSION))) NGREST_THROW_ASSERT("Invalid argument: (" #EXPRESSION ")")
 
 //! assert parameter
 #define NGREST_ASSERT_NULL(EXPRESSION) \
-    if (!(EXPRESSION)) NGREST_THROW_ASSERT(#EXPRESSION " is null!")
+    if (NGREST_UNLIKELY(!(EXPRESSION))) NGREST_THROW_ASSERT(#EXPRESSION " is null!")
 
 //! debug assert expression
 #ifdef _DEBUG
@@ -117,7 +125,7 @@ private:
 };
 
 //! assert exception class
-class AssertException: public Exception
+class NGREST_UTILS_EXPORT AssertException: public Exception
 {
 public:
     //! exception constructor

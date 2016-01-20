@@ -40,7 +40,7 @@ public:
         variables.push(StringMap());
     }
 
-    std::string GetElementPath(const xml::Element* element) const
+    std::string getElementPath(const xml::Element* element) const
     {
         if (element) {
             std::string path = element->getName();
@@ -101,10 +101,10 @@ public:
             }
 
             NGREST_ASSERT(element != nullptr, "\nCan't find node which match current class: \"" + serviceClass
-                          + "\"\n context: " + GetElementPath(&elem) + "\n Variable: " + variableName + "\n");
+                          + "\"\n context: " + getElementPath(&elem) + "\n Variable: " + variableName + "\n");
             NGREST_ASSERT(element->getName() == serviceClass, "\nElement name does not match current class: \""
                           + element->getName() + "\" <=> \"" + serviceClass + "\"\n context: " +
-                          GetElementPath(&elem) + "\n");
+                          getElementPath(&elem) + "\n");
 
             while ((pos = variable.find('.')) != std::string::npos) {
                 const std::string& subClass = variable.substr(0, pos);
@@ -119,7 +119,8 @@ public:
                         element = &element->getChildElementByName(subClass);
                     }
                 } catch(...) {
-                    LogDebug() << "While parsing variable: [" << variableName << "]";
+                    LogError() << "While parsing variable: [" << variableName << "]"
+                               << " Element: [" << getElementPath(element) << "]";
                     throw;
                 }
 
@@ -127,7 +128,8 @@ public:
             }
         } else {
             NGREST_ASSERT(element->getName() == variableName, "node name does not match current class: \""
-                          + element->getName() + "\" <=> \"" + variableName + "\"");
+                          + element->getName() + "\" <=> \"" + variableName + "\"\n context: " +
+                          getElementPath(&elem) + "\n");
             return elem;
         }
 
@@ -200,7 +202,7 @@ public:
         return element->getChildElementByName(variable);
     }
 
-    std::string::size_type ParseParam(std::string& paramBegin) const
+    std::string::size_type parseParam(std::string& paramBegin) const
     {
         std::string::size_type pos = paramBegin.find_first_of("/\\");
         // slash unescaping
@@ -233,7 +235,7 @@ public:
     {
         static xml::Element resultElem("result");
         std::string result = element.getTextValue();
-        result.clear();
+        resultElem.clear();
 
         if (function.substr(0, 9) == "mangledot") {
             stringReplace(result, ".", "_", true);
@@ -263,7 +265,7 @@ public:
         } else if (function.substr(0, 7) == "equals/") {
             function.erase(0, 7);
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -272,7 +274,7 @@ public:
         } else if (function.substr(0, 6) == "match/") {
             function.erase(0, 6);
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -282,13 +284,13 @@ public:
             function.erase(0, 8);
 
             // what replace
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
 
             // replace with
-            posEnd = ParseParam(function);
+            posEnd = parseParam(function);
             std::string with = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(with, element);
@@ -298,13 +300,13 @@ public:
             function.erase(0, 13);
 
             // what replace
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
 
             // replace with
-            posEnd = ParseParam(function);
+            posEnd = parseParam(function);
             std::string with = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(with, element);
@@ -320,7 +322,7 @@ public:
         } else if (function.substr(0, 5) == "trim/") {
             function.erase(0, 5);
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -329,7 +331,7 @@ public:
         } else if (function.substr(0, 9) == "trimleft/") {
             function.erase(0, 9);
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -338,7 +340,7 @@ public:
         } else if (function.substr(0, 10) == "trimright/") {
             function.erase(0, 10);
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -368,7 +370,7 @@ public:
             function.erase(0, 9);
         } else if (function.substr(0, 7) == "append/") {
             function.erase(0, 7);
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -376,7 +378,7 @@ public:
             result += what;
         } else if (function.substr(0, 8) == "prepend/") {
             function.erase(0, 8);
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -384,7 +386,7 @@ public:
             result = what + result;
         } else if (function.substr(0, 9) == "deprefix/") {
             function.erase(0, 9);
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -394,7 +396,7 @@ public:
                 result.erase(0, what.size());
         } else if (function.substr(0, 10) == "depostfix/") {
             function.erase(0, 10);
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -409,7 +411,7 @@ public:
             function.erase(0, 6);
             const std::string& val = element.getValue();
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -425,7 +427,7 @@ public:
             function.erase(0, 10);
             const std::string& val = element.getValue();
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -441,7 +443,7 @@ public:
             function.erase(0, 4);
             const std::string& val = element.getValue();
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -457,7 +459,7 @@ public:
             function.erase(0, 8);
             const std::string& val = element.getValue();
 
-            std::string::size_type posEnd = ParseParam(function);
+            std::string::size_type posEnd = parseParam(function);
             std::string what = function.substr(0, posEnd);
             function.erase(0, posEnd + 1);
             replaceToValue(what, element);
@@ -579,7 +581,7 @@ public:
                 valElement.setValue(value);
                 value = getValue(value + name.substr(17), valElement);
             } else if (name.substr(0, 16) == "$thisElementPath") {
-                value = GetElementPath(&element);
+                value = getElementPath(&element);
                 if (name.size() == 16)
                     return;
                 xml::Element valElement(value);
@@ -751,15 +753,15 @@ public:
 
         replaceToValue(line, element);
 
-        { //#ifeq(123,321)
-            int offsetPos = isNotEq ? 7 : 6;
-            std::string::size_type posStart = line.find(",", 6);
+        { //##ifeq(123,321)
+            int offsetPos = isNotEq ? 8 : 7;
+            std::string::size_type posStart = line.find(",", 7);
             std::string::size_type posEnd = 0;
 
-            NGREST_ASSERT(posStart != std::string::npos, "#ifeq expression is invalid!: \n----\n" + line +
+            NGREST_ASSERT(posStart != std::string::npos, "##ifeq expression is invalid!: \n----\n" + line +
                           "\n----\n");
             posEnd = line.find(')', posStart);
-            NGREST_ASSERT(posEnd != std::string::npos, "#ifeq expression is invalid!: \n----\n" + line +
+            NGREST_ASSERT(posEnd != std::string::npos, "##ifeq expression is invalid!: \n----\n" + line +
                           "\n----\n");
 
             std::string left = line.substr(offsetPos, posStart - offsetPos);
@@ -806,16 +808,16 @@ public:
             in.ignore();
             in.peek(); // for EOF
 
-            if (line.substr(0, 6) == "#ifeq(" || line.substr(0, 7) == "#ifneq(") {
+            if (line.substr(0, 7) == "##ifeq(" || line.substr(0, 8) == "##ifneq(") {
                 ++recursion;
                 if (isCurrentBlock == isEq && recursion > 1)
                     lines += line;
-            } else if (line.substr(0, 5) == "#ifeqelse") {
+            } else if (line.substr(0, 6) == "##else") {
                 if (isCurrentBlock == isEq && recursion > 1)
                     lines += line;
                 if (recursion == 1)
                     isEq = !isEq;
-            } else if (line.substr(0, 8) == "#ifeqend") {
+            } else if (line.substr(0, 7) == "##endif") {
                 if (isCurrentBlock == isEq && recursion > 1)
                     lines += line;
                 --recursion;
@@ -830,6 +832,87 @@ public:
         {
             std::istringstream stream(lines);
             process(stream, fsOut, element);
+        }
+    }
+
+    void processSwitch(std::istream& in, std::ostream& out, const xml::Element& element, std::string& line)
+    {
+        std::stringbuf data;
+        std::string lines;
+        int recursion = 1;
+
+        std::string switchExpr = line.substr(9);
+        NGREST_ASSERT(!switchExpr.empty(), "switch expression is invalid!");
+        stringTrim(switchExpr);
+        replaceToValue(switchExpr, element);
+
+        bool equal = false;
+        bool processed = false;
+
+        while (!in.eof() && in.good()) {
+            if (in.peek() == '\n') {
+                line = "\n";
+            } else {
+                in.get(data, '\n');
+                line = data.str();
+                if (in.peek() == '\n')
+                    line += "\n";
+                data.str("");
+            }
+            in.ignore();
+            in.peek(); // for EOF
+
+            if (line.substr(0, 9) == "##switch ") {
+                ++recursion;
+            } else if (recursion == 1 && !processed && line.substr(0, 7) == "##case ") {
+                if (equal) {
+                    processed = true;
+                    continue;
+                }
+
+                std::string caseExpr = line.substr(7);
+                stringTrim(caseExpr);
+
+                std::string::size_type casePosStart = 0;
+                std::string::size_type casePosEnd = 0;
+                do {
+                    casePosEnd = caseExpr.find("||", casePosStart);
+                    std::string caseExprCmp = caseExpr.substr(casePosStart, casePosEnd - casePosStart);
+
+                    stringTrim(caseExprCmp);
+                    replaceToValue(caseExprCmp, element);
+                    if (switchExpr == caseExprCmp) {
+                        equal = true;
+                        break;
+                    }
+
+                    casePosStart = casePosEnd + 2;
+                } while (casePosEnd != std::string::npos);
+
+                continue;
+            } else if (recursion == 1 && !processed && line.substr(0, 9) == "##default") {
+                if (equal) {
+                    processed = true;
+                } else {
+                    equal = true;
+                }
+                continue;
+            } else if (line.substr(0, 11) == "##endswitch") {
+                --recursion;
+                if (recursion == 0) {
+                    if (equal)
+                        processed = true;
+                    break;
+                }
+            }
+
+            if (equal && !processed)
+                lines += line;
+        }
+
+        if (equal) {
+            std::istringstream stream(lines);
+            process(stream, out, element);
         }
     }
 
@@ -861,9 +944,9 @@ public:
             in.ignore();
             in.peek(); // for EOF
 
-            if (line.substr(0, 9) == "#foreach ") {
+            if (line.substr(0, 10) == "##foreach ") {
                 ++recursion;
-            } else if (line.substr(0, 4) == "#forend") {
+            } else if (line.substr(0, 8) == "##endfor") {
                 --recursion;
                 if (recursion == 0)
                     break;
@@ -914,9 +997,9 @@ public:
             fsIn.ignore();
             fsIn.peek(); // for EOF
 
-            if (line.substr(0, 9) == "#context ") {
+            if (line.substr(0, 10) == "##context ") {
                 ++recursion;
-            } else if (line.substr(0, 11) == "#contextend") {
+            } else if (line.substr(0, 12) == "##endcontext") {
                 --recursion;
                 if (recursion == 0)
                     break;
@@ -946,19 +1029,19 @@ public:
     {
         std::string includeFileName;
 
-        char quote = *line.begin();
+        char quote = line[0];
         std::string::size_type pos = 0;
 
         if (quote == '<') {
             pos = line.find('>', 1);
-            NGREST_ASSERT(pos != std::string::npos, "cginclude expression is invalid!");
+            NGREST_ASSERT(pos != std::string::npos, "include expression is invalid!");
             includeFileName = inDir + "../" + line.substr(1, pos - 1);
         } else if (quote == '"') {
             pos = line.find('"', 1);
-            NGREST_ASSERT(pos != std::string::npos, "cginclude expression is invalid!");
+            NGREST_ASSERT(pos != std::string::npos, "include expression is invalid!");
             includeFileName = inDir + line.substr(1, pos - 1);
         } else {
-            NGREST_THROW_ASSERT("cginclude expression is invalid!");
+            NGREST_THROW_ASSERT("include expression is invalid!");
         }
 
 #ifdef WIN32
@@ -981,7 +1064,7 @@ public:
 
     void processIndent(const std::string& line)
     {
-        std::string value = line.substr(8);
+        std::string value = line.substr(9);
         stringTrim(value);
         if (value == "+") {
             NGREST_ASSERT(indent < 1024, "Invalid indentation: " + toString(indent + 1)
@@ -1034,16 +1117,22 @@ public:
             fsIn.ignore();
             fsIn.peek(); // for EOF
 
-            if (line.substr(0, 5) == "#var ") {
-                std::string::size_type pos = line.find_first_of(" \t", 5);
+            if (line.substr(0, 3) == "###") {
+                // comment
+            } else if (line.substr(0, 7) == "##echo ") {
+                std::string value = line.substr(7);
+                replaceToValue(value, element);
+                std::cout << value << std::endl;
+            } else if (line.substr(0, 6) == "##var ") {
+                std::string::size_type pos = line.find_first_of(" \t", 6);
                 std::string variable;
                 std::string value;
 
                 if (pos == std::string::npos) {
-                    variable = line.substr(5);
+                    variable = line.substr(6);
                     stringTrimRight(variable);
                 } else {
-                    variable = line.substr(5, pos - 5);
+                    variable = line.substr(6, pos - 6);
                     value = line.substr(pos + 1, line.size() - pos - 2);
                     replaceToValue(value, element);
                 }
@@ -1051,20 +1140,22 @@ public:
                 NGREST_ASSERT(!variable.empty(), "invalid var declaration: " + line);
 
                 variables.top()[variable] = value;
-            } else if (line.substr(0, 6) == "#ifeq(") {
+            } else if (line.substr(0, 7) == "##ifeq(") {
                 processIfeq(fsIn, out, element, line);
-            } else if (line.substr(0, 7) == "#ifneq(") {
+            } else if (line.substr(0, 8) == "##ifneq(") {
                 processIfeq(fsIn, out, element, line, true);
-            } else if (line.substr(0, 9) == "#foreach ") {
+            } else if (line.substr(0, 9) == "##switch ") {
+                processSwitch(fsIn, out, element, line);
+            } else if (line.substr(0, 10) == "##foreach ") {
                 processForEach(fsIn, out, element, line);
-            } else if (line.substr(0, 9) == "#context ") {
+            } else if (line.substr(0, 10) == "##context ") {
                 processContext(fsIn, out, element, line);
-            } else if (line.substr(0, 10) == "#fileopen ") {
-                std::string fileName = line.substr(10);
+            } else if (line.substr(0, 11) == "##fileopen ") {
+                std::string fileName = line.substr(11);
                 replaceToValue(fileName, element);
                 stringTrim(fileName);
 
-                NGREST_ASSERT(!fileName.empty(), "#fileopen: Filename is empty");
+                NGREST_ASSERT(!fileName.empty(), "##fileopen: Filename is empty");
 
                 fileName = outDir + fileName;
                 const std::string& failedFileName = fileName + ".failed";
@@ -1084,32 +1175,32 @@ public:
                 }
                 ofsFile.close();
                 ::unlink(failedFileName.c_str());
-            } else if (line.substr(0, 10) == "#fileclose") {
+            } else if (line.substr(0, 11) == "##fileclose") {
                 return;
-            } else if (line.substr(0, 7) == "#mkdir ") {
+            } else if (line.substr(0, 8) == "##mkdir ") {
                 std::string dirName = line.substr(7);
                 replaceToValue(dirName, element);
                 stringTrim(dirName);
 
                 File(outDir + dirName).mkdirs();
-            } else if (line.substr(0, 11) == "#cginclude ") {
-                line.erase(0, 11);
+            } else if (line.substr(0, 10) == "##include ") {
+                line.erase(0, 10);
                 stringTrim(line);
                 processInclude(out, element, line);
-            } else if (line.substr(0, 11) == "#cgwarning ") {
+            } else if (line.substr(0, 10) == "##warning ") {
                 replaceToValue(line, element);
                 stringTrimRight(line, "\n\r");
-                std::cerr << "Warning: " << line.substr(11) << std::endl;
-            } else if (line.substr(0, 9) == "#cgerror ") {
+                std::cerr << "Warning: " << line.substr(10) << std::endl;
+            } else if (line.substr(0, 8) == "##error ") {
                 replaceToValue(line, element);
-                NGREST_THROW_ASSERT(line.substr(9));
-            } else  if (line.substr(0, 8) == "#indent ") {
+                NGREST_THROW_ASSERT(line.substr(8));
+            } else if (line.substr(0, 9) == "##indent ") {
                 processIndent(line);
-            } else if (line.substr(0, 11) == "#cgpushvars") {
+            } else if (line.substr(0, 10) == "##pushvars") {
                 variables.push(variables.top());
-            } else if (line.substr(0, 10) == "#cgpopvars") {
+            } else if (line.substr(0, 9) == "##popvars") {
                 variables.pop();
-            } else if (line.substr(0, 11) == "#cgdumpvars") {
+            } else if (line.substr(0, 10) == "##dumpvars") {
                 const StringMap& rmVars = variables.top();
                 line = "variables dump:";
                 for (StringMap::const_iterator itVar = rmVars.begin(); itVar != rmVars.end(); ++itVar)
@@ -1119,7 +1210,7 @@ public:
                 std::string indentStr;
                 NGREST_ASSERT(indent < 1024, "Invalid indentation: " + toString(indent));
                 for (int i = 0; i < indent; ++i) {
-                    indentStr += "  ";
+                    indentStr += "    ";
                 }
                 if (isNeedIndent && line[0] != '\n') {
                     line = indentStr + line;
@@ -1226,7 +1317,7 @@ void CodeGen::start(const std::string& templateDir, const std::string& outDir,
 
     File(outDir).mkdirs();
 
-    templateParser.init(templateDir);
+    templateParser.init(templateDir + NGREST_PATH_SEPARATOR);
     templateParser.setEnv(env);
     templateParser.start(outDir, rootElement, updateOnly);
 }

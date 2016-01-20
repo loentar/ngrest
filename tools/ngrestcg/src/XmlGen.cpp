@@ -209,7 +209,7 @@ void writeCppNs(xml::Element& node, const std::string& ns)
     std::string::size_type pos = 0;
     std::string::size_type prevPos = 0;
     while((pos = realNs.find("::", pos)) != std::string::npos) {
-        startNs += "namespace " + realNs.substr(prevPos, pos - prevPos) + "\n{\n";
+        startNs += "namespace " + realNs.substr(prevPos, pos - prevPos) + " {\n";
         endNs += "}\n";
         pos += 2;
         prevPos = pos;
@@ -304,7 +304,7 @@ xml::Element& operator<<(xml::Element& elemStructs, const Struct& structure)
     elemStruct.createElement("description", structure.description);
     elemStruct.createElement("details", structure.details);
     elemStruct.createElement("isExtern", structure.isExtern);
-    elemStruct.createElement("operations", "") << structure.fields;
+    elemStruct.createElement("fields") << structure.fields;
 
     writeCppNs(elemStruct, structure.ns);
 
@@ -389,6 +389,7 @@ xml::Element& operator<<(xml::Element& rootNode, const Project& project)
     rootNode.setName("project");
     rootNode.createElement("name", project.name);
     rootNode.createElement("ns", project.ns);
+    rootNode.createElement("nsName", project.ns + project.name);
     writeCppNs(rootNode, project.ns);
 
     rootNode.createElement("interfaces") << project.interfaces;
