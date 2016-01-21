@@ -7,7 +7,7 @@
 #ifndef NGREST_FILE_LINE
 #define NGREST_STRINGIZE(x) #x
 #define NGREST_TO_STRING(x) NGREST_STRINGIZE(x)
-#define NGREST_FILE_LINE __FILE__ "[" NGREST_TO_STRING(__LINE__) "] "
+#define NGREST_FILE_LINE __FILE__ ":" NGREST_TO_STRING(__LINE__) " "
 #endif
 
 namespace ngrest {
@@ -34,17 +34,14 @@ namespace ngrest {
 //! log info message
 #define LogInfo()    NGREST_LOG_WRITE(LogLevelInfo)
 
-//! log high level debug message
+//! log debug message
 #define LogDebug()   NGREST_LOG_WRITE(LogLevelDebug)
 
-//! log mid level debug message
-#define LogDebug1()  NGREST_LOG_WRITE(LogLevelDebug1)
+//! log verbose message
+#define LogVerbose()  NGREST_LOG_WRITE(LogLevelVerbose)
 
-//! log low level debug message
-#define LogDebug2()  NGREST_LOG_WRITE(LogLevelDebug2)
-
-//! log very low level debug message
-#define LogDebug3()  NGREST_LOG_WRITE(LogLevelDebug3)
+//! log trace message
+#define LogTrace()  NGREST_LOG_WRITE(LogLevelTrace)
 
 //! log standard debug message
 #define LogLabel()   NGREST_LOG_WRITE(LogLevelDebug) << "*";
@@ -71,9 +68,8 @@ namespace ngrest {
       - LogNotice()   - log notice message
       - LogInfo()     - log info message
       - LogDebug()    - log high level debug message
-      - LogDebug1()   - log mid level debug message
-      - LogDebug2()   - log low level debug message
-      - LogDebug3()   - log very low level debug message
+      - LogVerbose()  - log verbose message
+      - LogTrace()    - log trace message
       - LogLabel()    - log standard debug message
       - LogEntry()    - log enter/exit scope message
   */
@@ -89,9 +85,8 @@ public:
         LogLevelNotice,   //!< notice
         LogLevelInfo,     //!< information
         LogLevelDebug,    //!< debug message
-        LogLevelDebug1,   //!< debug message 1 level
-        LogLevelDebug2,   //!< debug message 2 level
-        LogLevelDebug3    //!< debug message 3 level
+        LogLevelVerbose,  //!< verbose message
+        LogLevelTrace     //!< trace message
     };
 
     enum LogVerbosity      //! log verbosity
@@ -153,6 +148,7 @@ private:
 
 private:
     std::ostream*  stream;    //!< output stream
+    std::ostream*  streamErr; //!< output stream for warning and higher levels
     LogLevel       level;     //!< log level
     int            verbosity; //!< verbosity
 };

@@ -113,12 +113,14 @@ const ServiceDescription* TestDeploymentWrapper::getDescription()
                 "echoSync",
                 "sync?value={value}",
                 static_cast<int>(HttpMethod::GET),
+                "GET",
                 false
             },
             {
                 "echoASync",
                 "async/{value}",
                 static_cast<int>(HttpMethod::GET),
+                "GET",
                 true
             }
         }

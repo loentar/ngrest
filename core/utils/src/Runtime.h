@@ -8,8 +8,10 @@ namespace ngrest {
 class Runtime
 {
 public:
+    static const std::string& getApplicationRootPath();
     static const std::string& getApplicationDirPath();
     static const std::string& getApplicationFilePath();
+    static const std::string& getSharePath();
 };
 
 } // namespace ngrest

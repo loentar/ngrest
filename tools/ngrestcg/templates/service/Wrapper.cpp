@@ -158,8 +158,27 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription()
 ##endif
             {
                 "$(.name)",
+##ifeq($(.options.*location)-$(.options.*method||"GET"),-GET)
+##var loc
+##ifneq($(operation.params.$count),0)
+### generate location for get query
+##var loc $(.name)?
+##var isAmp 0
+##foreach $(operation.params)
+##ifeq($($isAmp),0)
+##var isAmp 1
+##else
+##var loc $($loc)&
+##endif
+##var loc $($loc)$(param.name)={$(param.name)}
+##endfor
+##endif
+                "$($loc)",
+##else
                 "$(.options.*location)",
+##endif
                 static_cast<int>(::ngrest::HttpMethod::$(.options.*method||"GET")),
+                "$(.options.*method||"GET")",
                 $(.isAsynch||"false")
             }\
 ##endfor

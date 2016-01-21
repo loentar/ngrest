@@ -8,4 +8,10 @@ FILE(GLOB NGRESTJSONBENCHMARK_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
 
 add_executable(ngrestjsonbenchmark ${NGRESTJSONBENCHMARK_SOURCES})
 
+set_target_properties(ngrestjsonbenchmark PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${TESTS_OUTPUT_DIRECTORY}"
+)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/test.json DESTINATION "${TESTS_OUTPUT_DIRECTORY}/")
+
 target_link_libraries(ngrestjsonbenchmark ngrestutils ngrestjson json-c)

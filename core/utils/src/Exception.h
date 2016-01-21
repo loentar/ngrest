@@ -8,7 +8,7 @@
 #ifndef NGREST_FILE_LINE
 #define NGREST_STRINGIZE(x) #x
 #define NGREST_TO_STRING(x) NGREST_STRINGIZE(x)
-#define NGREST_FILE_LINE __FILE__ "[" NGREST_TO_STRING(__LINE__) "] "
+#define NGREST_FILE_LINE __FILE__ ":" NGREST_TO_STRING(__LINE__) " "
 #endif
 
 //! throw specific exception

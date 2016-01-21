@@ -41,22 +41,27 @@ int main()
         uint64_t end;
 
         ngrest::MemPool poolFile(NGREST_MEMPOOL_CHUNK_SIZE * 10);
-        int fd = ::open("deploy/bin/test.json", O_RDONLY);
+        const char* testFile = "test.json";
+        int fd = ::open(testFile, O_RDONLY);
+        if (fd == -1) {
+            std::cerr << "failed to open" << testFile << std::endl;
+            return 1;
+        }
+
         struct stat st;
         ::fstat(fd, &st);
         __off_t remaining = st.st_size;
-        if (fd >= 0) {
-            while (remaining > 0) {
-                int blockSize = (remaining > 4096) ? 4096 : remaining;
-                ssize_t res = ::read(fd, poolFile.grow(blockSize), blockSize);
-                if (res != blockSize) {
-                    std::cerr << "failed to read" << std::endl;
-                    return 1;
-                }
-                remaining -= res;
+        while (remaining > 0) {
+            int blockSize = (remaining > 4096) ? 4096 : remaining;
+            char* buff = poolFile.grow(blockSize);
+            ssize_t res = ::read(fd, buff, blockSize);
+            if (res != blockSize) {
+                std::cerr << "failed to read: " << strerror(errno) << std::endl;
+                return 1;
             }
-            ::close(fd);
+            remaining -= res;
         }
+        ::close(fd);
         ngrest::MemPool::Chunk* chunk = poolFile.flatten();
 
         ////////////////////////////////////////////////////////////////////////

@@ -94,8 +94,8 @@ core/xml/src/XmlWriter.cpp
 core/xml/src/XmlWriter.h
 examples/CMakeLists.txt
 examples/echo/CMakeLists.txt
-examples/echo/Echo.cpp
-examples/echo/Echo.h
+examples/echo/src/Echo.cpp
+examples/echo/src/Echo.h
 tests/CMakeLists.txt
 tests/deployment/CMakeLists.txt
 tests/deployment/src/main.cpp

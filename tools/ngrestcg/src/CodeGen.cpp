@@ -711,8 +711,8 @@ public:
                         replaceToValue(file, elementInterface);
                         isProcessFile = true;
                     } catch (const Exception&) {
-                        LogDebug1() << "Skipping template file " << file
-                                    << " for interface " << elementInterface.getChildElementByName("nsName").getTextValue();
+                        LogVerbose() << "Skipping template file " << file
+                                     << " for interface " << elementInterface.getChildElementByName("nsName").getTextValue();
                         continue;
                     }
 

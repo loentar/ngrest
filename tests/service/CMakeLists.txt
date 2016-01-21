@@ -12,7 +12,7 @@ PREPEND(NGRESTTESTSERVICE_HEADERS_PATHS ${PROJECT_SOURCE_DIR} ${NGRESTTESTSERVIC
 CODEGEN_FILES(NGRESTTESTSERVICE_CODEGEN_SOURCES ${NGRESTTESTSERVICE_CODEGEN_DIR} ${NGRESTTESTSERVICE_HEADERS})
 
 add_custom_command(OUTPUT ${NGRESTTESTSERVICE_CODEGEN_SOURCES}
-    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ngrestcg -i "${PROJECT_SOURCE_DIR}" -o ${NGRESTTESTSERVICE_CODEGEN_DIR} -t service ${NGRESTTESTSERVICE_HEADERS} -x
+    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ngrestcg -i "${PROJECT_SOURCE_DIR}" -o ${NGRESTTESTSERVICE_CODEGEN_DIR} -t service ${NGRESTTESTSERVICE_HEADERS}
     DEPENDS ${NGRESTTESTSERVICE_HEADERS_PATHS}
 )
 
@@ -24,5 +24,9 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(ngresttestservice MODULE ${NGRESTTESTSERVICE_SOURCES})
 
-target_link_libraries(ngresttestservice ngrestutils ngrestcommon ngrestjson ngrestengine)
+set_target_properties(ngresttestservice PROPERTIES PREFIX "")
+set_target_properties(ngresttestservice PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SERVICES_DIR}"
+)
 
+target_link_libraries(ngresttestservice ngrestutils ngrestcommon ngrestjson ngrestengine)

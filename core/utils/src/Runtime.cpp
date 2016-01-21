@@ -19,6 +19,19 @@
 
 namespace ngrest {
 
+const std::string& Runtime::getApplicationRootPath()
+{
+    static std::string result;
+    if (result.empty()) {
+        result = getApplicationDirPath();
+        std::string::size_type pos = result.find_last_of(NGREST_PATH_SEPARATOR);
+        if (pos != std::string::npos)
+            result.erase(pos);
+    }
+
+    return result;
+}
+
 const std::string& Runtime::getApplicationDirPath()
 {
     static std::string result;
@@ -64,6 +77,17 @@ const std::string& Runtime::getApplicationFilePath()
     NGREST_ASSERT(pathSize > 0, "Failed to get application file path");
 
     result.assign(path, pathSize);
+
+    return result;
+}
+
+const std::string& Runtime::getSharePath()
+{
+    static std::string result;
+    if (result.empty()) {
+        result = getApplicationRootPath() + NGREST_PATH_SEPARATOR "share"
+                NGREST_PATH_SEPARATOR "ngrest";
+    }
 
     return result;
 }

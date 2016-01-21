@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (ngrest)
 
+set(NGREST_VERSION "0.2")
+
 include(CheckCXXCompilerFlag)
 
 check_cxx_compiler_flag(-std=gnu++11 HAS_CXX11)
@@ -12,6 +14,7 @@ check_cxx_compiler_flag(-Wl,--no-undefined HAS_NO_UNDEFINED)
 if (HAS_NO_UNDEFINED)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-undefined")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
 check_cxx_compiler_flag(-pedantic HAS_PEDANTIC)
@@ -30,9 +33,14 @@ endif()
 
 set(PROJECT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/deploy)
 set(PROJECT_INCLUDE_DIR ${PROJECT_DEPLOY_DIR}/include)
+set(PROJECT_SHARE_DIR ${PROJECT_DEPLOY_DIR}/share/ngrest)
+set(PROJECT_SERVICES_DIR ${PROJECT_SHARE_DIR}/services)
+set(PROJECT_CODEGEN_DIR ${PROJECT_SHARE_DIR}/codegen)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/bin)
+set(TESTS_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/tests)
+set(EXAMPLES_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/examples)
 
 FUNCTION(PREPEND var prefix)
    SET(listVar "")
@@ -57,3 +65,4 @@ include_directories("${PROJECT_INCLUDE_DIR}")
 add_subdirectory(core)
 add_subdirectory(tools)
 add_subdirectory(tests)
+add_subdirectory(examples)

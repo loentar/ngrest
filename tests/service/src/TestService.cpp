@@ -1,3 +1,5 @@
+#include <ngrest/utils/Log.h>
+
 #include "TestService.h"
 
 namespace ngrest {
@@ -20,6 +22,11 @@ int TestService::add(int a, int b)
 void TestService::set(bool /*val*/)
 {
 
+}
+
+void TestService::notify()
+{
+    LogDebug() << "Nofify";
 }
 
 Test TestService::test(const Test &arg)

@@ -46,6 +46,7 @@ enum ValType
     Two
 };
 
+// *location: ngrest/test
 class TestService: public ngrest::Service
 {
 public:
@@ -53,6 +54,7 @@ public:
     // *resultElement: resultValue
     std::string echoSync(const std::string& value);
     void echoASync(const std::string& value, ngrest::Callback<const std::string&>& callback);
+    // default location is: add?a={a}&b={b}
     int add(int a, int b);
     void set(bool val);
     void notify();

@@ -82,7 +82,7 @@ public:
         uint64_t offset;
         if (currChunk == nullptr || (currChunk->size + growSize) > currChunk->bufferSize) {
             offset = 0;
-            newChunk((growSize > chunkSize) ? growSize : NGREST_MEMPOOL_CHUNK_SIZE);
+            newChunk((growSize > chunkSize) ? growSize : chunkSize);
         } else {
             offset = currChunk->size;
         }

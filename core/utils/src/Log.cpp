@@ -37,6 +37,7 @@ Log::Log():
     const char* logFile = getenv("NGREST_LOG_FILE");
     if (!logFile) {
         stream = &std::cout;
+        streamErr = &std::cerr;
     } else {
         const char* logFileAppend = getenv("NGREST_LOG_FILE_APPEND");
         static std::ofstream outStream;
@@ -49,10 +50,12 @@ Log::Log():
 
         if (outStream.good()) {
             stream = &outStream;
+            streamErr = &outStream;
         } else {
             std::cerr << "Warning: cannot open Log file: \"" << logFile
-                      << "\". using stdout..\n\n" << std::endl;
+                      << "\". using stdout/stderr..\n\n" << std::endl;
             stream = &std::cout;
+            streamErr = &std::cerr;
         }
     }
 
@@ -70,12 +73,11 @@ Log::Log():
         NGREST_CHECK_LOG_LEVEL(NOTICE, Notice)
         NGREST_CHECK_LOG_LEVEL(INFO, Info)
         NGREST_CHECK_LOG_LEVEL(DEBUG, Debug)
-        NGREST_CHECK_LOG_LEVEL(DEBUG1, Debug1)
-        NGREST_CHECK_LOG_LEVEL(DEBUG2, Debug2)
-        NGREST_CHECK_LOG_LEVEL(DEBUG3, Debug3)
+        NGREST_CHECK_LOG_LEVEL(VERBOSE, Verbose)
+        NGREST_CHECK_LOG_LEVEL(TRACE, Trace)
         std::cerr << "ngrest:Log: Invalid NGREST_LOG_LEVEL value: [" << logLevel
                   << "]\nSupported values are (ALERT, CRIT, ERROR, WARNING, NOTICE,"
-                         "INFO, DEBUG, DEBUG1, DEBUG2, DEBUG3)" << std::endl;
+                         "INFO, DEBUG, VERBOSE, TRACE)" << std::endl;
 #undef NGREST_CHECK_LOG_LEVEL
     }
 
@@ -116,53 +118,51 @@ void Log::setLogStream(std::ostream* outStream)
 
 LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* function)
 {
-    if (!stream || logLevel > level)
+    std::ostream* out = (logLevel <= LogLevelWarning) ? streamErr : stream;
+
+    if (!out || logLevel > level)
         return LogStream(nullptr);
 
     if ((verbosity & LogVerbosityLevel)) {
         switch (logLevel) {
         case LogLevelAlert:
-            *stream << "ALERT ";
+            *out << "ALERT ";
             break;
 
         case LogLevelCrit:
-            *stream << "CRITICAL ";
+            *out << "CRITICAL ";
             break;
 
         case LogLevelError:
-            *stream << "ERROR ";
+            *out << "ERROR ";
             break;
 
         case LogLevelWarning:
-            *stream << "WARNING ";
+            *out << "WARNING ";
             break;
 
         case LogLevelNotice:
-            *stream << "NOTICE ";
+            *out << "NOTICE ";
             break;
 
         case LogLevelInfo:
-            *stream << "INFO ";
+            *out << "INFO ";
             break;
 
         case LogLevelDebug:
-            *stream << "DEBUG ";
+            *out << "DEBUG ";
             break;
 
-        case LogLevelDebug1:
-            *stream << "DEBUG1 ";
+        case LogLevelVerbose:
+            *out << "VERBOSE ";
             break;
 
-        case LogLevelDebug2:
-            *stream << "DEBUG2 ";
-            break;
-
-        case LogLevelDebug3:
-            *stream << "DEBUG3 ";
+        case LogLevelTrace:
+            *out << "TRACE ";
             break;
 
         default:
-            *stream << "UNKNOWN ";
+            *out << "UNKNOWN ";
         }
     }
 
@@ -187,16 +187,16 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
                         localTime.tm_hour, localTime.tm_min, localTime.tm_sec, timeBuf.millitm);
 #endif
 
-        *stream << buff;
+        *out << buff;
     }
 
     if ((verbosity & LogVerbosityFileLine))
-        *stream << baseName(fileLine);
+        *out << baseName(fileLine);
 
     if ((verbosity & LogVerbosityFunction))
-        *stream << function << ": ";
+        *out << function << ": ";
 
-    return LogStream(stream);
+    return LogStream(out);
 }
 
 void Log::setLogLevel(LogLevel logLevel)

@@ -3,6 +3,7 @@
 
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/Log.h>
+#include <ngrest/utils/stringutils.h>
 #include <ngrest/common/Service.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/ObjectModel.h>
@@ -34,9 +35,32 @@ struct DeployedService
     std::unordered_multimap<std::string, Resource> paramResources;
 };
 
+struct ResourcePath
+{
+    DeployedService* service = nullptr;
+    ResourcePath* parent = nullptr;
+    std::string name;
+    std::unordered_map<std::string, ResourcePath*> children;
+};
+
 struct ServiceDispatcher::Impl
 {
     std::unordered_map<std::string, DeployedService> deployedServices;
+    ResourcePath root;
+
+    std::string getServiceLocation(const ServiceDescription* serviceDescr)
+    {
+        if (serviceDescr->location.empty()) {
+            std::string serviceLocation = serviceDescr->name;
+            stringReplace(serviceLocation, ".", "/", true);
+            return serviceLocation;
+        } else {
+            // validate service location
+            NGREST_ASSERT(serviceDescr->location.find_first_of("{} \n\r\t?%&=\'\"") == std::string::npos,
+                          "Service location is not valid");
+            return serviceDescr->location;
+        }
+    }
 
     // location may be "add?a={a}&b={b}" or "get/{id}" or "echo"
     void parseResource(const std::string& location, Resource& res, std::string& baseLocation)
@@ -65,6 +89,84 @@ struct ServiceDispatcher::Impl
         if (baseLocation.empty())
             baseLocation = location;
     }
+
+    ResourcePath& getResourcePath(const std::string& path, bool create)
+    {
+        ResourcePath* curr = &root;
+        std::string::size_type start = 0;
+        std::string::size_type end = 0;
+        while (end != std::string::npos) {
+            end = path.find('/', start);
+            const std::string& part = (end != std::string::npos)
+                    ? path.substr(start, end - start) : path.substr(start);
+
+            if (create) {
+                ResourcePath*& next = curr->children[part];
+                if (!next) {
+                    next = new ResourcePath();
+                    next->name = part;
+                    next->parent = curr;
+                }
+                curr = next;
+            } else {
+                auto it = curr->children.find(part);
+                NGREST_ASSERT(it != curr->children.end(), "Failed to get resource by path: " + path);
+                curr = it->second;
+                NGREST_ASSERT_NULL(curr);
+            }
+
+            start = end + 1;
+        }
+
+        return *curr;
+    }
+
+    void deleteResourcePath(ResourcePath* res) {
+        for (;;) {
+            ResourcePath* parent = res->parent;
+            if (!parent || parent->service || !res->children.empty())
+                break;
+            auto it = parent->children.find(res->name);
+            NGREST_ASSERT(it != parent->children.end(), "Failed to get resource by path");
+            NGREST_ASSERT(it->second == res, "Internal exception!"); // should never happen
+            delete res;
+            parent->children.erase(it);
+            res = parent;
+        }
+    }
+
+    DeployedService* findServiceByPath(const std::string& path, std::string::size_type& matchedPos)
+    {
+        NGREST_ASSERT_PARAM(!path.empty() && path[0] == '/'); // should never happen
+
+        ResourcePath* curr = &root;
+        std::string::size_type start = 1;
+        std::string::size_type end = 0;
+        DeployedService* service = nullptr;
+
+        while (end != std::string::npos) {
+            end = path.find('/', start);
+            const std::string& part = (end != std::string::npos)
+                    ? path.substr(start, end - start) : path.substr(start);
+
+            auto it = curr->children.find(part);
+            if (it == curr->children.end()) {
+                // no next path part
+                break;
+            }
+            curr = it->second;
+            NGREST_ASSERT_NULL(curr);
+            if (curr->service) {
+                service = curr->service;
+                matchedPos = end + 1;
+            }
+
+            start = end + 1;
+        }
+
+        return service;
+    }
+
 };
 
 
@@ -90,16 +192,18 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
 
     LogDebug() << "Registering service " << serviceName;
 
-    // use service name as location in case of service location is not set
-    const std::string& serviceLocation = serviceDescr->location.empty()
-            ? serviceName : serviceDescr->location;
-    // validate service location
-    NGREST_ASSERT(serviceLocation.find_first_of("{} \n\r\t?%&=\'\"") == std::string::npos,
-                  "Service location is not valid");
+    // use default service location in case of service location is not set
+    const std::string& serviceLocation = impl->getServiceLocation(serviceDescr);
 
     // test if service already registered
-    DeployedService& deployedService = impl->deployedServices[serviceLocation];
+    DeployedService& deployedService = impl->deployedServices[serviceName];
     NGREST_ASSERT(!deployedService.wrapper, "Service " + serviceName + " is already registered");
+
+    ResourcePath& serviceResPath = impl->getResourcePath(serviceLocation, true);
+    NGREST_ASSERT(!serviceResPath.service, "Resource path " + serviceLocation
+                  + " is already occupied by the service "
+                  + serviceResPath.service->wrapper->getDescription()->name);
+    serviceResPath.service = &deployedService;
 
     // parse operations locations
     for (auto it = serviceDescr->operations.begin(); it != serviceDescr->operations.end(); ++it) {
@@ -114,8 +218,8 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
         NGREST_ASSERT(operationLocation.find_first_of(" \n\r\t") == std::string::npos,
                       "Operation location is not valid: " + serviceName + ": " + operationLocation);
 
-        LogDebug() << "Registering resource: " <<serviceName << " : "
-                   << "/" << serviceLocation << "/" << operationLocation;
+        LogVerbose() << "Registering resource: " << operationDescr.methodStr
+                     << " /" << serviceLocation << "/" << operationLocation;
 
         Resource resource;
         std::string baseLocation;
@@ -162,14 +266,16 @@ void ServiceDispatcher::unregisterService(ServiceWrapper* wrapper)
 
     LogDebug() << "Unregistering service " << serviceName;
 
-    // use service name as location in case of service location is not set
-    const std::string& serviceLocation = serviceDescr->location.empty() ?
-                serviceName : serviceDescr->location;
-    // validate service location
-    NGREST_ASSERT(serviceLocation.find_first_of("{} \n\r\t?%&=\'\"") == std::string::npos,
-                  "Service location is not valid");
+    // use default service location in case of service location is not set
+    const std::string& serviceLocation = impl->getServiceLocation(serviceDescr);
 
-    auto count = impl->deployedServices.erase(serviceLocation);
+    // recursively free resource path
+    ResourcePath& resourcePath = impl->getResourcePath(serviceLocation, false);
+    resourcePath.service = nullptr;
+    impl->deleteResourcePath(&resourcePath);
+
+    // unregister deployed service
+    auto count = impl->deployedServices.erase(serviceName);
     NGREST_ASSERT(count, "Service " + wrapper->getDescription()->name + " is not registered");
 
     LogDebug() << "Service " << serviceName << " has been unregistered";
@@ -181,43 +287,23 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
 
     LogDebug() << "Dispatching message " << path;
 
-    // parse service location
-    std::string::size_type begin = path.find_first_not_of('/');
-    NGREST_ASSERT(begin != std::string::npos, "Canot get start of service location in path: " + path);
-    std::string::size_type end = path.find('/', begin);
-    NGREST_ASSERT(end != std::string::npos, "Canot get end of service location in path: " + path);
+    std::string::size_type begin = std::string::npos;
+    DeployedService* service = impl->findServiceByPath(path, begin);
+    NGREST_ASSERT(service, "No service found to handle resource " + path);
 
-    // validate service location
-    const std::string& serviceLocation = path.substr(begin, end - begin);
-    NGREST_ASSERT(serviceLocation.empty() ||
-                  serviceLocation.find_first_of("{} \n\r\t?%&=\'\"") == std::string::npos,
-                  "Service location is not valid: " + serviceLocation);
-
-    // parse operation location
-    begin = path.find_first_not_of('/', end);
-    NGREST_ASSERT(begin != std::string::npos, "Canot get start of service location in URL: " + path);
-    end = path.find('/', begin);
-    const std::string& opLocation = path.substr(begin, (end == std::string::npos) ? end : (end - begin));
-
+    const std::string& opLocation = path.substr(begin);
     NGREST_ASSERT(opLocation.empty() || opLocation.find_first_of(" \n\r\t") == std::string::npos,
                   "Operation location is not valid: " + opLocation);
-
-
-    auto itService = impl->deployedServices.find(serviceLocation);
-    NGREST_ASSERT(itService != impl->deployedServices.end(),
-                  "Can't find service by path: " + path);
-
-    DeployedService& service = itService->second;
 
     int method = context->transport->getRequestMethod(context->request);
 
     // first look path in static resources
-    auto itOpLocation = service.staticResources.equal_range(opLocation);
+    auto itOpLocation = service->staticResources.equal_range(opLocation);
     for (auto it = itOpLocation.first; it != itOpLocation.second; ++it) {
         const Resource& resource = it->second;
         if (resource.operation->method == method) {
             // found it!
-            service.wrapper->invoke(resource.operation, context);
+            service->wrapper->invoke(resource.operation, context);
             return;
         }
     }
@@ -227,7 +313,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     Resource* resource = nullptr;
     std::string::size_type matchLength = 0;
 
-    for (auto it = service.paramResources.begin(); it != service.paramResources.end(); ++it) {
+    for (auto it = service->paramResources.begin(); it != service->paramResources.end(); ++it) {
         const std::string& basePath = it->first;
         const std::string::size_type basePathSize = basePath.size();
         if (!path.compare(begin, basePathSize, basePath) && (matchLength < basePathSize)) {
@@ -240,7 +326,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     }
 
     NGREST_ASSERT(resource, "Resource not found for path: " + path);
-    NGREST_ASSERT(!context->request->node, "Request must have just one of query or body, but have both");
+    NGREST_ASSERT(!context->request->node, "Request must have either of query or body, but have both");
 
     // generate OM from request
 
@@ -254,18 +340,22 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     const char* pathCStr = path.c_str();
     Object* requestNode = context->pool.alloc<Object>();
     NamedNode* lastNamedNode = nullptr;
+    std::string::size_type end;
+    std::string::size_type dividerSize;
 
     for (int i = 0, l = resource->parameters.size(); i < l; ++i) {
         const Parameter& parameter = resource->parameters[i];
 
         if ((i + 1) < l) {
-            const Parameter& nextParameter = resource->parameters[i];
+            const Parameter& nextParameter = resource->parameters[i + 1];
             const std::string& nextDivider = nextParameter.divider;
             end = path.find(nextDivider, begin);
             NGREST_ASSERT(end != std::string::npos,
                           "Can't find divider [" + nextDivider + "] for path: " + path);
+            dividerSize = nextDivider.size();
         } else {
             end = path.size();
+            dividerSize = 0;
         }
 
         const char* name = context->pool.putCString(parameter.name.c_str(), true);
@@ -284,6 +374,8 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         Value* valueNode = context->pool.alloc<Value>(ValueType::String);
         valueNode->value = value;
         namedNode->node = valueNode;
+
+        begin = end + dividerSize;
     }
 
 
@@ -297,9 +389,9 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
 
     context->request->node = requestNode;
 
-    LogDebug() << "Invoking service operation " << service.wrapper->getDescription()->name
+    LogDebug() << "Invoking service operation " << service->wrapper->getDescription()->name
                << "/" << resource->operation->name;
-    service.wrapper->invoke(resource->operation, context);
+    service->wrapper->invoke(resource->operation, context);
 }
 
 } // namespace ngrest

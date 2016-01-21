@@ -13,4 +13,8 @@ list(REMOVE_ITEM NGRESTDEPLOYMENT_SOURCES ${PROJECT_SOURCE_DIR}/../../../core/se
 
 add_executable(ngrestdeployment ${NGRESTDEPLOYMENT_SOURCES})
 
+set_target_properties(ngrestdeployment PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${TESTS_OUTPUT_DIRECTORY}"
+)
+
 target_link_libraries(ngrestdeployment ngrestutils ngrestcommon ngrestjson ngrestengine)

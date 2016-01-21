@@ -47,8 +47,10 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
-    const std::string& codegenDir = ::ngrest::Runtime::getApplicationDirPath()
-            + NGREST_PATH_SEPARATOR".." NGREST_PATH_SEPARATOR "lib" NGREST_PATH_SEPARATOR "codegen";
+    const std::string& codegenDir = ::ngrest::Runtime::getApplicationRootPath()
+            + NGREST_PATH_SEPARATOR "share"
+            NGREST_PATH_SEPARATOR "ngrest"
+            NGREST_PATH_SEPARATOR "codegen";
 
     ngrest::codegen::ParseSettings parseSettings;
     ngrest::codegen::Project project;
@@ -61,7 +63,7 @@ int main(int argc, const char* argv[])
 
     const std::string& templatesDir = codegenDir + "/templates/";
     const std::string& pluginsDir = codegenDir + "/parsers/";
-    const std::string& pluginPrefix = NGREST_LIBRARY_PREFIX "ngrestcgparser-";
+    const std::string& pluginPrefix = "ngrestcgparser-";
 
     project.name = "project1";
 

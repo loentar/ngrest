@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <ngrest/utils/Log.h>
+#include <ngrest/utils/ElapsedTimer.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
@@ -21,6 +22,7 @@ int help() {
 
 int main(int argc, char* argv[])
 {
+    ngrest::ElapsedTimer timer(true);
     ngrest::StringMap args;
 
     for (int i = 1; i < argc; i += 2) {
@@ -53,8 +55,10 @@ int main(int argc, char* argv[])
 
     deployment.deployAll();
 
-    // TODO: implement file system watcher to re-load service dynamically
+    // TODO: implement file system watcher to re-load service on the fly
 
+
+    ngrest::LogInfo() << "Server startup time: " << (timer.elapsed() / 1000.) << "ms";
 
     return server.exec();
 }

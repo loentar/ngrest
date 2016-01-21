@@ -1,1 +1,32 @@
-add_executable(echo Echo.cpp main.cpp)
+cmake_minimum_required(VERSION 2.6)
+
+project (echoservice CXX)
+
+set(ECHOSERVICE_HEADERS Echo.h)
+
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(ECHOSERVICE_CODEGEN_DIR "${PROJECT_BINARY_DIR}/codegen")
+
+PREPEND(ECHOSERVICE_HEADERS_PATHS ${PROJECT_SOURCE_DIR} ${ECHOSERVICE_HEADERS})
+
+CODEGEN_FILES(ECHOSERVICE_CODEGEN_SOURCES ${ECHOSERVICE_CODEGEN_DIR} ${ECHOSERVICE_HEADERS})
+
+add_custom_command(OUTPUT ${ECHOSERVICE_CODEGEN_SOURCES}
+    COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/ngrestcg -i "${PROJECT_SOURCE_DIR}" -o ${ECHOSERVICE_CODEGEN_DIR} -t service ${ECHOSERVICE_HEADERS} -x
+    DEPENDS ${ECHOSERVICE_HEADERS_PATHS}
+)
+
+file(GLOB ECHOSERVICE_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+
+list(APPEND ECHOSERVICE_SOURCES ${ECHOSERVICE_CODEGEN_SOURCES})
+
+include_directories(${PROJECT_SOURCE_DIR})
+
+add_library(echoservice MODULE ${ECHOSERVICE_SOURCES})
+
+set_target_properties(echoservice PROPERTIES PREFIX "")
+set_target_properties(echoservice PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SERVICES_DIR}"
+)
+
+target_link_libraries(echoservice ngrestutils ngrestcommon ngrestjson ngrestengine)

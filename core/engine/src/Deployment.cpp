@@ -3,6 +3,7 @@
 #include <ngrest/utils/File.h>
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/Plugin.h>
+#include <ngrest/utils/Runtime.h>
 #include <ngrest/engine/ServiceDescription.h>
 
 #include "ServiceGroup.h"
@@ -39,10 +40,11 @@ void Deployment::deployAll()
 {
     // find service libraries
     StringList libs;
-    const std::string& servicesPath = "services";
+    const std::string& servicesPath = Runtime::getSharePath()
+            + NGREST_PATH_SEPARATOR "services" NGREST_PATH_SEPARATOR;
     File(servicesPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeRegularFile);
 
-    if (servicesPath.empty()) {
+    if (libs.empty()) {
         LogError() << "No services found";
         return;
     }

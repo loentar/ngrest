@@ -12,6 +12,7 @@ struct OperationDescription
     std::string location;                          // by default = name
                                                    // can be "add?a={a}&b={b}" or "get/{id}" or "put"
     int method;                                    // method depending on transport
+    std::string methodStr;                         // method depending on transport in string form
     bool asynchronous;                             // is operation asynchronous
 };
 

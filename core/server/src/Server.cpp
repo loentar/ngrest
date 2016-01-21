@@ -95,7 +95,7 @@ int Server::exec()
                    (!(events[i].events & EPOLLIN))) {
                 /* An error has occured on this fd, or the socket is not
                  ready for reading(why were we notified then?) */
-                fprintf(stderr, "epoll error\n");
+                LogError() << "epoll error";
                 if (callback)
                     callback->error(events[i].data.fd);
                 close(events[i].data.fd);
@@ -137,7 +137,7 @@ int Server::createServerSocket(const std::string& port)
 
     int res = getaddrinfo(nullptr, port.c_str(), &hints, &addr);
     if (res != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(res));
+        LogError() << "getaddrinfo: " << gai_strerror(res);
         return -1;
     }
 
@@ -161,7 +161,7 @@ int Server::createServerSocket(const std::string& port)
     freeaddrinfo(addr);
 
     if (curr == nullptr) {
-        fprintf(stderr, "Could not bind\n");
+        LogError() << "Could not bind to port " << port;
         return -1;
     }
 
