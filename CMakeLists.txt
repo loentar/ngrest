@@ -64,5 +64,6 @@ include_directories("${PROJECT_INCLUDE_DIR}")
 
 add_subdirectory(core)
 add_subdirectory(tools)
+add_subdirectory(services)
 add_subdirectory(tests)
 add_subdirectory(examples)

@@ -15,7 +15,7 @@ public:
 
     virtual Service* getServiceImpl() override;
     virtual void invoke(const OperationDescription* operation, MessageContext* context) override;
-    virtual const ServiceDescription* getDescription() override;
+    virtual const ServiceDescription* getDescription() const override;
 
 private:
     TestDeployment* service;

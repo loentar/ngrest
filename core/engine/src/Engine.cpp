@@ -20,7 +20,9 @@ public:
 
     void success(MessageContext* context)
     {
-        context->transport->writeResponse(context->pool, context->request, context->response);
+        // only write response in case of it was not written
+        if (!context->response->poolBody.getSize())
+            context->transport->writeResponse(context->pool, context->request, context->response);
         context->callback = origCallback;
         context->callback->success(context);
     }
@@ -62,6 +64,11 @@ void Engine::dispatchMessage(MessageContext* context)
         LogWarning() << /*err.getFileLine() << " " << */err.getFunction() << " : " << err.what();
         context->callback->error(err);
     }
+}
+
+ServiceDispatcher& Engine::getDispatcher()
+{
+    return dispatcher;
 }
 
 } // namespace ngrest

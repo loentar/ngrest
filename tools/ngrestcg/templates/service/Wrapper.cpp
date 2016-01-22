@@ -75,7 +75,11 @@ service->$(operation.name)(\
 ##else
 , \
 ##endif
+##ifeq($(param.dataType.name),MessageContext)
+*context\
+##else
 $(param.name)\
+##endif
 ##endfor
 );
 
@@ -143,7 +147,7 @@ $(param.name)\
     }
 }
 
-const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription()
+const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() const
 {
     static ::ngrest::ServiceDescription description = {
         "$(.nsName.!dot)",
@@ -165,12 +169,14 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription()
 ##var loc $(.name)?
 ##var isAmp 0
 ##foreach $(operation.params)
+##ifneq($(param.dataType.name),Callback||MessageContext)
 ##ifeq($($isAmp),0)
 ##var isAmp 1
 ##else
 ##var loc $($loc)&
 ##endif
 ##var loc $($loc)$(param.name)={$(param.name)}
+##endif
 ##endfor
 ##endif
                 "$($loc)",

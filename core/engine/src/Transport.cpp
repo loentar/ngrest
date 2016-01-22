@@ -2,10 +2,10 @@
 
 namespace ngrest {
 
-//Transport::Transport(TransportType transportType_):
-//    transportType(transportType_)
-//{
-//}
+Transport::Transport(Type type_):
+    type(type_)
+{
+}
 
 Transport::~Transport()
 {

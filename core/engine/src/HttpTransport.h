@@ -8,6 +8,8 @@ namespace ngrest {
 class HttpTransport: public Transport
 {
 public:
+    HttpTransport();
+
     // pool temporary pool for storing data
     virtual Node* parseRequest(MemPool& pool, const Request* request) override;
 

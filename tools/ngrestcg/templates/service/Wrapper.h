@@ -42,7 +42,7 @@ public:
 
     virtual void invoke(const ::ngrest::OperationDescription* operation, ::ngrest::MessageContext* context) override;
 
-    virtual const ::ngrest::ServiceDescription* getDescription() override;
+    virtual const ::ngrest::ServiceDescription* getDescription() const override;
 
 private:
     $(service.name)* service;

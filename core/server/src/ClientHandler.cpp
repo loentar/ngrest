@@ -40,13 +40,14 @@ struct MessageData
 //    uint64_t currentChunkRemaining = 0;
     bool processing = false;
 
-    MessageData(uint64_t id_, Transport* transport):
+    MessageData(uint64_t id_, Transport* transport, Engine* engine):
         timer(true),
         id(id_),
         poolStr(2048),
         poolBody(1024)
     {
         LogDebug() << "Start handling request " << id;
+        context.engine = engine;
         context.transport = transport;
         context.request = context.pool.alloc<HttpRequest>();
         context.response = context.pool.alloc<HttpResponse>();
@@ -142,7 +143,7 @@ bool ClientHandler::readyRead(int fd)
     MessageData* messageData;
 
     if (clientData->requests.empty()) {
-        messageData = new MessageData(++lastId, &transport);
+        messageData = new MessageData(++lastId, &transport, &engine);
         clientData->requests.push_back(messageData);
     } else {
         messageData = clientData->requests.back();
@@ -150,7 +151,7 @@ bool ClientHandler::readyRead(int fd)
         if (messageData->processing) {
             // request is finished to read and now processing.
             // creating new request
-            messageData = new MessageData(++lastId, &transport);
+            messageData = new MessageData(++lastId, &transport, &engine);
             clientData->requests.push_back(messageData);
         }
     }

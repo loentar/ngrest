@@ -44,7 +44,6 @@ core/server/src/servercommon.h
 core/server/src/Server.cpp
 core/server/src/Server.h
 core/server/src/strutils.h
-core/service/CMakeLists.txt
 core/utils/CMakeLists.txt
 core/utils/src/DynamicLibrary.cpp
 core/utils/src/DynamicLibrary.h
@@ -96,6 +95,10 @@ examples/CMakeLists.txt
 examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
+services/CMakeLists.txt
+services/serverstatus/CMakeLists.txt
+services/serverstatus/src/ServerStatus.cpp
+services/serverstatus/src/ServerStatus.h
 tests/CMakeLists.txt
 tests/deployment/CMakeLists.txt
 tests/deployment/src/main.cpp

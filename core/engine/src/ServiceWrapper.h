@@ -19,7 +19,7 @@ public:
     virtual void invoke(const OperationDescription* operation, MessageContext* context) = 0;
 
     // server side service description
-    virtual const ServiceDescription* getDescription() = 0;
+    virtual const ServiceDescription* getDescription() const = 0;
 };
 
 } // namespace ngrest

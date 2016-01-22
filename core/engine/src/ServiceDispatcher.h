@@ -1,6 +1,8 @@
 #ifndef NGREST_SERVICEDISPATCHER_H
 #define NGREST_SERVICEDISPATCHER_H
 
+#include <vector>
+
 namespace ngrest {
 
 class ServiceWrapper;
@@ -16,6 +18,10 @@ public:
     void unregisterService(ServiceWrapper* wrapper);
 
     void dispatchMessage(MessageContext* context);
+
+    std::vector<ServiceWrapper*> getServices() const;
+
+    ServiceWrapper* getService(const std::string& name) const;
 
 private:
     struct Impl;

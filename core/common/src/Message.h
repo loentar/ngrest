@@ -53,9 +53,11 @@ class MessageCallback: public Callback<MessageContext*>
 {
 };
 
+class Engine;
 struct MessageContext
 {
-    Transport* transport;
+    Engine* engine = nullptr;
+    Transport* transport = nullptr;
     Request* request = nullptr;
     Response* response = nullptr;
     MessageCallback* callback = nullptr;

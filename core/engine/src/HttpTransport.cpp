@@ -12,6 +12,11 @@
 
 namespace ngrest {
 
+HttpTransport::HttpTransport():
+    Transport(Type::Http)
+{
+}
+
 Node* HttpTransport::parseRequest(MemPool& pool, const Request* request)
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
@@ -33,15 +38,13 @@ void HttpTransport::writeResponse(MemPool& pool, const Request* request, Respons
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
     const Header* contentType = httpRequest->getHeader("content-type");
-    NGREST_ASSERT(contentType, "Content-Type header is missing!");
 
-
-    if (!strcmp(contentType->value, "application/json")) {
+    // response with JSON if no "content-type" header set
+    if (!contentType || !strcmp(contentType->value, "application/json")) {
         HttpResponse* httpResponse = static_cast<HttpResponse*>(response);
         Header* headerContentType = pool.alloc<Header>("Content-Type", "application/json");
         httpResponse->headers = headerContentType;
 
-        // TODO: check source content type
         return json::JsonWriter::write(httpResponse->node, httpResponse->poolBody);
     } else {
         NGREST_THROW_ASSERT(std::string("Can't handle content type: ") + contentType->value);

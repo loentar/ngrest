@@ -2,17 +2,19 @@
 ##var callbackParam
 ##ifneq($(operation.params.$count),0)
 /// ######### deserialize request ###########
+##ifneq($(operation.params.$count)-$(operation.params.param.dataType.name),1-MessageContext)
         NGREST_ASSERT(context->request->node, "Request expected for $(service.serviceNsName)/$(operation.name)");
         NGREST_ASSERT_PARAM(context->request->node->type == NodeType::Object);
 
         const ::ngrest::Object* request = static_cast<const ::ngrest::Object*>(context->request->node);
+##endif
 
 ######### parameters ###########
 \
 ######### deserialize request parameters ###########
 ##foreach $(operation.params)
 \
-##ifneq($(param.dataType.name),Callback)
+##ifneq($(param.dataType.name),Callback||MessageContext)
         $(param.dataType.nsName) $(param.name);
 ##endif
 ##endfor
@@ -22,7 +24,9 @@
 ##switch $(param.dataType.type)
 \
 ##case generic||string
+##ifneq($(param.dataType.name),MessageContext)
         ::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)", $(param.name));
+##endif
 ##case enum
         $(param.name) = $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
 ##case struct||typedef

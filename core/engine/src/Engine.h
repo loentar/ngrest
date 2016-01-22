@@ -13,6 +13,8 @@ public:
 
     void dispatchMessage(MessageContext* context);
 
+    ServiceDispatcher& getDispatcher();
+
 private:
     ServiceDispatcher& dispatcher;
 };

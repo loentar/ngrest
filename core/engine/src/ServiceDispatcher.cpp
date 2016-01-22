@@ -394,5 +394,20 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     service->wrapper->invoke(resource->operation, context);
 }
 
+std::vector<ServiceWrapper*> ServiceDispatcher::getServices() const
+{
+    std::vector<ServiceWrapper*> services;
+    services.reserve(impl->deployedServices.size());
+    for (auto it = impl->deployedServices.begin(), end = impl->deployedServices.end(); it != end; ++it)
+        services.push_back(it->second.wrapper);
+    return services;
+}
+
+ServiceWrapper* ServiceDispatcher::getService(const std::string& name) const
+{
+    auto it = impl->deployedServices.find(name);
+    return (it == impl->deployedServices.end()) ? nullptr : it->second.wrapper;
+}
+
 } // namespace ngrest
 
