@@ -8,14 +8,14 @@ namespace ngrest {
 namespace examples {
 
 //! Echo service example
-/*! by default exposes Echo service relative to base URL: http://server:port/ngrest/examples/echo/Echo */
+/*! by default exposes Echo service relative to base URL: http://server:port/ngrest/examples/Echo */
 class Echo: public Service
 {
 public:
     //! a simple operation "echo"
     /*!
       example of POST request:
-      http://server:port/ngrest/examples/echo/Echo/echo
+      http://server:port/ngrest/examples/Echo/echo
       -- body -----------------------
       {
         "str": "Hello ngrest!"
@@ -29,7 +29,7 @@ public:
     //! a simple operation "echo"
     /*!
       example of GET request:
-      http://server:port/ngrest/examples/echo/Echo?text=Hello%20World!
+      http://server:port/ngrest/examples/Echo?text=Hello%20World!
     */
     // *method: GET
     // *location: echo?text={text}
