@@ -159,6 +159,7 @@ bool ClientHandler::readyRead(int fd)
     HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
     MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
     for (;;) {
+        uint64_t prevSize = pool.getSize();
         uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
                 ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
         char* buffer = pool.grow(sizeToRead);
@@ -190,20 +191,28 @@ bool ClientHandler::readyRead(int fd)
             messageData->httpBodyRemaining -= count;
 
         if (messageData->httpBodyOffset == 0) {
-            const char* startFind = ((buffer - 3) > pool.getLastChunk()->buffer)
-                    ? (buffer - 3) : buffer;
-            // will not be found if HTTP header size will be 4095-4097!
-            const char* pos = strnstr(startFind, "\r\n\r\n", count);
+            MemPool::Chunk* chunk = pool.flatten(false);
+            // pool == poolStr until header is not fully read
+            buffer = chunk->buffer + prevSize;
+
+            const char* startFind;
+            uint64_t searchSize;
+            if (prevSize) {
+                startFind = buffer - 3;
+                searchSize = count + 3;
+            } else {
+                startFind = buffer;
+                searchSize = count;
+            }
+
+            const char* pos = strnstr(startFind, "\r\n\r\n", searchSize);
             if (pos) {
-                uint64_t httpHeaderSize = pool.getSize()
-                        - pool.getLastChunk()->size + (pos - buffer);
+                uint64_t httpHeaderSize = prevSize + (pos - buffer);
                 messageData->httpBodyOffset = httpHeaderSize + 4;
 
-                MemPool::Chunk* chunk = pool.flatten();
+                chunk->buffer[httpHeaderSize + 2] = '\0'; // terminate HTTP header
 
                 // parse HTTP header
-                chunk->buffer[httpHeaderSize + 2] = '\0';
-                chunk->buffer[httpHeaderSize + 3] = '\0';
                 parseHttpHeader(chunk->buffer, messageData);
 
                 const Header* headerEncoding = httpRequest->getHeader("transfer-encoding");

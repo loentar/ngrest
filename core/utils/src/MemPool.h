@@ -109,7 +109,7 @@ public:
         return result;
     }
 
-    Chunk* flatten();
+    Chunk* flatten(bool terminate = true);
 
     void reserve(uint64_t size);
 
