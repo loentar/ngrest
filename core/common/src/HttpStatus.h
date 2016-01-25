@@ -5,6 +5,8 @@ namespace ngrest {
 
 enum HttpStatus
 {
+    HTTP_STATUS_UNDEFINED,
+
     // 1xx: Informational
     HTTP_STATUS_100_CONTINUE = 100, // Continue
     HTTP_STATUS_101_SWITCHING_PROTOCOLS = 101, // Switching Protocols

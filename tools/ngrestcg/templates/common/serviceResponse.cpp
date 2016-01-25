@@ -120,7 +120,7 @@ result ? "true" : "false"\
 ##endswitch
 
         context->response->node = responseNode;
-        context->callback->success(context);
+        context->callback->success();
 /// ######### serialize response end ###########
 
 ##endif

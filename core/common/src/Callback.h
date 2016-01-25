@@ -14,6 +14,14 @@ public:
     virtual void error(const Exception& error) = 0;
 };
 
+class VoidCallback
+{
+public:
+    virtual ~VoidCallback() {}
+    virtual void success() = 0;
+    virtual void error(const Exception& error) = 0;
+};
+
 } // namespace ngrest
 
 #endif // NGREST_CALLBACK_H

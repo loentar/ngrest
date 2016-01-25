@@ -231,7 +231,7 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
         auto itExisting = deployedService.paramResources.find(baseLocation);
         NGREST_ASSERT(itExisting == deployedService.paramResources.end() ||
                       itExisting->second.operation->method != operationDescr.method,
-                      "Static path " + baseLocation + " is already taken by "
+                      "Parametrized path " + baseLocation + " is already taken by "
                       + serviceName + "/" + itExisting->second.operation->name);
 
         itExisting = deployedService.staticResources.find(baseLocation);

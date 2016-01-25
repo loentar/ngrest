@@ -19,7 +19,7 @@ struct HttpRequest: public Request
 
 struct HttpResponse: public Response
 {
-    int statusCode = HTTP_STATUS_200_OK;
+    int statusCode = HTTP_STATUS_UNDEFINED;
 
 //    // name must be in lower case
 //    const Header* getHeader(const char* name) const;

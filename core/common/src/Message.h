@@ -49,7 +49,7 @@ struct Response
     MemPool poolBody;
 };
 
-class MessageCallback: public Callback<MessageContext*>
+class MessageCallback: public VoidCallback
 {
 };
 

@@ -2,6 +2,7 @@ CMakeLists.txt
 core/CMakeLists.txt
 core/common/CMakeLists.txt
 core/common/src/Callback.h
+core/common/src/HttpException.h
 core/common/src/HttpMessage.h
 core/common/src/HttpMethod.h
 core/common/src/HttpStatus.cpp

@@ -18,13 +18,13 @@ public:
         context->callback = this;
     }
 
-    void success(MessageContext* context)
+    void success()
     {
         // only write response in case of it was not written
         if (!context->response->poolBody.getSize())
             context->transport->writeResponse(context->pool, context->request, context->response);
         context->callback = origCallback;
-        context->callback->success(context);
+        context->callback->success();
     }
 
     void error(const Exception& error)

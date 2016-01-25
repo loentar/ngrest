@@ -51,7 +51,7 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
 
         context->response->node = responseNode;
 
-        context->callback->success(context);
+        context->callback->success();
     } else if (operation->name == "echoASync") {
         NGREST_ASSERT(context->request->node, "Request expected for Service:operation");
         NGREST_ASSERT_PARAM(context->request->node->type == NodeType::Object);
@@ -83,7 +83,7 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
 
                 context->response->node = responseNode;
 
-                context->callback->success(context);
+                context->callback->success();
                 // no need to "delete this" - it's in mempool
             }
 

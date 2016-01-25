@@ -13,6 +13,7 @@
 #include <ngrest/utils/ElapsedTimer.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/HttpMessage.h>
+#include <ngrest/common/HttpException.h>
 #include <ngrest/engine/Engine.h>
 
 #include "strutils.h"
@@ -72,9 +73,8 @@ public:
     {
     }
 
-    void success(MessageContext* context)
+    void success()
     {
-        NGREST_ASSERT_PARAM(context == &messageData->context);
         handler->processResponse(clientFd, messageData);
     }
 
@@ -394,6 +394,8 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     // build response
     HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
     messageData->poolStr.putData("HTTP/1.1 ", 9);
+    if (response->statusCode == HTTP_STATUS_UNDEFINED)
+        response->statusCode = HTTP_STATUS_200_OK;
     messageData->poolStr.putCString(HttpStatusInfo::httpStatusToString(
                                     static_cast<HttpStatus>(response->statusCode)));
     messageData->poolStr.putData("\r\n", 2);
@@ -441,7 +443,15 @@ void ClientHandler::processError(int clientFd, MessageData* messageData, const E
     LogDebug() << "Error while handling request " << messageData->context.request->path;
 
     HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
-    response->statusCode = HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
+    if (response->statusCode == HTTP_STATUS_UNDEFINED) {
+        try {
+             throw; // we're called from catch block
+        } catch (const HttpException& e) {
+            response->statusCode = e.getHttpStatus();
+        } catch (...) {
+            response->statusCode = HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
+        }
+    }
     Header headerContentType("Content-Type", "text/plain");
     response->headers = &headerContentType;
     response->poolBody.reset();
