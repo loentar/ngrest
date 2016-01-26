@@ -15,8 +15,8 @@ TestServiceGroup::TestServiceGroup():
 
 TestServiceGroup::~TestServiceGroup()
 {
-    for (auto it = services.begin(); it != services.end(); ++it)
-        delete *it;
+    for (ServiceWrapper* service : services)
+        delete service;
     services.clear();
 }
 

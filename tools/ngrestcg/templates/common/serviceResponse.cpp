@@ -41,7 +41,7 @@ result ? "true" : "false"\
         ::ngrest::Array* resultArray = context->pool.alloc< ::ngrest::Array>();
         resultNode->node = resultArray;
         ::ngrest::LinkedNode* lastResultArrayItem = nullptr;
-        for (auto it = result.begin(), end = result.end(); it != end; ++it) {
+        for (const auto& it : result) {
             ::ngrest::LinkedNode* resultArrayItem = context->pool.alloc< ::ngrest::LinkedNode>();
             if (lastResultArrayItem == nullptr) {
                 resultArray->firstChild = resultArrayItem;
@@ -52,7 +52,7 @@ result ? "true" : "false"\
 \
 ##context $(.templateParams.templateParam1)
 ##pushvars
-##var var (*it)
+##var var it
 ##var node resultArrayItem->node
 ##var name resultItem
 ##indent +2
@@ -67,7 +67,7 @@ result ? "true" : "false"\
         ::ngrest::Object* resultObj = context->pool.alloc< ::ngrest::Object>();
         resultNode->node = resultObj;
         ::ngrest::NamedNode* lastResultObjItem = nullptr;
-        for (auto it = result.begin(), end = result.end(); it != end; ++it) {
+        for (const auto& it : result) {
 ### // key
 \
 ##var inlineValue
@@ -75,15 +75,15 @@ result ? "true" : "false"\
 ##case generic
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
         char resultBuffItem[NUM_TO_STR_BUFF_SIZE];
-        NGREST_ASSERT(::ngrest::toCString(it->first, resultBuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
+        NGREST_ASSERT(::ngrest::toCString(it.first, resultBuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
 ##var inlineValue resultBuffItem
 ##else
-##var inlineValue it->first ? "true" : "false"
+##var inlineValue it.first ? "true" : "false"
 ##endif
 ##case string
-##var inlineValue it->first.c_str()
+##var inlineValue it.first.c_str()
 ##case enum
-##var inlineValue $(.templateParams.templateParam1.ns)$(.templateParams.templateParam1.name.!replace/::/Serializer::/)Serializer::toCString(it->first)
+##var inlineValue $(.templateParams.templateParam1.ns)$(.templateParams.templateParam1.name.!replace/::/Serializer::/)Serializer::toCString(it.first)
 ##default
 ##error Cannot serialize $(.templateParams.templateParam1) as response of $(service.name)/$(operation.name)
 ##endswitch
@@ -99,7 +99,7 @@ result ? "true" : "false"\
 \
 ##context $(.templateParams.templateParam2)
 ##pushvars
-##var var it->second
+##var var it.second
 ##var node resultObjItem->node
 ##var name resultItem
 ##indent +2

@@ -206,8 +206,7 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
     serviceResPath.service = &deployedService;
 
     // parse operations locations
-    for (auto it = serviceDescr->operations.begin(); it != serviceDescr->operations.end(); ++it) {
-        const OperationDescription& operationDescr = *it;
+    for (const OperationDescription& operationDescr : serviceDescr->operations) {
 
         NGREST_ASSERT(!operationDescr.name.empty(), "Operation name cannot be empty. " + serviceName);
 
@@ -313,11 +312,11 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     Resource* resource = nullptr;
     std::string::size_type matchLength = 0;
 
-    for (auto it = service->paramResources.begin(); it != service->paramResources.end(); ++it) {
-        const std::string& basePath = it->first;
+    for (auto& paramResource : service->paramResources) {
+        const std::string& basePath = paramResource.first;
         const std::string::size_type basePathSize = basePath.size();
         if (!path.compare(begin, basePathSize, basePath) && (matchLength < basePathSize)) {
-            Resource& currResource = it->second;
+            Resource& currResource = paramResource.second;
             if (currResource.operation->method == method) {
                 matchLength = basePathSize;
                 resource = &currResource;
@@ -398,8 +397,8 @@ std::vector<ServiceWrapper*> ServiceDispatcher::getServices() const
 {
     std::vector<ServiceWrapper*> services;
     services.reserve(impl->deployedServices.size());
-    for (auto it = impl->deployedServices.begin(), end = impl->deployedServices.end(); it != end; ++it)
-        services.push_back(it->second.wrapper);
+    for (const auto& service : impl->deployedServices)
+        services.push_back(service.second.wrapper);
     return services;
 }
 

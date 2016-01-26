@@ -49,8 +49,8 @@ void Deployment::deployAll()
         return;
     }
 
-    for (StringList::const_iterator it = libs.begin(); it != libs.end(); ++it) {
-        const std::string& servicePath = servicesPath + *it;
+    for (const std::string& lib : libs) {
+        const std::string& servicePath = servicesPath + lib;
         try {
             deploy(servicePath);
         } catch (const Exception& exception) {
@@ -131,9 +131,9 @@ void Deployment::undeployStatic(ServiceGroup* serviceGroup)
         return;
     }
 
-    for (auto it = serviceWrappers.begin(); it != serviceWrappers.end(); ++it) {
+    for (ServiceWrapper* wrapper : serviceWrappers) {
         try {
-            impl->dispatcher.unregisterService(*it);
+            impl->dispatcher.unregisterService(wrapper);
         } NGREST_CATCH_ALL;
     }
 }

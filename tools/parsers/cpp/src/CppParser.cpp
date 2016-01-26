@@ -238,19 +238,19 @@ public:
     template<typename StructType>
     bool parseCompositeDataType(const std::list<StructType>& types, DataType& dataType)
     {
-        for (auto it = types.begin(); it != types.end(); ++it) {
-            if (it->name == dataType.name) {
+        for (const StructType& type : types) {
+            if (type.name == dataType.name) {
                 // namespace match
-                if (it->ns == dataType.ns)
+                if (type.ns == dataType.ns)
                     return true;
 
                 std::string::size_type pos = currentNs.find_last_of("::");
 
                 while (pos != std::string::npos) {
                     ++pos;
-                    if ((currentNs.substr(0, pos) + dataType.ns) == it->ns) {
-                        if (it->ns != dataType.ns) // correct namespace
-                            dataType.ns = it->ns;
+                    if ((currentNs.substr(0, pos) + dataType.ns) == type.ns) {
+                        if (type.ns != dataType.ns) // correct namespace
+                            dataType.ns = type.ns;
 
                         return true;
                     }
@@ -559,8 +559,8 @@ public:
             if (tmp.empty())
                 break;
 
-            for (std::string::iterator it = tmp.begin(), end = tmp.end(); it != end; ++it) {
-                switch (*it) {
+            for (const std::string::value_type ch : tmp) {
+                switch (ch) {
                 case '<':
                     ++ltCount;
                     break;

@@ -44,8 +44,8 @@ std::string typeToString(const DataType::Type type)
 template<typename Type>
 xml::Element& operator<<(xml::Element& element, const std::list<Type>& list)
 {
-    for(typename std::list<Type>::const_iterator it = list.begin(); it != list.end(); ++it)
-        element << *it;
+    for (const auto& item : list)
+        element << item;
     return element;
 }
 

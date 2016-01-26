@@ -33,8 +33,8 @@ ServiceGroupImpl::ServiceGroupImpl():
 
 ServiceGroupImpl::~ServiceGroupImpl()
 {
-    for (auto it = services.begin(); it != services.end(); ++it)
-        delete *it;
+    for (::ngrest::ServiceWrapper* service : services)
+        delete service;
     services.clear();
 }
 

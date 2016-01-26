@@ -665,11 +665,11 @@ public:
             StringList files;
 
             File(inDir).list(files, "*.*", File::AttributeRegularFile);
-            for (StringList::const_iterator itFile = files.begin(); itFile != files.end(); ++itFile) {
-                if (itFile->find('$') != std::string::npos) {
-                    templateFileList.push_back(*itFile);
+            for (const std::string& file : files) {
+                if (file.find('$') != std::string::npos) {
+                    templateFileList.push_back(file);
                 } else {
-                    constFileList.push_back(*itFile);
+                    constFileList.push_back(file);
                 }
             }
         }
@@ -1208,8 +1208,8 @@ public:
             } else if (line.substr(0, 10) == "##dumpvars") {
                 const StringMap& rmVars = variables.top();
                 line = "variables dump:";
-                for (StringMap::const_iterator itVar = rmVars.begin(); itVar != rmVars.end(); ++itVar)
-                    line += "\n" + itVar->first + "=\"" + itVar->second + "\"";
+                for (const auto& var : rmVars)
+                    line += "\n" + var.first + "=\"" + var.second + "\"";
                 out << line << "\n";
             } else if (!line.empty()) {
                 std::string indentStr;
