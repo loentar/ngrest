@@ -10,6 +10,7 @@
 ##ifneq($(.name.!match/bool/),true)
         char resultBuff[NUM_TO_STR_BUFF_SIZE];
         NGREST_ASSERT(::ngrest::toCString(result, resultBuff, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
+        const char* resultCStr = context->pool.putCString(resultBuff, true);
 ##endif
         resultNode->node = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::\
 ##ifeq($(.name.!match/bool/),true)
@@ -19,7 +20,7 @@ Number\
 ##endif
 , \
 ##ifneq($(.name.!match/bool/),true)
-resultBuff\
+resultCStr\
 ##else
 result ? "true" : "false"\
 ##endif
@@ -76,7 +77,8 @@ result ? "true" : "false"\
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
         char resultBuffItem[NUM_TO_STR_BUFF_SIZE];
         NGREST_ASSERT(::ngrest::toCString(it.first, resultBuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
-##var inlineValue resultBuffItem
+        const char* $($name)CStr = context->pool.putCString(resultBuffItem, true);
+##var inlineValue $($name)CStr
 ##else
 ##var inlineValue it.first ? "true" : "false"
 ##endif
@@ -120,7 +122,6 @@ result ? "true" : "false"\
 ##endswitch
 
         context->response->node = responseNode;
-        context->callback->success();
 /// ######### serialize response end ###########
 
 ##endif

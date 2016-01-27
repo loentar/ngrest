@@ -86,7 +86,7 @@ struct ServiceDispatcher::Impl
             res.parameters.push_back(parameter);
             ++end;
         }
-        if (baseLocation.empty())
+        if (res.parameters.empty())
             baseLocation = location;
     }
 
@@ -210,8 +210,12 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
 
         NGREST_ASSERT(!operationDescr.name.empty(), "Operation name cannot be empty. " + serviceName);
 
-        const std::string& operationLocation = operationDescr.location.empty()
+        std::string operationLocation = operationDescr.location.empty()
                 ? operationDescr.name : operationDescr.location;
+
+        NGREST_ASSERT_PARAM(!operationLocation.empty()); // should never happen
+        if (operationLocation[0] == '/') // use '/' as location to access resource root
+            operationLocation.erase(0, 1);
 
         // validate operation location
         NGREST_ASSERT(operationLocation.find_first_of(" \n\r\t") == std::string::npos,
@@ -221,22 +225,23 @@ void ServiceDispatcher::registerService(ServiceWrapper* wrapper)
                      << " /" << serviceLocation << "/" << operationLocation;
 
         Resource resource;
-        std::string baseLocation;
+        std::string baseLocation; // can be empty
         impl->parseResource(operationLocation, resource, baseLocation);
         resource.operation = &operationDescr; // it's ok, because ServiceDescription stored statically
-        NGREST_ASSERT(!baseLocation.empty(), "BaseLocation is empty!"); // should never happen
 
         // check for path collision in resources
         auto itExisting = deployedService.paramResources.find(baseLocation);
         NGREST_ASSERT(itExisting == deployedService.paramResources.end() ||
-                      itExisting->second.operation->method != operationDescr.method,
-                      "Parametrized path " + baseLocation + " is already taken by "
+                      itExisting->second.operation->method != operationDescr.method ||
+                      itExisting->second.operation->parameters.size() != operationDescr.parameters.size(),
+                      "Parametrized path [" + baseLocation + "] is already taken by "
                       + serviceName + "/" + itExisting->second.operation->name);
 
         itExisting = deployedService.staticResources.find(baseLocation);
         NGREST_ASSERT(itExisting == deployedService.staticResources.end() ||
-                      itExisting->second.operation->method != operationDescr.method,
-                      "Static path " + baseLocation + " is already taken by "
+                      itExisting->second.operation->method != operationDescr.method ||
+                      itExisting->second.operation->parameters.size() != operationDescr.parameters.size(),
+                      "Static path [" + baseLocation + "] is already taken by "
                       + serviceName + "/" + itExisting->second.operation->name);
 
 
@@ -315,7 +320,8 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     for (auto& paramResource : service->paramResources) {
         const std::string& basePath = paramResource.first;
         const std::string::size_type basePathSize = basePath.size();
-        if (!path.compare(begin, basePathSize, basePath) && (matchLength < basePathSize)) {
+        // '=' is required in case of base path is empty
+        if (!path.compare(begin, basePathSize, basePath) && (matchLength <= basePathSize)) {
             Resource& currResource = paramResource.second;
             if (currResource.operation->method == method) {
                 matchLength = basePathSize;
@@ -325,7 +331,6 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     }
 
     NGREST_ASSERT(resource, "Resource not found for path: " + path);
-    NGREST_ASSERT(!context->request->node, "Request must have either of query or body, but have both");
 
     // generate OM from request
 
@@ -337,10 +342,26 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     begin += matchLength;
 
     const char* pathCStr = path.c_str();
-    Object* requestNode = context->pool.alloc<Object>();
+    Object* requestNode;
     NamedNode* lastNamedNode = nullptr;
     std::string::size_type end;
     std::string::size_type dividerSize;
+
+    if (context->request->node) {
+        // request have both of body and query
+        // pointing lastNamedNode to last child of root query
+        NGREST_ASSERT(context->request->node->type == NodeType::Object, "Body must be an Object");
+        requestNode = static_cast<Object*>(context->request->node);
+        lastNamedNode = static_cast<NamedNode*>(requestNode->firstChild);
+        if (lastNamedNode) {
+            while (lastNamedNode->nextSibling)
+                lastNamedNode = lastNamedNode->nextSibling;
+        }
+    } else {
+        // create empty object to serialize query to it
+        requestNode = context->pool.alloc<Object>();
+        context->request->node = requestNode;
+    }
 
     for (int i = 0, l = resource->parameters.size(); i < l; ++i) {
         const Parameter& parameter = resource->parameters[i];
@@ -385,8 +406,6 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
                << "\n---------------------\n";
     context->response->poolBody.reset();
 #endif
-
-    context->request->node = requestNode;
 
     LogDebug() << "Invoking service operation " << service->wrapper->getDescription()->name
                << "/" << resource->operation->name;

@@ -39,6 +39,9 @@ label {
 .success {
   color: darkgreen;
 }
+.nocontent {
+  color: lightgray;
+}
 )";
 
 static const char* jsUtil = R"(
@@ -46,7 +49,7 @@ static const char* jsUtil = R"(
       return document.querySelectorAll(name);
     }
 
-    function ajax(method, url, body) {
+    function ajax(method, url, body, headers) {
 
       var asyncWrapper = {
         success: function(fn) {
@@ -80,6 +83,8 @@ static const char* jsUtil = R"(
             asyncWrapper.onDone(request.responseText);
         }
       };
+      for (var name in headers)
+        request.setRequestHeader(name, headers[name]);
       request.send(body);
 
       return asyncWrapper;
@@ -128,6 +133,32 @@ std::string getServiceLocation(const ServiceDescription* serviceDescr)
     }
 }
 
+const char* paramTypeToString(ParameterDescription::Type type)
+{
+    switch (type) {
+    case ParameterDescription::Type::Undefined:
+        return "Undefined";
+
+    case ParameterDescription::Type::String:
+        return "String";
+
+    case ParameterDescription::Type::Number:
+        return "Number";
+
+    case ParameterDescription::Type::Boolean:
+        return "Boolean";
+
+    case ParameterDescription::Type::Array:
+        return "Array";
+
+    case ParameterDescription::Type::Object:
+        return "Object";
+
+    default:
+        return "UNKNOWN";
+    }
+}
+
 void ServerStatus::getServices(MessageContext& context)
 {
     NGREST_ASSERT_HTTP(context.transport->getType() == Transport::Type::Http,
@@ -148,23 +179,20 @@ void ServerStatus::getServices(MessageContext& context)
                     "<h1><a href='/ngrest/services'>ngrest</a><h1>"
                     "<h2>Deployed services:</h2>");
     const std::vector<ServiceWrapper*>& services = context.engine->getDispatcher().getServices();
-    for (auto itSvc = services.begin(), endService = services.end(); itSvc != endService; ++itSvc) {
-        const ServiceWrapper* service = *itSvc;
-        const ServiceDescription* descr = service->getDescription();
+    for (const ServiceWrapper* service : services) {
+        const ServiceDescription* serviceDescr = service->getDescription();
         pool.putCString("<p><h3>");
-        pool.putCString(("<a href=\"/ngrest/service/" + descr->name + "\">" + descr->name + "</a>").c_str());
+        pool.putCString(("<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
+                         + serviceDescr->name + "</a>").c_str());
         pool.putCString("</h3><ul>");
-        for (auto itOp = descr->operations.begin(), endOp = descr->operations.end(); itOp != endOp; ++itOp) {
-            const OperationDescription* opDescr = &*itOp;
-            pool.putCString(("<li><a href=\"/ngrest/operation/" + descr->name + "/"
-                             + opDescr->name + "\">" + opDescr->name + "</a></li>").c_str());
+        for (const OperationDescription& opDescr : serviceDescr->operations) {
+            pool.putCString(("<li><a href=\"/ngrest/operation/" + serviceDescr->name + "/"
+                             + opDescr.name + "\">" + opDescr.name + "</a></li>").c_str());
         }
         pool.putCString("</ul></p>");
     }
 
     pool.putCString("</body></html>");
-
-    context.callback->success();
 }
 
 void ServerStatus::getService(const std::string& name, MessageContext& context)
@@ -193,17 +221,23 @@ void ServerStatus::getService(const std::string& name, MessageContext& context)
                     "<h2>");
     pool.putCString(("<a href=\"/ngrest/service/" + descr->name + "\">"
                     + descr->name + "</a>").c_str());
-    pool.putCString("</h2><ul>");
-    for (auto itOp = descr->operations.begin(), endOp = descr->operations.end(); itOp != endOp; ++itOp) {
-        const OperationDescription* opDescr = &*itOp;
-        pool.putCString(("<li><a href=\"/ngrest/operation/" + descr->name + "/"
-                         + opDescr->name + "\">" + opDescr->name + "</a></li>").c_str());
+    pool.putCString("</h2><p><h3>");
+    pool.putCString(descr->description.c_str());
+    pool.putCString("</h3><pre>");
+    pool.putCString(descr->details.c_str());
+    pool.putCString("</pre></p><ul>");
+    for (const OperationDescription& opDescr : descr->operations) {
+        pool.putCString(("<li><hr/><p><a href=\"/ngrest/operation/" + descr->name + "/"
+                         + opDescr.name + "\">" + opDescr.name + "</a>").c_str());
+        pool.putCString("<h4>");
+        pool.putCString(opDescr.description.c_str());
+        pool.putCString("</h4><small><pre>");
+        pool.putCString(opDescr.details.c_str());
+        pool.putCString("</pre></small></p></li>");
     }
     pool.putCString("</ul>");
 
     pool.putCString("</body></html>");
-
-    context.callback->success();
 }
 
 void ServerStatus::getOperation(const std::string& serviceName, const std::string& operationName,
@@ -220,9 +254,9 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     const ServiceDescription* serviceDescr = service->getDescription();
     const OperationDescription* opDescr = nullptr;
 
-    for (auto itOp = serviceDescr->operations.begin(), endOp = serviceDescr->operations.end(); itOp != endOp; ++itOp) {
-        if (itOp->name == operationName) {
-            opDescr = &*itOp;
+    for (const OperationDescription& operation : serviceDescr->operations) {
+        if (operation.name == operationName) {
+            opDescr = &operation;
             break;
         }
     }
@@ -248,12 +282,18 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
   <h1><a href='/ngrest/services'>ngrest</a><h1>
   <h2>{{serviceHref}} / {{operationHref}}</h2>
   <p>
+  <h3>{{serviceDescr}}</h3>
+  <pre>{{serviceDetails}}</pre>
+  <h4>{{operationDescr}}</h4>
+  <small><pre>{{operationDetails}}</pre></small>
   <span><label>Method: </label>{{method}}</span><br/>
   <span><label>Location: </label>{{location}}</span><br/>
   <span><label>Asynchronous: </label>{{asynchronous}}</span><br/>
   </p>
   {{form}}
   <script language='javascript'>
+    var method = '{{method}}';
+    var resLocation = '{{location}}';
     {{jsutil}}
     {{jsform}}
   </script>
@@ -268,16 +308,28 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     form.onsubmit = function(e) {
       e.preventDefault();
 
-      var action = form.action;
+      var url = resLocation;
       var inputs = $('form *[name]');
+      var bodyFields;
+      var headers;
       for (var i = 0, l = inputs.length; i < l; ++i) {
         var input = inputs[i];
-        action = action.replace('{' + input.name + '}', input.value);
+        var param = '{' + input.name + '}';
+        if (url.indexOf(param) != -1) {
+          url = url.replace(param, input.value);
+        } else {
+          if (!bodyFields) {
+            bodyFields = {};
+            headers = {'Content-Type': 'application/json'};
+          }
+          bodyFields[input.name] = input.value;
+        }
       }
 
-      ajax(form.method, action)
+      ajax(method, url, bodyFields && JSON.stringify(bodyFields), headers)
         .success(function(res){
-          result.innerHTML = '<h3>Success:</h3><pre class="success">' + res + '</pre>';
+          result.innerHTML = res ? '<h3>Success:</h3><pre class="success">' + res + '</pre>'
+                                : '<h3>Success</h3><span class="nocontent">NO CONTENT</span>'
         })
         .error(function(res, status){
           result.innerHTML = '<h3>Error #' + status + ':</h3><pre class="error">' + res + '</pre>';
@@ -288,48 +340,51 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
 
     std::string form;
 
-    if (static_cast<HttpMethod>(opDescr->method) == HttpMethod::GET) {
-        const std::string& location = opDescr->location.empty() ? opDescr->name : opDescr->location;
-        form = "<hr/><h2>Test operation</h2><p>";
-        form += "<form action='/" + serviceLocation + "/" + location
-                + "' method='" + opDescr->methodStr + "'>";
-        std::string::size_type begin = 0;
-        std::string::size_type end = 0;
+    std::string location = opDescr->location.empty() ? opDescr->name : opDescr->location;
+    NGREST_ASSERT_PARAM(!location.empty()); // should never happen
+    if (location[0] == '/')
+        location.erase(0, 1);
 
-        for (;;) {
-            begin = location.find('{', end);
-            if (begin == std::string::npos)
-                break;
-            end = location.find('}', begin + 1);
-            if (end == std::string::npos)
-                break;
+    form = "<hr/><h2>Test operation</h2><p>";
+    form += "<form action='#'>";
+    form += "<table><tbody>";
+    std::string::size_type begin = 0;
+    std::string::size_type end = 0;
 
-            const std::string& parameter = location.substr(begin + 1, end - begin - 1);
+    for (const ParameterDescription& param : opDescr->parameters) {
+        const std::string& parameter = param.name;
 
-            form += "<label for='" + parameter + "'>" + parameter + " = </label>";
-            form += "<input type='text' id='" + parameter + "' name='" + parameter + "'></input>";
-            form += "<br/>";
+        form += "<tr>";
+        form += "<td><label for='" + parameter + "'>" + parameter + "</label></td>";
+        form += "<td><input type='text' id='" + parameter + "' name='" + parameter + "' placeholder='"
+                  + paramTypeToString(param.type) + "'></input></td>";
+        form += "</tr>";
 
-            end = begin + 1;
-        }
-        form += "</p>";
-        form += "<input type='submit'></input>";
-        form += "</form>";
-        form += "<hr/>";
-        form += "<div id='result'></div>";
+        end = begin + 1;
     }
+    form += "</tbody></table>";
+    form += "</p>";
+    form += "<input type='submit'></input>";
+    form += "</form>";
+    form += "<hr/>";
+    form += "<div id='result'></div>";
 
     TemplateProcessor::process(templ, ParamsMap {
         {"css", css},
         {"jsutil", jsUtil},
         {"service", serviceDescr->name},
+        {"serviceDescr", serviceDescr->description},
+        {"serviceDetails", serviceDescr->details},
         {"operation", opDescr->name},
+        {"operationDescr", opDescr->description},
+        {"operationDetails", opDescr->details},
         {"serviceHref", "<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
                         + serviceDescr->name + "</a>"},
         {"operationHref", "<a href=\"/ngrest/operation/" + serviceDescr->name + "/"
                           + opDescr->name + "\">" + opDescr->name + "</a>"},
         {"method", opDescr->methodStr},
-        {"location", "<a href='/" + serviceLocation + "/" + opDescr->location
+        {"location", "/" + serviceLocation + "/" + location},
+        {"locationHref", "<a href='/" + serviceLocation + "/" + location
          + "'>" + opDescr->location + "</a>"},
         {"asynchronous", opDescr->asynchronous ? "true" : "false"},
         {"form", form},
@@ -337,8 +392,6 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     });
 
     pool.putCString(templ.c_str());
-
-    context.callback->success();
 }
 
 }

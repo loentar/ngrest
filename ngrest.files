@@ -93,6 +93,9 @@ core/xml/src/XmlReader.h
 core/xml/src/XmlWriter.cpp
 core/xml/src/XmlWriter.h
 examples/CMakeLists.txt
+examples/crud/CMakeLists.txt
+examples/crud/src/Crud.cpp
+examples/crud/src/Crud.h
 examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
@@ -136,6 +139,7 @@ tools/ngrestcg/src/XmlGen.h
 tools/ngrestcg/templates/common/deserialization.cpp
 tools/ngrestcg/templates/common/enums.cpp
 tools/ngrestcg/templates/common/enums.h
+tools/ngrestcg/templates/common/jsonType.h
 tools/ngrestcg/templates/common/nsopt.cpp
 tools/ngrestcg/templates/common/serialization.cpp
 tools/ngrestcg/templates/common/serviceRequest.cpp

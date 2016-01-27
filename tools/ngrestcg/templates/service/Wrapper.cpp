@@ -86,13 +86,19 @@ $(param.name)\
 ##context $(operation.return)
 ##include <common/serviceResponse.cpp>
 ##endcontext
+        context->callback->success();
 \
 \
 ##else                                  //////////// asynchronous ///////////////
 \
 ##include <common/serviceRequest.cpp>
 
-        class Callback_$(operation.name): public Callback< $($callbackType) >
+        class Callback_$(operation.name): public \
+##ifeq($($callbackType),void)
+VoidCallback
+##else
+Callback< $($callbackType) >
+##endif
         {
         public:
             Callback_$(operation.name)(::ngrest::MessageContext* context_):
@@ -100,7 +106,11 @@ $(param.name)\
             {
             }
 
-            void success($($callbackType) result) override
+            void success(\
+##ifneq($($callbackType),void)
+$($callbackType) result\
+##endif
+) override
             {
 ##foreach $(operation.params)
 ##ifeq($(param.dataType.name),Callback)
@@ -111,6 +121,7 @@ $(param.name)\
 ##indent -2
 ##endif
 ##endfor
+                context->callback->success();
                 // no need to "delete this" - it's in mempool
             }
 
@@ -150,8 +161,10 @@ $(param.name)\
 const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() const
 {
     static ::ngrest::ServiceDescription description = {
-        "$(.nsName.!dot)",
-        "$(.options.*location)",
+        "$(.nsName.!dot)", // name
+        "$(.options.*location)", // location
+        R"($(.description))", // description
+        R"($(.details))", // details
         {
 ##var isComma 0
 ##foreach $(.operations)
@@ -161,7 +174,7 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
 ,
 ##endif
             {
-                "$(.name)",
+                "$(.name)",             // name
 ##ifeq($(.options.*location)-$(.options.*method||"GET"),-GET)
 ##var loc
 ##ifneq($(operation.params.$count),0)
@@ -179,15 +192,38 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
 ##endif
 ##endfor
 ##endif
-                "$($loc)",
+                "$($loc)", // location
 ##else
-                "$(.options.*location)",
+                "$(.options.*location)", // location
 ##endif
                 static_cast<int>(::ngrest::HttpMethod::$(.options.*method||"GET")),
                 "$(.options.*method||"GET")",
-                $(.isAsynch||"false")
+                $(.isAsynch||"false"),
+                R"($(.description))", // description
+                R"($(.details))", // details
+                {
+##var isCommaParam 0
+##foreach $(.params)
+##ifeq($($isCommaParam),0)
+##var isCommaParam 1
+##else
+,
+##endif
+                    {"$(.name)", ::ngrest::ParameterDescription::Type::\
+##context $(.dataType)
+##include <common/jsonType.h>
+##endcontext
+}\
+##endfor // params
+
+                },
+                ::ngrest::ParameterDescription::Type::\
+##context $(.return)
+##include <common/jsonType.h>
+##endcontext
+
             }\
-##endfor
+##endfor // operations
 
         }
     };

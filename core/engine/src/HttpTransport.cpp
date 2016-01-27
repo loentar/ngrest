@@ -45,8 +45,8 @@ void HttpTransport::writeResponse(MemPool& pool, const Request* request, Respons
         Header* headerContentType = pool.alloc<Header>("Content-Type", "application/json");
         httpResponse->headers = headerContentType;
 
-        NGREST_ASSERT_NULL(httpResponse->node);
-        return json::JsonWriter::write(httpResponse->node, httpResponse->poolBody);
+        if (httpResponse->node)
+            json::JsonWriter::write(httpResponse->node, httpResponse->poolBody);
     } else {
         NGREST_THROW_ASSERT(std::string("Can't handle content type: ") + contentType->value);
     }

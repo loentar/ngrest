@@ -108,20 +108,34 @@ const ServiceDescription* TestDeploymentWrapper::getDescription() const
     static ServiceDescription description = {
         "ngrest.TestDeployment",
         "td",
+        "",
+        "",
         {
             {
                 "echoSync",
                 "sync?value={value}",
                 static_cast<int>(HttpMethod::GET),
                 "GET",
-                false
+                false,
+                "",
+                "",
+                {
+                    {"value", ParameterDescription::Type::String}
+                },
+                ParameterDescription::Type::String
             },
             {
                 "echoASync",
                 "async/{value}",
                 static_cast<int>(HttpMethod::GET),
                 "GET",
-                true
+                true,
+                "",
+                "",
+                {
+                    {"value", ParameterDescription::Type::String}
+                },
+                ParameterDescription::Type::String
             }
         }
     };

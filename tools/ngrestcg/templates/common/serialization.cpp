@@ -8,6 +8,7 @@
 ##ifneq($(.name.!match/bool/),true)
     char $($name)Buff[NUM_TO_STR_BUFF_SIZE];
     NGREST_ASSERT(::ngrest::toCString($($var), $($name)Buff, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
+    const char* $($name)CStr = context->pool.putCString($($name)Buff, true);
 ##endif
     $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::\
 ##ifeq($(.name.!match/bool/),true)
@@ -17,7 +18,7 @@ Number\
 ##endif
 , \
 ##ifneq($(.name.!match/bool/),true)
-$($name)Buff\
+$($name)CStr\
 ##else
 $($var) ? "true" : "false"\
 ##endif
@@ -74,7 +75,8 @@ $($var) ? "true" : "false"\
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
     char $($name)BuffItem[NUM_TO_STR_BUFF_SIZE];
     NGREST_ASSERT(::ngrest::toCString($($name)Item.first, $($name)BuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
-##var inlineValue $($name)BuffItem
+    const char* $($name)CStrItem = context->pool.putCString($($name)BuffItem, true);
+##var inlineValue $($name)CStrItem
 ##else
 ##var inlineValue $($name)Item.first ? "true" : "false"
 ##endif

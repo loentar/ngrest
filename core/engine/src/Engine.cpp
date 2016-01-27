@@ -61,7 +61,7 @@ void Engine::dispatchMessage(MessageContext* context)
 
         dispatcher.dispatchMessage(context);
     } catch (const Exception& err) {
-        LogWarning() << /*err.getFileLine() << " " << */err.getFunction() << " : " << err.what();
+        LogWarning() << err.getFileLine() << " " << err.getFunction() << " : " << err.what();
         context->callback->error(err);
     }
 }
