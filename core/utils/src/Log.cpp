@@ -14,17 +14,6 @@
 
 namespace ngrest {
 
-inline const char* baseName(const char* path)
-{
-    const char* last = path;
-    while (*path) {
-        if (*path == '/' || *path == '\\')
-            last = path + 1;
-        ++path;
-    }
-    return last;
-}
-
 Log& Log::inst()
 {
     static Log instance;
@@ -191,7 +180,7 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
     }
 
     if ((verbosity & LogVerbosityFileLine))
-        *out << baseName(fileLine);
+        *out << fileLine;
 
     if ((verbosity & LogVerbosityFunction))
         *out << function << ": ";

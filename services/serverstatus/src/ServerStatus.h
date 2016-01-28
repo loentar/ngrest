@@ -1,5 +1,5 @@
-#ifndef NGREST_EXAMPLES_SERVERSTATUS_H
-#define NGREST_EXAMPLES_SERVERSTATUS_H
+#ifndef NGREST_SERVERSTATUS_H
+#define NGREST_SERVERSTATUS_H
 
 #include <string>
 #include <ngrest/common/Service.h>

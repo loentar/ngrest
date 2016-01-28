@@ -56,6 +56,7 @@ core/utils/src/Exception.cpp
 core/utils/src/Exception.h
 core/utils/src/File.cpp
 core/utils/src/File.h
+core/utils/src/fileline.h
 core/utils/src/fromcstring.h
 core/utils/src/fromstring.h
 core/utils/src/Log.cpp
@@ -68,6 +69,7 @@ core/utils/src/PluginExport.h
 core/utils/src/Plugin.h
 core/utils/src/Runtime.cpp
 core/utils/src/Runtime.h
+core/utils/src/static.h
 core/utils/src/stringutils.h
 core/utils/src/tocstring.h
 core/utils/src/tostring.h

@@ -1,12 +1,6 @@
-#include <unordered_map>
-
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>
 #include <ngrest/engine/Transport.h>
-#include <ngrest/engine/Engine.h>
-#include <ngrest/engine/ServiceDispatcher.h>
-#include <ngrest/engine/ServiceWrapper.h>
-#include <ngrest/engine/ServiceDescription.h>
 
 #include "Favicon.h"
 #include "favicon_ico.h"
