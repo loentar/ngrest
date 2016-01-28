@@ -105,6 +105,7 @@ int Server::exec()
     }
 
     LogInfo() << "Simple NGREST server started on port " << port << ".";
+    LogInfo() << "Deployed services: http://localhost:" << port << "/ngrest/services .";
 
     /* The event loop */
     while (!isStopping) {

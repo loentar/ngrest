@@ -125,8 +125,8 @@ void ClientHandler::connected(int fd, const sockaddr* addr)
                               client->port, sizeof(client->port),
                               NI_NUMERICHOST | NI_NUMERICSERV);
         if (res == 0) {
-            LogInfo() << "Accepted connection on client " << fd
-                      << " (host=" << client->host << ", port=" << client->port << ")";
+            LogDebug() << "Accepted connection on client " << fd
+                       << " (host=" << client->host << ", port=" << client->port << ")";
         } else {
             client->host[0] = '\0';
             client->port[0] = '\0';
