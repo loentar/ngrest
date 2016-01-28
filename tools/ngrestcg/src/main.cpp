@@ -1,3 +1,23 @@
+/*
+ *  Copyright 2016 Utkin Dmitry <loentar@gmail.com>
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+/*
+ *  This file is part of ngrest: http://github.com/loentar/ngrest
+ */
+
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -24,7 +44,7 @@
 void help()
 {
     std::cerr << "Code generator for ngrest\n"
-                 "ngrest_codegen [source files][-t<template>][-p<plugin_name>][-i<inputdir>][-i<outputdir>][-c<chagedir>]"
+                 "ngrestcg [source files][-t<template>][-p<plugin_name>][-i<inputdir>][-i<outputdir>][-c<chagedir>]"
                  "[-u][-e][-n<prj_name>][-x][-v]\n"
                  "  -t<template>    - Generate source with template name. Example: -tserviceimpl\n"
                  "  -p<plugin_name> - Use parser <plugin_name> to read source file(s). (default is cpp). Example: -pwsdl\n"
@@ -234,10 +254,11 @@ int main(int argc, const char* argv[])
             }
 
             case 'v':
-                std::cout << "ngrest_codegen version " VERSION_FULL
-                             "\n\nCopyright © 2015 Utkin Dmitry\n\n"
+                std::cout << "ngrestcg version " VERSION_FULL
+                             "\n\nCopyright © 2016 Utkin Dmitry\n\n"
                              "Licensed under the Apache License, Version 2.0: "
-                             "http://www.apache.org/licenses/LICENSE-2.0"
+                             "http://www.apache.org/licenses/LICENSE-2.0\n\n"
+                             "For more information, please visit: https://github.com/loentar/ngrest"
                           << std::endl;
                 return 0;
 
