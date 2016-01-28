@@ -100,6 +100,10 @@ examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
 services/CMakeLists.txt
+services/favicon/CMakeLists.txt
+services/favicon/src/Favicon.cpp
+services/favicon/src/Favicon.h
+services/favicon/src/favicon_ico.h
 services/serverstatus/CMakeLists.txt
 services/serverstatus/src/ServerStatus.cpp
 services/serverstatus/src/ServerStatus.h

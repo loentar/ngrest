@@ -204,6 +204,7 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
                 {
 ##var isCommaParam 0
 ##foreach $(.params)
+##ifneq($(param.dataType.name),Callback||MessageContext)
 ##ifeq($($isCommaParam),0)
 ##var isCommaParam 1
 ##else
@@ -214,6 +215,7 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
 ##include <common/jsonType.h>
 ##endcontext
 }\
+##endif
 ##endfor // params
 
                 },

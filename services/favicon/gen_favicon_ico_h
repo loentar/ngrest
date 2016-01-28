@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd img
+xxd -i favicon.ico >../src/favicon_ico.h

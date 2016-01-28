@@ -144,10 +144,13 @@ struct ServiceDispatcher::Impl
         std::string::size_type end = 0;
         DeployedService* service = nullptr;
 
-        while (end != std::string::npos) {
+        const std::string::size_type pathSize = path.size();
+
+        while (end != pathSize) {
             end = path.find('/', start);
-            const std::string& part = (end != std::string::npos)
-                    ? path.substr(start, end - start) : path.substr(start);
+            if (end == std::string::npos)
+                end = pathSize;
+            const std::string& part = path.substr(start, end - start);
 
             auto it = curr->children.find(part);
             if (it == curr->children.end()) {
@@ -158,7 +161,7 @@ struct ServiceDispatcher::Impl
             NGREST_ASSERT_NULL(curr);
             if (curr->service) {
                 service = curr->service;
-                matchedPos = end + 1;
+                matchedPos = (end == pathSize) ? pathSize : (end + 1);
             }
 
             start = end + 1;
@@ -296,7 +299,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
     NGREST_ASSERT(service, "No service found to handle resource " + path);
 
     const std::string& opLocation = path.substr(begin);
-    NGREST_ASSERT(opLocation.empty() || opLocation.find_first_of(" \n\r\t") == std::string::npos,
+    NGREST_ASSERT(opLocation.find_first_of(" \n\r\t") == std::string::npos,
                   "Operation location is not valid: " + opLocation);
 
     int method = context->transport->getRequestMethod(context->request);
