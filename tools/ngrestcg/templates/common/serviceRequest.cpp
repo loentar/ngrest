@@ -4,7 +4,7 @@
 /// ######### deserialize request ###########
 ##ifneq($(operation.params.$count)-$(operation.params.param.dataType.name),1-MessageContext)
         NGREST_ASSERT(context->request->node, "Request expected for $(service.serviceNsName)/$(operation.name)");
-        NGREST_ASSERT_PARAM(context->request->node->type == NodeType::Object);
+        NGREST_ASSERT_PARAM(context->request->node->type == ::ngrest::NodeType::Object);
 
         const ::ngrest::Object* request = static_cast<const ::ngrest::Object*>(context->request->node);
 ##endif

@@ -38,7 +38,7 @@ public:
       http://server:port/ngrest/examples/Echo/echo
       -- body -----------------------
       {
-        "str": "Hello ngrest!"
+        "text": "Hello ngrest!"
       }
       -- end body -------------------
     */

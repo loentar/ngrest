@@ -495,14 +495,14 @@ public:
             function.erase(0, 8);
             fixId(result);
         } else if (function.substr(0, 3) == "inc") {
-            double dTmp = 0;
-            fromString(result, dTmp);
-            toString(dTmp + 1, result);
+            int tmp = 0;
+            fromString(result, tmp);
+            toString(tmp + 1, result);
             function.erase(0, 3);
         } else if (function.substr(0, 3) == "dec") {
-            double dTmp = 0;
-            fromString(result, dTmp);
-            toString(dTmp - 1, result);
+            int tmp = 0;
+            fromString(result, tmp);
+            toString(tmp - 1, result);
             function.erase(0, 3);
         } else if (function.substr(0, 4) == "add/") {
             std::string::size_type posWhat = function.find('/', 4);
@@ -510,28 +510,23 @@ public:
             NGREST_ASSERT(posWhat != std::string::npos, "Can't get operand for add");
 
             const std::string& what = function.substr(4, posWhat - 4);
-            double dOp1 = 0;
-            double dOp2 = 0;
-            fromString(result, dOp1);
-            fromString(what, dOp2);
-            toString(dOp1 + dOp2, result);
+            int op1 = 0;
+            int op2 = 0;
+            fromString(result, op1);
+            fromString(what, op2);
+            toString(op1 + op2, result);
             function.erase(0, posWhat + 1);
         } else if (function.substr(0, 4) == "sub/") {
             std::string::size_type posWhat = function.find('/', 4);
 
             NGREST_ASSERT(posWhat != std::string::npos, "Can't get operand for sub");
             const std::string& what = function.substr(4, posWhat - 4);
-            double dOp1 = 0;
-            double dOp2 = 0;
-            fromString(result, dOp1);
-            fromString(what, dOp2);
-            toString(dOp1 - dOp2, result);
+            int op1 = 0;
+            int op2 = 0;
+            fromString(result, op1);
+            fromString(what, op2);
+            toString(op1 - op2, result);
             function.erase(0, posWhat + 1);
-        } else if (function.substr(0, 5) == "trunc") {
-            double dTmp = 0;
-            fromString(result, dTmp);
-            toString(static_cast<long>(dTmp), result);
-            function.erase(0, 5);
         } else {
             NGREST_THROW_ASSERT("function " + function + " is undefined");
         }
@@ -988,6 +983,65 @@ public:
         }
     }
 
+    void processWhile(std::istream& in, std::ostream& out, const xml::Element& element, std::string& line,
+                      bool invertExpression)
+    {
+        std::stringbuf data;
+        std::string lines;
+        int recursion = 1;
+
+        std::string::size_type posStart = 8;
+        std::string::size_type posEnd = line.find(",", posStart);
+
+        NGREST_ASSERT(posEnd != std::string::npos, "while expression is invalid!");
+        const std::string& left = line.substr(posStart, posEnd - posStart);
+
+        posStart = posEnd + 1;
+        posEnd = line.find(')', posStart);
+        NGREST_ASSERT(posEnd != std::string::npos, "while expression is invalid!");
+        const std::string& right = line.substr(posStart, posEnd - posStart);
+
+        while (!in.eof() && in.good()) {
+            if (in.peek() == '\n') {
+                line = "\n";
+            } else {
+                in.get(data, '\n');
+                line = data.str();
+                if (in.peek() == '\n')
+                    line += "\n";
+                data.str("");
+            }
+            in.ignore();
+            in.peek(); // for EOF
+
+            if (line.substr(0, 8) == "##while" || line.substr(0, 8) == "##until") {
+                ++recursion;
+            } else if (line.substr(0, 6) == "##done") {
+                --recursion;
+                if (recursion == 0)
+                    break;
+            }
+
+            lines += line;
+        }
+
+        NGREST_ASSERT(recursion == 0, "Unexpected EOF while parsing: \n---------\n" + lines +
+                      "\n------------\n");
+
+        for (;;) {
+            std::string leftResolved = left;
+            std::string rightResolved = right;
+            replaceToValue(leftResolved, element);
+            replaceToValue(rightResolved, element);
+
+            if ((leftResolved == rightResolved) == invertExpression)
+                break;
+
+            std::istringstream stream(lines);
+            process(stream, out, element);
+        }
+    }
+
     void processContext(std::istream& fsIn, std::ostream& fsOut, const xml::Element& element,
                         std::string& line)
     {
@@ -1169,6 +1223,10 @@ public:
                 processIfeq(fsIn, out, element, line);
             } else if (line.substr(0, 8) == "##ifneq(") {
                 processIfeq(fsIn, out, element, line, true);
+            } else if (line.substr(0, 8) == "##while(") {
+                processWhile(fsIn, out, element, line, false);
+            } else if (line.substr(0, 8) == "##until(") {
+                processWhile(fsIn, out, element, line, true);
             } else if (line.substr(0, 9) == "##switch ") {
                 processSwitch(fsIn, out, element, line);
             } else if (line.substr(0, 10) == "##foreach ") {

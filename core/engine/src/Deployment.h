@@ -34,7 +34,7 @@ public:
     Deployment(ServiceDispatcher& dispatcher);
     ~Deployment();
 
-    void deployAll();
+    void deployAll(const std::string& servicesPath);
 
     void deploy(const std::string& servicePath);
     void undeploy(const std::string& servicePath);

@@ -61,7 +61,7 @@ void DynamicLibrary::load(const std::string& libName, bool raw /*= false*/)
 #endif
     }
 
-    NGREST_ASSERT(handle, "Failed load library [" + libName + "]: " + Error::getLastLibraryError());
+    NGREST_ASSERT(handle, "Failed to load library [" + libName + "]: " + Error::getLastLibraryError());
     this->libName = libName;
     this->raw = raw;
 }

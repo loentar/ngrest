@@ -23,7 +23,6 @@
 #include <ngrest/utils/File.h>
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/Plugin.h>
-#include <ngrest/utils/Runtime.h>
 #include <ngrest/engine/ServiceDescription.h>
 
 #include "ServiceGroup.h"
@@ -56,12 +55,10 @@ Deployment::~Deployment()
     delete impl;
 }
 
-void Deployment::deployAll()
+void Deployment::deployAll(const std::string& servicesPath)
 {
     // find service libraries
     StringList libs;
-    const std::string& servicesPath = Runtime::getSharePath()
-            + NGREST_PATH_SEPARATOR "services" NGREST_PATH_SEPARATOR;
     File(servicesPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeRegularFile);
 
     if (libs.empty()) {

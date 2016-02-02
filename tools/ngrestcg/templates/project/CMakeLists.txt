@@ -1,7 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-project (ngrest)
-
-set(NGREST_VERSION "0.2")
+project ($(project.name))
 
 include(CheckCXXCompilerFlag)
 
@@ -35,12 +33,9 @@ set(PROJECT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/deploy)
 set(PROJECT_INCLUDE_DIR ${PROJECT_DEPLOY_DIR}/include)
 set(PROJECT_SHARE_DIR ${PROJECT_DEPLOY_DIR}/share/ngrest)
 set(PROJECT_SERVICES_DIR ${PROJECT_SHARE_DIR}/services)
-set(PROJECT_CODEGEN_DIR ${PROJECT_SHARE_DIR}/codegen)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/bin)
-set(TESTS_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/tests)
-set(EXAMPLES_OUTPUT_DIRECTORY ${PROJECT_DEPLOY_DIR}/examples)
 
 FUNCTION(PREPEND var prefix)
    SET(listVar "")
@@ -62,14 +57,18 @@ ENDFUNCTION(CODEGEN_FILES)
 
 include_directories("${PROJECT_INCLUDE_DIR}")
 
-add_subdirectory(core)
-add_subdirectory(tools)
-add_subdirectory(services)
-
-if ("$ENV{WITH_TESTS}" STREQUAL "1")
-    add_subdirectory(tests)
+if (NOT "$ENV{NGREST_HOME}" STREQUAL "")
+  include_directories("$ENV{NGREST_HOME}/include")
+  link_directories("$ENV{NGREST_HOME}/lib")
+  set(NGREST_BIN_PATH "$ENV{NGREST_HOME}/bin/")
 endif()
 
-if ("$ENV{WITH_EXAMPLES}" STREQUAL "1")
-    add_subdirectory(examples)
-endif()
+# services deployed from this project
+
+##var servicesTmp $($services)
+##until($($servicesTmp),)
+##var serviceNs $($servicesTmp.!lasttoken/ /||$servicesTmp)
+##var service $($serviceNs.!lasttoken/./||$serviceNs)
+add_subdirectory($($service.!tolower))
+##var servicesTmp $($servicesTmp.!cutlast/ /)
+##done

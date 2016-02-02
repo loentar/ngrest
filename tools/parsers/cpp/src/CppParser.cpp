@@ -1614,7 +1614,7 @@ void CppParser::process(const ParseSettings& parseSettings, Project& project)
 
     if (!servicesCount && !parseSettings.noServiceWarn && !project.interfaces.empty()) {
         LogWarning() << "No ngrest service interfaces found. "
-                        "Ngrest services must be inherited from ngrest::Service.\n"
+                        "ngrest services must be inherited from ngrest::Service.\n"
                         "Example:\n----\n#include <ngrest/common/Service.h>"
                         "\n\n  class Calc: public ngrest::Service\n"
                         "  {\n  public:\n    "

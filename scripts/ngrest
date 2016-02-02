@@ -1,0 +1,240 @@
+#!/bin/bash
+
+set -eu
+
+export NGREST_HOME=~/.ngrest/ngrest-build/deploy
+export PATH=$PATH:$NGREST_HOME/bin
+nl="
+"
+
+help_create() {
+  cat >&2 << EOF
+Usage: ngrest create [<project_name>] <service_name> [<service_name>...]
+
+Create a new project with one or more services.
+Service name may optionally contain package name.
+
+
+Example 1. Create service calculator which is bound to "/calculator" resource:
+
+  ngrest create calculator
+
+
+Example 2. Create service calculator which is bound to "/ngrest/example/calculator" resource:
+
+  ngrest create ngrest.example.calculator
+
+Example 3. Create service calculator which is bound to "/ngrest/example/calculator" resource and set project name to "calc":
+
+  ngrest create calc ngrest.example.calculator
+
+EOF
+}
+
+help_run() {
+  cat >&2 << EOF
+Usage: ngrest [run]
+
+Build and run your project in local deployment mode.
+
+Must start in project's dir, i.e. current directory must contain '.ngrest' subdirectory and service(s) subdirectories.
+
+There a set of environment variables to control the server:
+
+  NGREST_SERVER_PORT       Sets port where server should listen for incoming connections.
+
+  NGREST_LOG_LEVEL         Sets log level. Supported values are:
+                              ALERT CRIT ERROR WARNING NOTICE INFO DEBUG VERBOSE TRACE
+
+  NGREST_LOG_VERBOSITY     Sets log verbosity. This variable is a combination of values such as:
+                              TEXT LEVEL FILELINE FUNCTION DATETIME DEFAULT ALL
+
+Example 1. Start your project enabling all log messages:
+
+  NGREST_LOG_LEVEL=TRACE NGREST_LOG_VERBOSITY=ALL ngrest
+
+Example 2. Start your project and set server's port to 9090:
+
+  NGREST_SERVER_PORT=9090 ngrest
+
+EOF
+}
+
+help() {
+  case "${1:-}" in
+  create)
+    help_create
+    ;;
+
+  run)
+    help_run
+    ;;
+
+  *)
+    cat >&2 << EOF
+Usage: ngrest [help] [<command>] [<arguments>]
+
+Commands:
+  create         Create a new project.
+  run            (default) Run current project in local deployment mode.
+  help           Display help for the command.
+
+EOF
+    ;;
+  esac
+}
+
+create() {
+  if [ -z "$1" ]
+  then
+    echo "Project name omitted" >&2
+    help_create
+    exit 1
+  fi
+
+  if [ -z "${2:-}" ]
+  then
+    # generate project name from service name
+    SERVICE_NAME=${1:-}
+    PROJECT_NAME=${SERVICE_NAME##*\.}
+    PROJECT_NAME=${PROJECT_NAME,,}
+    shift
+  else
+    PROJECT_NAME=${1:-}
+    SERVICE_NAME=${2:-}
+    shift
+    shift
+  fi
+
+  if [ -z "$PROJECT_NAME" ]
+  then
+    echo "Project name cannot be empty" >&2
+    help_create
+    exit 1
+  fi
+
+  if [ -d "$PROJECT_NAME" ]
+  then
+    echo "Failed to create project [$PROJECT_NAME]: Another directory with the same name is already exist in current directory" >&2
+    exit 1
+  fi
+
+  if [ -z "$SERVICE_NAME" ]
+  then
+    echo "Service name cannot be empty" >&2
+    help_create
+    exit 1
+  fi
+
+  SERVICES=
+
+  while [ -n "$SERVICE_NAME" ]
+  do
+    if [[ ! "$SERVICE_NAME" =~ ^([a-z][a-z0-9_]*\.)*[a-zA-Z]([a-zA-Z_0-9]*)$ ]]
+    then
+      echo "Invalid service name: [$SERVICE_NAME]" >&2
+      echo "Service name must only contain digits, letters, underscore and dot symbol and must start with a letter" >&2
+      help_create
+      exit 1
+    fi
+
+    SERVICES+="$SERVICE_NAME "
+
+    SERVICE_NAME=${1:-}
+    [ -n "$SERVICE_NAME" ] && shift
+  done
+  SERVICES=${SERVICES% }
+
+  echo "Creating project [$PROJECT_NAME] with services [$SERVICES]..."
+  mkdir "$PROJECT_NAME" || (
+    echo "Failed to create directory for project [$PROJECT_NAME]" >&2
+    exit 1
+  )
+  cd "$PROJECT_NAME"
+  mkdir -p .ngrest/local
+  ngrestcg -t project -n "$PROJECT_NAME" -d services="$SERVICES" >.ngrest/local/codegen.log || (
+    echo "Failed to create project [$PROJECT_NAME] with services [$SERVICES]" >&2
+    cat .ngrest/local/codegen.log
+    cd -
+    rm -rf "$PROJECT_NAME" 2>/dev/null
+    exit 1
+  )
+
+  echo "$PROJECT_NAME" >.ngrest/name
+  echo "${SERVICES// /$nl}" >.ngrest/services
+  cat >.gitignore <<EOF
+.ngrest/local
+EOF
+
+  cat <<EOF
+
+
+Your new project [$PROJECT_NAME] has been created.
+
+You can start it by typing from "$PROJECT_NAME" directory:
+
+  ngrest
+
+EOF
+}
+
+run() {
+  if [ ! -e .ngrest/name ]
+  then
+    cat >&2 << EOF
+run: No ngrest projects found in current directory.
+
+To create a new ngrest project:
+  ngrest create <project_name>
+
+For more help, see "ngrest help".
+EOF
+    exit 1
+  fi
+
+  echo "Building project $(<.ngrest/name)..."
+
+  PORT=${NGREST_SERVER_PORT:-9098}
+  PROJECT_DIR=$PWD
+  mkdir -p .ngrest/local/build
+  cd .ngrest/local/build
+
+  cmake ${CMAKE_FLAGS:-} $PROJECT_DIR >cmake.log
+  make >make.log
+
+  echo -e "\nTo test your services try ngrest service tester:"
+  while read SERVICE
+  do
+    echo "  http://localhost:$PORT/ngrest/service/$SERVICE"
+  done < $PROJECT_DIR/.ngrest/services
+
+  if [ -z "${NGREST_LOG_VERBOSITY:-}" ]
+  then
+    export NGREST_LOG_VERBOSITY="LEVEL DATETIME TEXT"
+  fi
+
+  echo -e "\nStarting your project in local deployment mode..."
+  echo -e "Press [Ctrl+C] to stop your project\n"
+  exec ngrestserver -p $PORT -s $PWD/deploy/share/ngrest/services
+}
+
+COMMAND=${1:-}
+shift || true
+
+case $COMMAND in
+  create)
+    create $@
+    ;;
+
+  help)
+    help $@
+    ;;
+
+  run)
+    run
+    ;;
+
+  "")
+    run
+    ;;
+esac

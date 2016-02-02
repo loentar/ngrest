@@ -6,5 +6,6 @@ echo "updating files list..."
 find * -type f \
         \( -regex '\(\(.*\/\)?CMakeLists.txt\|.*\/codegen.config\|.*\.\(h\|hpp\|c\|cpp\|json\|js\|html\|css\|conf\|load\)\)' -o \
            -regex '.*/codegen/templates/.*' \) \
-       -a \! -regex '\(.*/\)?\(\..*\|.*~\|tmp\)/.*' | sort >ngrest.files
+       -a \! -regex '\(.*/\)?\(\..*\|.*~\|tmp\)/.*' \
+       -o -regex 'scripts/.*' | sort >ngrest.files
 echo "done."

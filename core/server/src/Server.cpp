@@ -104,8 +104,8 @@ int Server::exec()
         return EXIT_FAILURE;
     }
 
-    LogInfo() << "Simple NGREST server started on port " << port << ".";
-    LogInfo() << "Deployed services: http://localhost:" << port << "/ngrest/services .";
+    LogInfo() << "Simple ngrest server started on port " << port << ".";
+    LogInfo() << "Deployed services: http://localhost:" << port << "/ngrest/services";
 
     /* The event loop */
     while (!isStopping) {

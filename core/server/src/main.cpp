@@ -23,6 +23,8 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/ElapsedTimer.h>
+#include <ngrest/utils/Runtime.h>
+#include <ngrest/utils/File.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
@@ -34,7 +36,8 @@
 
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
-              << "  -p        port number to use (default: 9099)" << std::endl
+              << "  -s        set extra path to locate services" << std::endl
+              << "  -p        port number to use (default: 9098)" << std::endl
               << "  -h        display this help" << std::endl << std::endl;
     return 1;
 }
@@ -73,10 +76,13 @@ int main(int argc, char* argv[])
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
 
-    deployment.deployAll();
+    const std::string& servicesPath = ngrest::Runtime::getSharePath()
+        + NGREST_PATH_SEPARATOR "services" NGREST_PATH_SEPARATOR;
+    deployment.deployAll(servicesPath);
 
-    // TODO: implement file system watcher to re-load service on the fly
-
+    auto itPath = args.find("s");
+    if (itPath != args.end())
+        deployment.deployAll(itPath->second + NGREST_PATH_SEPARATOR);
 
     ngrest::LogInfo() << "Server startup time: " << (timer.elapsed() / 1000.) << "ms";
 

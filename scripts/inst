@@ -1,0 +1,97 @@
+#!/bin/bash
+
+set -eu
+
+TO_INSTALL=
+
+for app in git cmake g++
+do
+  $app --version >/dev/null 2>&1 || TO_INSTALL+="$app "
+done
+
+if [ -n "$TO_INSTALL" ]
+then
+  pkg=
+
+  # detect package manager
+  for p in apt-get yum
+  do
+    if $p -v >/dev/null 2>&1
+    then
+      pkg=$p
+      break
+    fi
+  done
+
+  if [ -z "$pkg" ]
+  then
+    echo "Cannot detect package manager"
+    exit 1
+  fi
+
+  echo "This script will install missing dependencies for you: $TO_INSTALL..."
+  echo "To continue please enter your password, or press Ctrl+C to install it manually."
+  sudo $pkg install -y $TO_INSTALL </dev/null
+fi
+
+export NGREST_HOME=$HOME/.ngrest
+
+mkdir -p $NGREST_HOME
+cd $NGREST_HOME
+
+SRC_DIR=$NGREST_HOME/ngrest
+BUILD_DIR=$SRC_DIR-build
+
+test ! -e $SRC_DIR || mv $SRC_DIR $SRC_DIR~$(date +%F-%T)
+rm -rf $BUILD_DIR
+
+git clone https://github.com/loentar/ngrest.git
+
+mkdir $BUILD_DIR
+cd $BUILD_DIR
+
+echo "Configuring ngrest for the build..."
+cmake ${CMAKE_FLAGS:-} $SRC_DIR >$BUILD_DIR/cmake-build.log
+jobs=$(grep processor /proc/cpuinfo | wc -l) || jobs=4
+echo "Building ngrest. It may take few minutes..."
+make -j$jobs -C $BUILD_DIR >make-build.log
+
+# install to ~/bin if user already created it
+if [[ $PATH =~ ~/bin ]]
+then
+  USERINST=1
+fi
+
+if [ -z "${USERINST:-}" ]
+then
+  #ln -nsf $BUILD_DIR/deploy ngrest
+  echo "Installing ngrest script into /usr/local/bin/"
+  sudo cp -f $SRC_DIR/scripts/ngrest /usr/local/bin/
+  sudo chown 0:0 /usr/local/bin/ngrest
+  sudo chmod 755 /usr/local/bin/ngrest
+else
+  echo "Installing ngrest script into ~/bin/"
+  if [[ ! $PATH =~ ~/bin ]]
+  then
+    cat << EOF 
+ *** Please note: You need to re-login after installation completed. Else 'ngrest' command may not work ***
+If you cannot access 'ngrest' command after re-login you need to add this line into your startup scripts: ~/.bashrc or ~/.profile
+
+  PATH="$HOME/bin:$PATH"
+\[e0m
+EOF
+  fi
+
+  mkdir -p ~/bin
+  cp -f $SRC_DIR/scripts/ngrest ~/bin/
+  chmod 755 ~/bin/ngrest
+fi
+
+cat << EOF
+Installation completed.
+
+Now you can create your first project by typing:
+
+  ngrest create myproject
+
+EOF

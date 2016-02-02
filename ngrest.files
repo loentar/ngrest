@@ -101,6 +101,8 @@ examples/crud/src/Crud.h
 examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
+scripts/inst
+scripts/ngrest
 services/CMakeLists.txt
 services/favicon/CMakeLists.txt
 services/favicon/src/Favicon.cpp
@@ -142,6 +144,9 @@ tools/ngrestcg/src/CodeGen.h
 tools/ngrestcg/src/main.cpp
 tools/ngrestcg/src/XmlGen.cpp
 tools/ngrestcg/src/XmlGen.h
+tools/ngrestcg/templates/addservice/CMakeLists.txt
+tools/ngrestcg/templates/addservice/Service.cpp
+tools/ngrestcg/templates/addservice/Service.h
 tools/ngrestcg/templates/common/deserialization.cpp
 tools/ngrestcg/templates/common/enums.cpp
 tools/ngrestcg/templates/common/enums.h
@@ -154,6 +159,8 @@ tools/ngrestcg/templates/common/structs.cpp
 tools/ngrestcg/templates/common/structs.h
 tools/ngrestcg/templates/common/typedefs.cpp
 tools/ngrestcg/templates/common/typedefs.h
+tools/ngrestcg/templates/project/CMakeLists.txt
+tools/ngrestcg/templates/project/codegen.config
 tools/ngrestcg/templates/service/codegen.config
 tools/ngrestcg/templates/service/ServiceGroupImpl.cpp
 tools/ngrestcg/templates/service/ServiceGroupImpl.h

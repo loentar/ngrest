@@ -135,7 +135,7 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
     if ((verbosity & LogVerbosityLevel)) {
         switch (logLevel) {
         case LogLevelAlert:
-            *out << "ALERT ";
+            *out << "   ALERT ";
             break;
 
         case LogLevelCrit:
@@ -143,35 +143,35 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
             break;
 
         case LogLevelError:
-            *out << "ERROR ";
+            *out << "   ERROR ";
             break;
 
         case LogLevelWarning:
-            *out << "WARNING ";
+            *out << " WARNING ";
             break;
 
         case LogLevelNotice:
-            *out << "NOTICE ";
+            *out << "  NOTICE ";
             break;
 
         case LogLevelInfo:
-            *out << "INFO ";
+            *out << "    INFO ";
             break;
 
         case LogLevelDebug:
-            *out << "DEBUG ";
+            *out << "   DEBUG ";
             break;
 
         case LogLevelVerbose:
-            *out << "VERBOSE ";
+            *out << " VERBOSE ";
             break;
 
         case LogLevelTrace:
-            *out << "TRACE ";
+            *out << "   TRACE ";
             break;
 
         default:
-            *out << "UNKNOWN ";
+            *out << " UNKNOWN ";
         }
     }
 

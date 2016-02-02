@@ -35,7 +35,7 @@
 
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
-              << "  -p        port number to use (default: 9099)" << std::endl
+              << "  -p        port number to use (default: 9098)" << std::endl
               << "  -h        display this help" << std::endl << std::endl;
     return 1;
 }
