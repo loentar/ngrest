@@ -58,10 +58,14 @@ ENDFUNCTION(CODEGEN_FILES)
 include_directories("${PROJECT_INCLUDE_DIR}")
 
 if (NOT "$ENV{NGREST_HOME}" STREQUAL "")
-  include_directories("$ENV{NGREST_HOME}/include")
-  link_directories("$ENV{NGREST_HOME}/lib")
-  set(NGREST_BIN_PATH "$ENV{NGREST_HOME}/bin/")
+  set(NGREST_HOME "$ENV{NGREST_HOME}")
+else()
+  set(NGREST_HOME "$ENV{HOME}/.ngrest/ngrest-build/deploy")
 endif()
+
+include_directories("${NGREST_HOME}/include")
+link_directories("${NGREST_HOME}/lib")
+set(NGREST_BIN_PATH "${NGREST_HOME}/bin/")
 
 # services deployed from this project
 
