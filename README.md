@@ -10,7 +10,7 @@ Currently only Linux supported, but there are plans to extend support for other 
 
 To install ngrest, open terminal and copy-paste:
 
-`wget https://raw.githubusercontent.com/loentar/ngrest/master/scripts/inst | bash`
+`wget -qO- https://raw.githubusercontent.com/loentar/ngrest/master/scripts/inst | bash`
 
 
 **Notes:**
