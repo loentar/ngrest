@@ -377,7 +377,7 @@ void ClientHandler::processRequest(int clientFd, MessageData* messageData)
         // handle body from poolStr with offset
         NGREST_ASSERT_NULL(messageData->poolStr.getChunkCount() == 1); // should never happen
 
-        const MemPool::Chunk* chunk = messageData->poolStr.getLastChunk(); // already flat
+        const MemPool::Chunk* chunk = messageData->poolStr.flatten(); // already flat, but we need NUL
         NGREST_ASSERT(messageData->httpBodyOffset <= chunk->size, "Request > size");
         httpRequest->bodySize = chunk->size - messageData->httpBodyOffset;
         if (httpRequest->bodySize)

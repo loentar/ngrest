@@ -39,7 +39,7 @@ Build and run your project in local deployment mode.
 
 Must start in project's dir, i.e. current directory must contain '.ngrest' subdirectory and service(s) subdirectories.
 
-There a set of environment variables to control the server:
+There a set of environment variables to control the build process and the server:
 
   NGREST_SERVER_PORT       Sets port where server should listen for incoming connections.
 
@@ -49,6 +49,11 @@ There a set of environment variables to control the server:
   NGREST_LOG_VERBOSITY     Sets log verbosity. This variable is a combination of values such as:
                               TEXT LEVEL FILELINE FUNCTION DATETIME DEFAULT ALL
 
+  CMAKE_FLAGS              Sets CMAKE arguments used to build your project.
+
+  MAKE_FLAGS               Sets MAKE arguments used to build your project.
+
+
 Example 1. Start your project enabling all log messages:
 
   NGREST_LOG_LEVEL=TRACE NGREST_LOG_VERBOSITY=ALL ngrest
@@ -56,6 +61,15 @@ Example 1. Start your project enabling all log messages:
 Example 2. Start your project and set server's port to 9090:
 
   NGREST_SERVER_PORT=9090 ngrest
+
+EOF
+}
+
+help_clean() {
+  cat >&2 << EOF
+Usage: ngrest clean
+
+Cleans build and program caches. Useful when you change CMAKE/MAKE flags
 
 EOF
 }
@@ -70,6 +84,10 @@ help() {
     help_run
     ;;
 
+  clean)
+    help_clean
+    ;;
+
   *)
     cat >&2 << EOF
 Usage: ngrest [help] [<command>] [<arguments>]
@@ -77,6 +95,7 @@ Usage: ngrest [help] [<command>] [<arguments>]
 Commands:
   create         Create a new project.
   run            (default) Run current project in local deployment mode.
+  clean          Cleans build and program cache.
   help           Display help for the command.
 
 EOF
@@ -178,6 +197,69 @@ You can start it by typing from "$PROJECT_NAME" directory:
 EOF
 }
 
+build() {
+  echo "Building project $(<$PROJECT_DIR/.ngrest/name)..."
+  CMAKE_FLAGS=${CMAKE_FLAGS:-'-DCMAKE_BUILD_TYPE=DEBUG'}
+  cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
+  make ${MAKE_FLAGS:-} >make.log || return $?
+  mkdir -p services
+  rm -f services/*
+  cp $PWD/deploy/share/ngrest/services/* services/
+}
+
+start_server() {
+  CODE=0
+  rm -f core*
+  ulimit -c unlimited 2>/dev/null || true
+  ngrestserver -p $PORT -s $PWD/services || CODE=$?
+  if [ $CODE -eq 139 ]
+  then
+    CORE=$(find core* -type f -name 'core*' || true)
+    if [ -n "$CORE" ]
+    then
+      echo -e "\n===== CORE DUMP ==========================================================="
+      gdb -q $NGREST_HOME/bin/ngrestserver -core $CORE <<< "bt" 2>/dev/null || true
+      echo -e "===== END OF CORE DUMP ====================================================\n"
+    fi
+    echo "Server crashed. Waiting for project modifications..." >&2
+  fi
+}
+
+stop_server() {
+  SERVER_PID=$(ps --no-headers --ppid $NGREST_SERVER_WATCHER_PID -o pid,comm |\
+         sed -n '/ ngrestserver/{s/^[ ]*\([0-9]\+\) .*/\1/;p}')
+  if [ -z "$SERVER_PID" ]
+  then
+    CORE=$(find core* -type f -name 'core*' || true)
+    [ -n "$CORE" ] || echo "Cannot find server's PID." >&2
+    return
+  fi
+
+  if [ -n "$SERVER_PID" ]
+  then
+    kill -INT $SERVER_PID
+    sleep 1
+    COUNT=10
+    while :
+    do
+      if kill -0 $SERVER_PID 2>/dev/null
+      then :; else
+        FINISHED=1
+        break
+      fi
+
+      ((--COUNT))
+      if [ $COUNT -eq 0 ]
+      then
+        kill -KILL $SERVER_PID
+        sleep .5
+        break
+      fi
+      sleep .5
+    done
+  fi
+}
+
 run() {
   if [ ! -e .ngrest/name ]
   then
@@ -192,15 +274,12 @@ EOF
     exit 1
   fi
 
-  echo "Building project $(<.ngrest/name)..."
-
   PORT=${NGREST_SERVER_PORT:-9098}
   PROJECT_DIR=$PWD
   mkdir -p .ngrest/local/build
   cd .ngrest/local/build
 
-  cmake ${CMAKE_FLAGS:-} $PROJECT_DIR >cmake.log
-  make >make.log
+  build
 
   echo -e "\nTo test your services try ngrest service tester:"
   while read SERVICE
@@ -215,7 +294,52 @@ EOF
 
   echo -e "\nStarting your project in local deployment mode..."
   echo -e "Press [Ctrl+C] to stop your project\n"
-  exec ngrestserver -p $PORT -s $PWD/deploy/share/ngrest/services
+  if [ -n "${DISABLE_WATCHER:-}" ]
+  then
+    start_server
+  else
+    WAIT_FILES=${WAIT_FILES:-'(.*\.(c|cpp|h|hpp)|CMakeLists.txt)$'}
+    EXCLUDE_WAIT_FILES=${EXCLUDE_WAIT_FILES:-'.*/\..*$'}
+
+    start_server &
+    NGREST_SERVER_WATCHER_PID=$!
+
+    # watcher
+    sleep 1
+    echo "Watching your project for modifications..."
+    while :
+    do
+      FILE=$(inotifywait -q -e close_write -r "$PROJECT_DIR" --format "%w%f")
+      case $? in
+        127) # command not found
+          echo "Cannot find inotifywait. Please install it or start ngrest without watcher:" >&2
+          echo "  DISABLE_WATCHER=1 ngrest" >&2
+          exit 1
+          ;;
+        130) #Ctr+C
+          exit 130
+          ;;
+      esac
+
+      sleep 1
+      [[ "$FILE" =~ $WAIT_FILES ]] || continue
+      [[ ! "$FILE" =~ $EXCLUDE_WAIT_FILES ]] || continue
+
+      echo "Project files changed."
+      if build
+      then :; else
+        echo "Build failed. Waiting for project modifications..."
+        echo "(Server is still running with last successful build)"
+        continue
+      fi
+
+      echo "Build successful. Restarting the server..."
+      stop_server
+      start_server &
+      NGREST_SERVER_WATCHER_PID=$!
+    done
+
+  fi
 }
 
 COMMAND=${1:-}
@@ -232,6 +356,10 @@ case $COMMAND in
 
   run)
     run
+    ;;
+
+  clean)
+    rm -rf .ngrest/local/*
     ;;
 
   "")

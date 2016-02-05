@@ -3,11 +3,18 @@
 set -eu
 
 TO_INSTALL=
+TO_INSTALL_OPT=
 
 for app in git cmake g++
 do
   $app --version >/dev/null 2>&1 || TO_INSTALL+="$app "
 done
+
+inotifywait --help >/dev/null 2>&1
+if [ $? == 127 ] # command not found
+then
+  TO_INSTALL_OPT+="inotify-tools "
+fi
 
 if [ -n "$TO_INSTALL" ]
 then
@@ -29,9 +36,10 @@ then
     exit 1
   fi
 
-  echo "This script will install missing dependencies for you: $TO_INSTALL..."
+  echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
   echo "To continue please enter your password, or press Ctrl+C to install it manually."
   sudo $pkg install -y $TO_INSTALL </dev/null
+  sudo $pkg install -y $TO_INSTALL_OPT </dev/null || true
 fi
 
 export NGREST_HOME=$HOME/.ngrest
@@ -74,7 +82,7 @@ else
   if [[ ! $PATH =~ ~/bin ]]
   then
     cat << EOF 
- *** Please note: You need to re-login after installation completed. Else 'ngrest' command may not work ***
+ *** Please note: You must re-login after installation completed. Else 'ngrest' command may not work ***
 If you cannot access 'ngrest' command after re-login you need to add this line into your startup scripts: ~/.bashrc or ~/.profile
 
   PATH="$HOME/bin:$PATH"
