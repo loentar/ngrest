@@ -86,7 +86,7 @@ else
 If you cannot access 'ngrest' command after re-login you need to add this line into your startup scripts: ~/.bashrc or ~/.profile
 
   PATH="$HOME/bin:$PATH"
-\[e0m
+
 EOF
   fi
 

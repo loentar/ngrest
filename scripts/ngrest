@@ -207,6 +207,10 @@ build() {
   cp $PWD/deploy/share/ngrest/services/* services/
 }
 
+color() {
+  [ -n "${NO_LOG_COLOR:-}" ] || echo -en "\e[$1m"
+}
+
 start_server() {
   CODE=0
   rm -f core*
@@ -217,11 +221,23 @@ start_server() {
     CORE=$(find core* -type f -name 'core*' || true)
     if [ -n "$CORE" ]
     then
+      color "33"
       echo -e "\n===== CORE DUMP ==========================================================="
-      gdb -q $NGREST_HOME/bin/ngrestserver -core $CORE <<< "bt" 2>/dev/null || true
+      gdb -batch -q -ex "bt" $NGREST_HOME/bin/ngrestserver -core $CORE 2>/dev/null | (
+        if [ -n "${NO_LOG_COLOR:-}" ]
+        then
+          cat
+        else
+          # highlight crash location
+          sed "$(echo -e '/^[ \t]*#0.*$/{N;s/^.*$/\e[4;1m&\e[22;24m/;N;:p;N;$!bp}')"
+        fi
+      ) || true
       echo -e "===== END OF CORE DUMP ====================================================\n"
+      color "0"
     fi
+    color "31;1"
     echo "Server crashed. Waiting for project modifications..." >&2
+    color "0"
   fi
 }
 
@@ -274,6 +290,11 @@ EOF
     exit 1
   fi
 
+  if [ -z "${NO_LOG_COLOR:-}" ]
+  then
+    export NGREST_LOG_COLOR=1
+  fi
+
   PORT=${NGREST_SERVER_PORT:-9098}
   PROJECT_DIR=$PWD
   mkdir -p .ngrest/local/build
@@ -284,7 +305,10 @@ EOF
   echo -e "\nTo test your services try ngrest service tester:"
   while read SERVICE
   do
-    echo "  http://localhost:$PORT/ngrest/service/$SERVICE"
+    echo -n "  "
+    color "34;4;1"
+    echo "http://localhost:$PORT/ngrest/service/$SERVICE"
+    color "0"
   done < $PROJECT_DIR/.ngrest/services
 
   if [ -z "${NGREST_LOG_VERBOSITY:-}" ]
@@ -298,6 +322,10 @@ EOF
   then
     start_server
   else
+    color "32"
+    echo -e "Watching your project for modifications...\n"
+    color "0"
+
     WAIT_FILES=${WAIT_FILES:-'(.*\.(c|cpp|h|hpp)|CMakeLists.txt)$'}
     EXCLUDE_WAIT_FILES=${EXCLUDE_WAIT_FILES:-'.*/\..*$'}
 
@@ -305,8 +333,6 @@ EOF
     NGREST_SERVER_WATCHER_PID=$!
 
     # watcher
-    sleep 1
-    echo "Watching your project for modifications..."
     while :
     do
       FILE=$(inotifywait -q -e close_write -r "$PROJECT_DIR" --format "%w%f")

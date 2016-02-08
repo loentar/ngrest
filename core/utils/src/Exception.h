@@ -24,6 +24,7 @@
 #include <string>
 #include <exception>
 #include "fileline.h"
+#include "likely.h"
 #include "ngrestutilsexport.h"
 
 //! throw specific exception
@@ -33,14 +34,6 @@
 //! throw assert exception
 #define NGREST_THROW_ASSERT(DESCRIPTION) \
     throw ::ngrest::AssertException(NGREST_FILE_LINE, __FUNCTION__, DESCRIPTION);
-
-#ifdef __GNUC__
-#define NGREST_LIKELY(EXPRESSION) __builtin_expect(!!(EXPRESSION), true)
-#define NGREST_UNLIKELY(EXPRESSION) __builtin_expect(!!(EXPRESSION), false)
-#else
-#define NGREST_LIKELY(EXPRESSION) (EXPRESSION)
-#define NGREST_UNLIKELY(EXPRESSION) (EXPRESSION)
-#endif
 
 //! assert expression
 #define NGREST_ASSERT(EXPRESSION, DESCRIPTION) \

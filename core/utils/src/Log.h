@@ -101,7 +101,8 @@ public:
         LogLevelInfo,     //!< information
         LogLevelDebug,    //!< debug message
         LogLevelVerbose,  //!< verbose message
-        LogLevelTrace     //!< trace message
+        LogLevelTrace,    //!< trace message
+        LogLevelLast
     };
 
     enum LogVerbosity      //! log verbosity
@@ -166,6 +167,8 @@ private:
     std::ostream*  streamErr; //!< output stream for warning and higher levels
     LogLevel       level;     //!< log level
     int            verbosity; //!< verbosity
+    const char**   levels;    //!< levels of messages for output
+    bool           color;     //!< enable color
 };
 
 
@@ -176,16 +179,16 @@ public:
     //! log entry message
     /*! \param  fileLine - source file name and line number
         \param  function - function
-        \param  eLevel - level
+        \param  level - level
       */
     LogEntryScope(const char* fileLine, const char* function,
-                  Log::LogLevel eLevel = defaultLevel);
+                  Log::LogLevel level = defaultLevel);
 
     //! destructor
     ~LogEntryScope();
 
     //! set default log level for log entry
-    /*! \param eLevel - default log level
+    /*! \param level - default log level
     */
     static void setDefaultLogLevel(Log::LogLevel level = Log::LogLevelDebug);
 

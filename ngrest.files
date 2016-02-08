@@ -46,6 +46,8 @@ core/server/src/Server.cpp
 core/server/src/Server.h
 core/server/src/strutils.h
 core/utils/CMakeLists.txt
+core/utils/src/console.cpp
+core/utils/src/console.h
 core/utils/src/DynamicLibrary.cpp
 core/utils/src/DynamicLibrary.h
 core/utils/src/ElapsedTimer.cpp
@@ -59,6 +61,7 @@ core/utils/src/File.h
 core/utils/src/fileline.h
 core/utils/src/fromcstring.h
 core/utils/src/fromstring.h
+core/utils/src/likely.h
 core/utils/src/Log.cpp
 core/utils/src/Log.h
 core/utils/src/LogStream.h

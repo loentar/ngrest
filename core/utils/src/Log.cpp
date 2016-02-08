@@ -34,6 +34,12 @@
 
 namespace ngrest {
 
+template <typename T>
+T clamp(T min, T val, T max)
+{
+    return (val < min) ? min : ((val > max) ? max : val);
+}
+
 Log& Log::inst()
 {
     static Log instance;
@@ -114,6 +120,22 @@ Log::Log():
         }
 #undef NGREST_CHECK_LOG_VERBOSITY
     }
+
+    const char* logLevelLong = getenv("NGREST_LOG_LEVEL_LONG");
+    if (logLevelLong) {
+        static const char* levelsLong[LogLevelLast + 1] = {
+            "   ALERT ", "CRITICAL ", "   ERROR ", " WARNING ", "  NOTICE ",
+            "    INFO ", "   DEBUG ", " VERBOSE ", "   TRACE ", " UNKNOWN "
+        };
+        levels = levelsLong;
+    } else {
+        static const char* levelsShort[LogLevelLast + 1] = {
+            "A/", "C/", "E/", "W/", "N/", "I/", "D/", "V/", "T/", "?/"
+        };
+        levels = levelsShort;
+    }
+
+    color = !!getenv("NGREST_LOG_COLOR");
 }
 
 Log::~Log()
@@ -130,50 +152,53 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
     std::ostream* out = (logLevel <= LogLevelWarning) ? streamErr : stream;
 
     if (!out || logLevel > level)
-        return LogStream(nullptr);
+        return LogStream(nullptr, color);
 
-    if ((verbosity & LogVerbosityLevel)) {
+    if (color) {
         switch (logLevel) {
         case LogLevelAlert:
-            *out << "   ALERT ";
+            *out << colorTextRed << colorInverseOn;
             break;
 
         case LogLevelCrit:
-            *out << "CRITICAL ";
+            *out << colorTextRed << colorUnderlineOn;
             break;
 
         case LogLevelError:
-            *out << "   ERROR ";
+            *out << colorTextRed << colorBright;
             break;
 
         case LogLevelWarning:
-            *out << " WARNING ";
+            *out << colorTextBrown << colorBright;
             break;
 
         case LogLevelNotice:
-            *out << "  NOTICE ";
+            *out << colorTextCyan << colorBright;
             break;
 
         case LogLevelInfo:
-            *out << "    INFO ";
+            *out << colorBright;
             break;
 
         case LogLevelDebug:
-            *out << "   DEBUG ";
+            *out << colorDefault;
             break;
 
         case LogLevelVerbose:
-            *out << " VERBOSE ";
+            *out << colorDim;
             break;
 
         case LogLevelTrace:
-            *out << "   TRACE ";
+            *out << colorTextBlack << colorBright;
             break;
 
         default:
             *out << " UNKNOWN ";
         }
     }
+
+    if ((verbosity & LogVerbosityLevel))
+        *out << levels[clamp(LogLevelAlert, logLevel, LogLevelTrace)];
 
     if ((verbosity & LogVerbosityDateTime)) {
         static const int buffSize = 32;
@@ -205,7 +230,7 @@ LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* functi
     if ((verbosity & LogVerbosityFunction))
         *out << function << ": ";
 
-    return LogStream(out);
+    return LogStream(out, color);
 }
 
 void Log::setLogLevel(LogLevel logLevel)

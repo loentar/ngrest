@@ -22,6 +22,7 @@
 #define NGREST_UTILS_LOGSTREAM_H
 
 #include <ostream>
+#include "console.h"
 #include "ngrestutilsexport.h"
 
 namespace ngrest {
@@ -34,15 +35,19 @@ typedef unsigned char unsignedByte;
 class NGREST_UTILS_EXPORT LogStream
 {
 public:
-    inline LogStream(std::ostream* stream_, bool writeEol_ = true):
-        stream(stream_), writeEol(writeEol_)
+    inline LogStream(std::ostream* stream_, bool color_, bool writeEol_ = true):
+        stream(stream_), color(color_), writeEol(writeEol_)
     {
     }
 
     inline ~LogStream()
     {
-        if (stream && writeEol)
-            *stream << std::endl;
+        if (stream) {
+            if (color)
+                *stream << colorDefault;
+            if (writeEol)
+                *stream << std::endl;
+        }
     }
 
     inline LogStream& operator<<(bool value)
@@ -68,6 +73,7 @@ private:
 
 private:
     std::ostream* stream;
+    bool          color;
     bool          writeEol;
 };
 
