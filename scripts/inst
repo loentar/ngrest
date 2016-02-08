@@ -10,8 +10,8 @@ do
   $app --version >/dev/null 2>&1 || TO_INSTALL+="$app "
 done
 
-inotifywait --help >/dev/null 2>&1
-if [ $? == 127 ] # command not found
+inotifywait --help >/dev/null 2>&1 || ERR=$?
+if [ $ERR == 127 ] # command not found
 then
   TO_INSTALL_OPT+="inotify-tools "
 fi
