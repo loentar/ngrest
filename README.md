@@ -10,7 +10,7 @@ Currently only Linux supported, but there are plans to extend support for other 
 
 To install ngrest, open terminal and copy-paste:
 
-`wget -qO- https://raw.githubusercontent.com/loentar/ngrest/master/scripts/inst | bash`
+`wget -qO- http://bit.ly/ngrest | bash`
 
 
 **Notes:**
@@ -57,6 +57,10 @@ After server is started you can try your service operations: open a link located
 
 Service's sources are located in `<servicename>/src/<ServiceName>.h/cpp` files. To implement your service you must edit those files (QtCreator is a very good tool for that: open CMakeLists.txt from project's dir in QtCreator).
 
+> While you change source code, you can leave project started. ngrest will detect any changes in source code and will try to build and to apply changes. In case of successful build ngrest will restart the server.
+
+> If you faced with crash ngrest will try to trace the error using gdb and display the place of crash and program stack. To restart the server just modify your source code.
+
 Example. Add "add" operation into Calculator service:
 
 1) insert this line into `Calculator.h` before end of class:
@@ -76,7 +80,7 @@ public:
 };
 ```
 
-2) add operation implementation - append this lines into `Calculator.cpp`:
+2) add implementation - append these lines into `Calculator.cpp`:
 
 ```
 int Calculator::add(int a, int b)
@@ -85,4 +89,4 @@ int Calculator::add(int a, int b)
 }
 ```
 
-After that you can start your project again and test newly added "add" operation from service tester.
+After that, click on the service name in service tester to see and test new `add` operation.
