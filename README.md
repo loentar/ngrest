@@ -8,6 +8,8 @@ ngrest is written on C++11 and uses CMake for build.
 
 Currently only Linux supported, but there are plans to extend support for other popular operating systems.
 
+Installation with screenshots: https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots
+
 To install ngrest, open terminal and copy-paste:
 
 `wget -qO- http://bit.ly/ngrest | bash`
@@ -20,6 +22,8 @@ To install ngrest, open terminal and copy-paste:
 2. By default script installs `ngrest` wrapper into best location available. If you have `~/bin` directory in your search path `ngrest` wrapper will be installed into it. Else it will try to install into `/usr/local/bin/` and you will be prompted for your password to install. To override this behavior and forcibly install `ngrest` wrapper into `~/bin` please create `~/bin` directory and re-login. After re-login it should be added into `$PATH` automatically. If this does not happen, please add into your `~/.bashrc` or `~/.profile` a line: `export PATH=$PATH:$USER/bin`. Also you can export `USERINST` environment variable to something non-empty, install ngrest and re-login.
 
 ## Create a new project
+
+Create and start project with screenshots: https://github.com/loentar/ngrest/wiki/Creating-and-starting-a-project-guide-with-screenshots
 
 To create a new project please open new terminal and enter:
 
