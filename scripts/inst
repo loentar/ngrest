@@ -50,10 +50,13 @@ cd $NGREST_HOME
 SRC_DIR=$NGREST_HOME/ngrest
 BUILD_DIR=$SRC_DIR-build
 
-test ! -e $SRC_DIR || mv $SRC_DIR $SRC_DIR~$(date +%F-%T)
 rm -rf $BUILD_DIR
 
-git clone https://github.com/loentar/ngrest.git
+if [ -z "${UPGRADE:-}" ]
+then
+  test ! -e $SRC_DIR || mv $SRC_DIR $SRC_DIR~$(date +%F-%T)
+  git clone https://github.com/loentar/ngrest.git
+fi
 
 mkdir $BUILD_DIR
 cd $BUILD_DIR

@@ -74,6 +74,23 @@ Cleans build and program caches. Useful when you change CMAKE/MAKE flags
 EOF
 }
 
+help_upgrade() {
+  cat >&2 << EOF
+Usage: ngrest upgrade [<commit_hash>]
+
+Upgrades ngrest to the latest available version on github. Upgrades to specific commit if provided.
+
+Example 1. Upgrade to latest available version:
+
+  ngrest upgrade
+
+Example 2. Upgrade to commit 2092ea0...:
+
+  ngrest upgrade 2092ea0
+
+EOF
+}
+
 help() {
   case "${1:-}" in
   create)
@@ -86,6 +103,10 @@ help() {
 
   clean)
     help_clean
+    ;;
+
+  upgrade)
+    help_upgrade
     ;;
 
   *)
@@ -198,6 +219,14 @@ EOF
 }
 
 build() {
+  [ -e .ngrest_version ] && BUILT_WITH_VERSION=$(<.ngrest_version) || BUILT_WITH_VERSION=
+  CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse HEAD)
+  if [ "$BUILT_WITH_VERSION" != "$CURRENT_VERSION" ]
+  then
+    echo "Cleaning build $(<$PROJECT_DIR/.ngrest/name) due to ngrest upgrade..."
+    rm -rf ../build/* # be sure to do not remove something wrong
+  fi
+
   echo "Building project $(<$PROJECT_DIR/.ngrest/name)..."
   CMAKE_FLAGS=${CMAKE_FLAGS:-'-DCMAKE_BUILD_TYPE=DEBUG'}
   cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
@@ -205,6 +234,8 @@ build() {
   mkdir -p services
   rm -f services/*
   cp $PWD/deploy/share/ngrest/services/* services/
+
+  [ "$BUILT_WITH_VERSION" = "$CURRENT_VERSION" ] || echo "$CURRENT_VERSION" > .ngrest_version
 }
 
 color() {
@@ -368,6 +399,19 @@ EOF
   fi
 }
 
+upgrade() {
+  echo "Checking for upgrades..."
+  cd ~/.ngrest/ngrest
+
+  [ -n "${1:-}" ] || git checkout master >/dev/null
+  RES=$(LANG=C git pull)
+  [ -z "${1:-}" ] || RES=$(git checkout $1)
+  echo "$RES"
+  [[ ! "$RES" =~ "Already up-to-date" ]] || exit 0
+
+  UPGRADE=1 bash < ~/.ngrest/ngrest/scripts/inst
+}
+
 COMMAND=${1:-}
 shift || true
 
@@ -386,6 +430,10 @@ case $COMMAND in
 
   clean)
     rm -rf .ngrest/local/*
+    ;;
+
+  upgrade)
+    upgrade
     ;;
 
   "")
