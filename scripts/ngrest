@@ -221,7 +221,7 @@ EOF
 build() {
   [ -e .ngrest_version ] && BUILT_WITH_VERSION=$(<.ngrest_version) || BUILT_WITH_VERSION=
   CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse HEAD)
-  if [ "$BUILT_WITH_VERSION" != "$CURRENT_VERSION" ]
+  if [ "$BUILT_WITH_VERSION" != "$CURRENT_VERSION" -a -n "$BUILT_WITH_VERSION" ]
   then
     echo "Cleaning build $(<$PROJECT_DIR/.ngrest/name) due to ngrest upgrade..."
     rm -rf ../build/* # be sure to do not remove something wrong

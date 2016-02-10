@@ -307,7 +307,7 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
   <h4>{{operationDescr}}</h4>
   <small><pre>{{operationDetails}}</pre></small>
   <span><label>Method: </label>{{method}}</span><br/>
-  <span><label>Location: </label>{{location}}</span><br/>
+  <span><label>Location: </label><a href="{{location}}">{{location}}</a></span><br/>
   <span><label>Asynchronous: </label>{{asynchronous}}</span><br/>
   </p>
   {{form}}

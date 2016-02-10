@@ -113,8 +113,10 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
 
 void MemPool::reserve(uint64_t size)
 {
-    if (!chunksCount)
+    if (!chunksCount) {
+        newChunk(size);
         return;
+    }
 
     if (size < currChunk->bufferSize)
         return;
@@ -163,7 +165,7 @@ void MemPool::newChunk(uint64_t size)
     currChunk = chunks + chunksCount;
     currChunk->buffer = buffer;
     currChunk->size = 0;
-    currChunk->bufferSize = chunkSize;
+    currChunk->bufferSize = size;
     ++chunksCount;
     ++chunkIndex;
 }

@@ -48,7 +48,7 @@
     if (NGREST_UNLIKELY(!(EXPRESSION))) NGREST_THROW_ASSERT(#EXPRESSION " is null!")
 
 //! debug assert expression
-#ifdef _DEBUG
+#ifdef DEBUG
 #define NGREST_DEBUG_ASSERT(EXPRESSION, DESCRIPTION) \
     if (!(EXPRESSION)) \
     NGREST_THROW_ASSERT(DESCRIPTION + std::string(". Debug assertion failed: (" #EXPRESSION ")"))

@@ -19,6 +19,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/MemPool.h>
@@ -41,7 +42,15 @@ Node* HttpTransport::parseRequest(MemPool& pool, const Request* request)
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
     LogDebug() << "HTTP Request: " << httpRequest->methodStr << " " << httpRequest->path;
-    LogDebug() << "-- body -------------\n" << httpRequest->body << "\n-----------------\n";
+#ifdef DEBUG
+    static const bool dontTruncate = !!getenv("NGREST_DONT_TRUNCATE_REQUEST");
+    if (dontTruncate || httpRequest->bodySize < 1024) {
+        LogDebug() << "-- body -------------\n" << httpRequest->body << "\n-----------------\n";
+    } else {
+        (LogDebug() << "-- body -------------\n").write(httpRequest->body, 1024)
+                    << "... (truncated)\n-----------------\n";
+    }
+#endif
 
     const Header* contentType = httpRequest->getHeader("content-type");
     NGREST_ASSERT(contentType, "Content-Type header is missing!");

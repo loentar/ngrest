@@ -58,6 +58,13 @@ public:
         return *this;
     }
 
+    inline LogStream& write(const char* buff, int size)
+    {
+        if (stream)
+            stream->write(buff, size);
+        return *this;
+    }
+
     // for complex types
     template<typename Type>
     inline LogStream& operator<<(Type value)

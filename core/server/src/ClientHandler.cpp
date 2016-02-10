@@ -31,6 +31,7 @@
 #include <ngrest/utils/fromcstring.h>
 #include <ngrest/utils/tocstring.h>
 #include <ngrest/utils/ElapsedTimer.h>
+#include <ngrest/utils/Error.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>
@@ -177,8 +178,8 @@ bool ClientHandler::readyRead(int fd)
     }
 
     HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
-    MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
     for (;;) {
+        MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
         uint64_t prevSize = pool.getSize();
         uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
                 ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
@@ -370,7 +371,7 @@ void ClientHandler::processRequest(int clientFd, MessageData* messageData)
 
     if (messageData->usePoolBody) {
         // handle body from poolBody with zero offset
-        MemPool::Chunk* chunk = messageData->poolStr.flatten();
+        MemPool::Chunk* chunk = messageData->poolBody.flatten();
         httpRequest->bodySize = chunk->size;
         httpRequest->body = chunk->buffer;
     } else {
@@ -444,7 +445,11 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     // write response body to client
     chunk = response->poolBody.getChunks();
     for (int i = 0, l = response->poolBody.getChunkCount(); i < l; ++i, ++chunk) {
-        ::write(clientFd, chunk->buffer, chunk->size);
+        ssize_t res = ::write(clientFd, chunk->buffer, chunk->size);
+        if (res == -1) {
+            LogError() << Error::getLastError();
+            break;
+        }
     }
 
     LogDebug() << "Request " << messageData->id << " handled in " << messageData->timer.elapsed() << " microsecond(s)";
