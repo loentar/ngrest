@@ -243,13 +243,14 @@ color() {
 }
 
 start_server() {
+  trap : HUP
   CODE=0
   rm -f core*
   ulimit -c unlimited 2>/dev/null || true
   ngrestserver -p $PORT -s $PWD/services || CODE=$?
   if [ $CODE -eq 139 ]
   then
-    CORE=$(find core* -type f -name 'core*' || true)
+    CORE=$(find core* -type f -name 'core*' 2>/dev/null || true)
     if [ -n "$CORE" ]
     then
       color "33"
@@ -277,7 +278,7 @@ stop_server() {
          sed -n '/ ngrestserver/{s/^[ ]*\([0-9]\+\) .*/\1/;p}')
   if [ -z "$SERVER_PID" ]
   then
-    CORE=$(find core* -type f -name 'core*' || true)
+    CORE=$(find core* -type f -name 'core*' 2>/dev/null || true)
     [ -n "$CORE" ] || echo "Cannot find server's PID." >&2
     return
   fi
@@ -305,6 +306,14 @@ stop_server() {
       sleep .5
     done
   fi
+}
+
+restart_on_upgrade() {
+  echo "Restarting the project due to ngrest upgrade..."
+  UPGRADE_RESTART=1
+  CHILDREN=$(ps --no-headers --ppid $$ -o pid)
+  stop_server
+  kill -TERM $CHILDREN 2>/dev/null || true
 }
 
 run() {
@@ -363,11 +372,15 @@ EOF
     start_server &
     NGREST_SERVER_WATCHER_PID=$!
 
+    trap restart_on_upgrade HUP
+
     # watcher
     while :
     do
-      FILE=$(inotifywait -q -e close_write -r "$PROJECT_DIR" --format "%w%f")
-      case $? in
+      UPGRADE_RESTART=
+      RES=0
+      FILE=$(inotifywait -q -e close_write -r "$PROJECT_DIR" --format "%w%f") || RES=$?
+      case $RES in
         127) # command not found
           echo "Cannot find inotifywait. Please install it or start ngrest without watcher:" >&2
           echo "  DISABLE_WATCHER=1 ngrest" >&2
@@ -378,11 +391,15 @@ EOF
           ;;
       esac
 
-      sleep 1
-      [[ "$FILE" =~ $WAIT_FILES ]] || continue
-      [[ ! "$FILE" =~ $EXCLUDE_WAIT_FILES ]] || continue
+      if [ -z "${UPGRADE_RESTART:-}" ]
+      then
+        sleep 1
+        [[ "$FILE" =~ $WAIT_FILES ]] || continue
+        [[ ! "$FILE" =~ $EXCLUDE_WAIT_FILES ]] || continue
 
-      echo "Project files changed."
+        echo "Project files changed."
+      fi
+
       if build
       then :; else
         echo "Build failed. Waiting for project modifications..."
@@ -404,8 +421,8 @@ upgrade() {
   cd ~/.ngrest/ngrest
 
   [ -n "${1:-}" ] || git checkout master >/dev/null
-  RES=$(LANG=C git pull)
-  [ -z "${1:-}" ] || RES=$(git checkout $1)
+  RES=$(LANG=C git pull >/dev/null)
+  [ -z "${1:-}" ] || RES=$(git checkout $1 >/dev/null)
   echo "$RES"
   [[ ! "$RES" =~ "Already up-to-date" ]] || exit 0
 

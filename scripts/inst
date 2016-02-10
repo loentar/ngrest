@@ -98,7 +98,9 @@ EOF
   chmod 755 ~/bin/ngrest
 fi
 
-cat << EOF
+if [ -z "${UPGRADE:-}" ]
+then
+  cat << EOF
 Installation completed.
 
 Now you can create your first project by typing:
@@ -106,3 +108,7 @@ Now you can create your first project by typing:
   ngrest create myproject
 
 EOF
+else
+  echo "Upgrade completed."
+  killall -HUP ngrest
+fi
