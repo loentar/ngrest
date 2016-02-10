@@ -61,11 +61,12 @@ fi
 mkdir $BUILD_DIR
 cd $BUILD_DIR
 
+rm -f .build_ok
 echo "Configuring ngrest for the build..."
-cmake ${CMAKE_FLAGS:-} $SRC_DIR >$BUILD_DIR/cmake-build.log
-jobs=$(grep processor /proc/cpuinfo | wc -l) || jobs=4
+cmake ${CMAKE_FLAGS:-} $SRC_DIR >cmake-build.log
 echo "Building ngrest. It may take few minutes..."
-make -j$jobs -C $BUILD_DIR >make-build.log
+make >make-build.log
+touch .build_ok
 
 # install to ~/bin if user already created it
 if [[ $PATH =~ ~/bin ]]

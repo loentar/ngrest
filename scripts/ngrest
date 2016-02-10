@@ -243,7 +243,6 @@ color() {
 }
 
 start_server() {
-  trap : HUP
   CODE=0
   rm -f core*
   ulimit -c unlimited 2>/dev/null || true
@@ -420,17 +419,24 @@ upgrade() {
   echo "Checking for upgrades..."
   cd ~/.ngrest/ngrest
 
+  LAST_VERSION=$(git rev-parse HEAD)
   [ -n "${1:-}" ] || git checkout master >/dev/null
   RES=$(LANG=C git pull >/dev/null)
   [ -z "${1:-}" ] || RES=$(git checkout $1 >/dev/null)
-  echo "$RES"
-  [[ ! "$RES" =~ "Already up-to-date" ]] || exit 0
+  CURRENT_VERSION=$(git rev-parse HEAD)
 
-  UPGRADE=1 bash < ~/.ngrest/ngrest/scripts/inst
+  if [ "$CURRENT_VERSION" = "$LAST_VERSION" -a -e $NGREST_HOME/../.build_ok ]
+  then
+    echo "No upgrades found"
+  else
+    UPGRADE=1 bash < ~/.ngrest/ngrest/scripts/inst
+  fi
 }
 
 COMMAND=${1:-}
 shift || true
+
+trap : HUP
 
 case $COMMAND in
   create)
