@@ -94,3 +94,15 @@ int Calculator::add(int a, int b)
 ```
 
 After that, click on the service name in service tester to see and test new `add` operation.
+
+## Upgrade ngrest
+
+To upgrade ngrest to the latest changeset from master branch type:
+
+`ngrest upgrade`
+
+If you want to downgrade to specific commit, add commit hash as last argument, for example:
+
+`ngrest upgrade 3b78eee`
+
+If there are any running projects it will be automatically rebuild and restarted.
