@@ -242,7 +242,7 @@ bool ClientHandler::readyRead(int fd)
                 searchSize = count;
             }
 
-            const char* pos = strnstr(startFind, "\r\n\r\n", searchSize);
+            const char* pos = strnstrn(startFind, "\r\n\r\n", searchSize, 4);
             if (pos) {
                 uint64_t httpHeaderSize = prevSize + (pos - buffer);
                 messageData->httpBodyOffset = httpHeaderSize + 4;

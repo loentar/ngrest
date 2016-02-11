@@ -45,7 +45,7 @@ void DynamicLibrary::load(const std::string& libName, bool raw /*= false*/)
 #ifdef WIN32
         handle = LoadLibraryA(libName.c_str());
 #else
-        handle = dlopen(libName.c_str(), RTLD_LAZY);
+        handle = dlopen(libName.c_str(), RTLD_NOW);
 #endif
     } else {
 #ifdef WIN32

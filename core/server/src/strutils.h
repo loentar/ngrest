@@ -25,21 +25,21 @@
 
 namespace ngrest {
 
-inline const char* strnstr(const char *s, const char *find, size_t slen)
+inline const char* strnstrn(const char *s, const char *find, size_t slen, size_t flen)
 {
     char c;
     char sc;
 
     if ((c = *find++) != '\0') {
-        size_t len = strlen(find);
+        --flen;
         do {
             do {
                 if ((sc = *s++) == '\0' || slen-- < 1)
                     return nullptr;
             } while (sc != c);
-            if (len > slen)
+            if (flen > slen)
                 return nullptr;
-        } while (strncmp(s, find, len) != 0);
+        } while (strncmp(s, find, flen) != 0);
         s--;
     }
     return s;
