@@ -35,6 +35,7 @@ public:
     virtual void disconnected(int fd) = 0;
     virtual void error(int fd) = 0;
     virtual bool readyRead(int fd) = 0;
+    virtual bool readyWrite(int fd) = 0;
 };
 
 }

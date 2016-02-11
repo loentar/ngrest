@@ -111,11 +111,12 @@ int Server::exec()
     while (!isStopping) {
         int n = epoll_wait(fdEpoll, events, MAXEVENTS, -1);
         for (int i = 0; i < n && !isStopping; ++i) {
+            const uint32_t event = events[i].events;
             if ((events[i].events & EPOLLERR) ||
                    (events[i].events & EPOLLHUP) ||
-                   (!(events[i].events & EPOLLIN))) {
+                   (!(events[i].events & (EPOLLIN | EPOLLOUT)))) {
                 /* An error has occured on this fd, or the socket is not
-                 ready for reading(why were we notified then?) */
+                 ready for reading/writing(why were we notified then?) */
                 LogError() << "epoll error";
                 if (callback)
                     callback->error(events[i].data.fd);
@@ -130,7 +131,13 @@ int Server::exec()
                  completely, as we are running in edge-triggered mode
                  and won't get a notification again for the same
                  data. */
-                handleRequest(events[i].data.fd);
+                if (event & EPOLLIN) {
+                    handleRequest(events[i].data.fd);
+                } else if (event & EPOLLOUT) {
+                    callback->readyWrite(events[i].data.fd);
+                } else {
+                    LogError() << "Unknown EPOLL event";
+                }
             }
         }
     }
@@ -235,7 +242,7 @@ bool Server::handleIncomingConnection()
 
         /* add it to the list of fds to monitor. */
         event->data.fd = fdIn;
-        event->events = EPOLLIN | EPOLLET;
+        event->events = EPOLLIN | EPOLLOUT | EPOLLET;
         res = epoll_ctl(fdEpoll, EPOLL_CTL_ADD, fdIn, event);
         if (res == -1)
             perror("epoll_ctl");

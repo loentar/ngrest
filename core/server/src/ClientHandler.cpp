@@ -47,6 +47,13 @@ namespace ngrest {
 
 static const uint64_t INVALID_VALUE = static_cast<uint64_t>(-1);
 
+struct MessageWriteState
+{
+    const MemPool::Chunk* chunk = nullptr;
+    const MemPool::Chunk* end = nullptr;
+    uint64_t pos = 0;
+};
+
 struct MessageData
 {
     ElapsedTimer timer;
@@ -61,6 +68,11 @@ struct MessageData
     uint64_t httpBodyRemaining = INVALID_VALUE;
 //    uint64_t currentChunkRemaining = 0;
     bool processing = false;
+
+    // response data
+    bool writing = false;
+    MessageWriteState headerState;
+    MessageWriteState bodyState;
 
     MessageData(uint64_t id_, Transport* transport, Engine* engine):
         timer(true),
@@ -155,11 +167,14 @@ void ClientHandler::error(int fd)
 
 bool ClientHandler::readyRead(int fd)
 {
-    ClientInfo* clientData = clients[fd];
-    if (clientData == nullptr) {
-        LogError() << "failed to find client #" << fd;
+    auto it = clients.find(fd);
+    if (it == clients.end()) {
+        LogWarning() << "Failed to process request: non-existing client: " << fd;
         return false;
     }
+
+    ClientInfo* clientData = it->second;
+    NGREST_ASSERT_NULL(clientData);
 
     MessageData* messageData;
 
@@ -169,6 +184,7 @@ bool ClientHandler::readyRead(int fd)
     } else {
         messageData = clientData->requests.back();
         NGREST_ASSERT_NULL(messageData);
+
         if (messageData->processing) {
             // request is finished to read and now processing.
             // creating new request
@@ -302,6 +318,37 @@ bool ClientHandler::readyRead(int fd)
     return true;
 }
 
+bool ClientHandler::readyWrite(int fd)
+{
+    auto it = clients.find(fd);
+    if (it == clients.end()) {
+        LogWarning() << "Failed to process request: non-existing client: " << fd;
+        return false;
+    }
+
+    ClientInfo* clientData = it->second;
+    NGREST_ASSERT_NULL(clientData);
+
+    // nothing to write: all requests already finished
+    if (clientData->requests.empty())
+        return false;
+
+    MessageData* messageData = nullptr;
+    // find first unfinished write
+    for (MessageData* message : clientData->requests) {
+        if (message->writing) {
+            messageData = message;
+            break;
+        }
+    }
+
+    // nothing to write: no requests to write but some to read
+    if (!messageData)
+        return false;
+
+    return !writeNextPart(fd, clientData, messageData);
+}
+
 void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
 {
     char* curr = buffer;
@@ -409,7 +456,8 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     ClientInfo* clientInfo = it->second;
     NGREST_ASSERT_NULL(clientInfo);
 
-    clientInfo->requests.remove(messageData);
+    messageData->writing = true;
+
     messageData->poolStr.reset();
 
     // build response
@@ -436,31 +484,16 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     // split body
     messageData->poolStr.putData("\r\n", 2);
 
-    // write header to client
-    const MemPool::Chunk* chunk = messageData->poolStr.getChunks();
-    for (int i = 0, l = messageData->poolStr.getChunkCount(); i < l; ++i, ++chunk) {
-        ::write(clientFd, chunk->buffer, chunk->size);
+    messageData->headerState.chunk = messageData->poolStr.getChunks();
+    messageData->headerState.end = messageData->poolStr.getLastChunk() + 1;
+    messageData->headerState.pos = 0;
+    if (!response->poolBody.isClean()) {
+        messageData->bodyState.chunk = response->poolBody.getChunks();
+        messageData->bodyState.end = response->poolBody.getLastChunk() + 1;
+        messageData->bodyState.pos = 0;
     }
 
-    // write response body to client
-    chunk = response->poolBody.getChunks();
-    for (int i = 0, l = response->poolBody.getChunkCount(); i < l; ++i, ++chunk) {
-        ssize_t res = ::write(clientFd, chunk->buffer, chunk->size);
-        if (res == -1) {
-            LogError() << Error::getLastError();
-            break;
-        }
-    }
-
-    LogDebug() << "Request " << messageData->id << " handled in " << messageData->timer.elapsed() << " microsecond(s)";
-
-    delete messageData;
-
-    // delayed deleting ClientInfo after all requests are processed
-    if (clientInfo->deleteLater && clientInfo->requests.empty())
-        delete clientInfo;
-
-    // response is to be freed by engine
+    writeNextPart(clientFd, clientInfo, messageData);
 }
 
 void ClientHandler::processError(int clientFd, MessageData* messageData, const Exception& error)
@@ -482,6 +515,61 @@ void ClientHandler::processError(int clientFd, MessageData* messageData, const E
     response->poolBody.reset();
     response->poolBody.putCString(error.what());
     processResponse(clientFd, messageData);
+}
+
+inline bool writeChunks(int fd, ssize_t& res, MessageWriteState& state)
+{
+    while (state.chunk != state.end) {
+        res = ::write(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos);
+        if (res == -1) {
+            // output buffer is full.
+            if (errno == EAGAIN)
+                return false;
+
+            // other error
+            LogError() << "Failed to write response:" << Error::getLastError();
+            return true;
+        }
+
+        if (static_cast<uint64_t>(res) != state.chunk->size) {
+            state.pos += static_cast<uint64_t>(res);
+            continue;
+        }
+
+        state.pos = 0;
+        ++state.chunk;
+    }
+
+    return true;
+}
+
+bool ClientHandler::writeNextPart(int clientFd, ClientInfo* clientInfo, MessageData* messageData)
+{
+    ssize_t res = 0;
+
+    // write header to client
+    if (!writeChunks(clientFd, res, messageData->headerState))
+        return false;  // EAGAIN
+
+    if (res != -1 && messageData->bodyState.chunk) {
+        // write response body to client
+        if (!writeChunks(clientFd, res, messageData->bodyState))
+            return false;  // EAGAIN
+    }
+
+    LogDebug() << "Request " << messageData->id << " handled in "
+               << messageData->timer.elapsed() << " microsecond(s)";
+
+    clientInfo->requests.remove(messageData);
+
+    delete messageData;
+
+    // delayed deleting ClientInfo after all requests are processed
+    if (clientInfo->deleteLater && clientInfo->requests.empty())
+        delete clientInfo;
+
+    // response is to be freed by engine
+    return true;
 }
 
 }

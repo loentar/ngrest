@@ -42,11 +42,15 @@ public:
     virtual void disconnected(int fd) override;
     virtual void error(int fd) override;
     virtual bool readyRead(int fd) override;
+    virtual bool readyWrite(int fd) override;
 
     void parseHttpHeader(char* buffer, MessageData* messageData);
     void processRequest(int clientFd, MessageData* messageData);
     void processResponse(int clientFd, MessageData* messageData);
     void processError(int clientFd, MessageData* messageData, const Exception& error);
+
+private:
+    bool writeNextPart(int clientFd, ClientInfo* clientInfo, MessageData* messageData);
 
 private:
     uint64_t lastId = 0;
