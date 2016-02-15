@@ -8,9 +8,9 @@
 ##ifneq($(.name.!match/bool/),true)
     char $($name)Buff[NUM_TO_STR_BUFF_SIZE];
     NGREST_ASSERT(::ngrest::toCString($($var), $($name)Buff, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
-    const char* $($name)CStr = context->pool.putCString($($name)Buff, true);
+    const char* $($name)CStr = context->pool->putCString($($name)Buff, true);
 ##endif
-    $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::\
+    $($node) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::\
 ##ifeq($(.name.!match/bool/),true)
 Boolean\
 ##else
@@ -24,11 +24,11 @@ $($var) ? "true" : "false"\
 ##endif
 );
 ##case string
-    $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $($var).c_str());
+    $($node) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, $($var).c_str());
 ##case enum
-    $($node) = context->pool.alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.ns)$(.name.!replace/::/Serializer::/)Serializer::toCString($($var));
+    $($node) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.ns)$(.name.!replace/::/Serializer::/)Serializer::toCString($($var));
 ##case struct||typedef
-    $($node) = context->pool.alloc< ::ngrest::Object>();
+    $($node) = context->pool->alloc< ::ngrest::Object>();
     $(.ns)$(.name.!replace/::/Serializer::/)Serializer::serialize(context, $($var), $($node));
 ##case template
 \
@@ -37,11 +37,11 @@ $($var) ? "true" : "false"\
 \
 ### /// list
 ##case vector||list
-    ::ngrest::Array* $($name)Array = context->pool.alloc< ::ngrest::Array>();
+    ::ngrest::Array* $($name)Array = context->pool->alloc< ::ngrest::Array>();
     $($node) = $($name)Array;
     ::ngrest::LinkedNode* $($name)ArrayItemLast = nullptr;
     for (const auto& $($name)Item : $($var)) {
-        ::ngrest::LinkedNode* $($name)ArrayItem = context->pool.alloc< ::ngrest::LinkedNode>();
+        ::ngrest::LinkedNode* $($name)ArrayItem = context->pool->alloc< ::ngrest::LinkedNode>();
         if ($($name)ArrayItemLast == nullptr) {
             $($name)Array->firstChild = $($name)ArrayItem;
         } else {
@@ -63,7 +63,7 @@ $($var) ? "true" : "false"\
 \
 ### /// map
 ##case map||unordered_map
-    ::ngrest::Object* $($name)Obj = context->pool.alloc< ::ngrest::Object>();
+    ::ngrest::Object* $($name)Obj = context->pool->alloc< ::ngrest::Object>();
     $($node) = $($name)Obj;
     ::ngrest::NamedNode* $($name)ObjItemLast = nullptr;
     for (const auto& $($name)Item : $($var)) {
@@ -75,7 +75,7 @@ $($var) ? "true" : "false"\
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
     char $($name)BuffItem[NUM_TO_STR_BUFF_SIZE];
     NGREST_ASSERT(::ngrest::toCString($($name)Item.first, $($name)BuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
-    const char* $($name)CStrItem = context->pool.putCString($($name)BuffItem, true);
+    const char* $($name)CStrItem = context->pool->putCString($($name)BuffItem, true);
 ##var inlineValue $($name)CStrItem
 ##else
 ##var inlineValue $($name)Item.first ? "true" : "false"
@@ -88,7 +88,7 @@ $($var) ? "true" : "false"\
 ##error Cannot serialize $(.templateParams.templateParam1) as response of $(service.name)/$(operation.name)
 ##endswitch
 \
-        ::ngrest::NamedNode* $($name)ObjItem = context->pool.alloc< ::ngrest::NamedNode>($($inlineValue));
+        ::ngrest::NamedNode* $($name)ObjItem = context->pool->alloc< ::ngrest::NamedNode>($($inlineValue));
         if ($($name)ObjItemLast == nullptr) {
             $($name)Obj->firstChild = $($name)ObjItem;
         } else {

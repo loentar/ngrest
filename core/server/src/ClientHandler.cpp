@@ -27,6 +27,7 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/MemPool.h>
+#include <ngrest/utils/MemPooler.h>
 #include <ngrest/utils/Exception.h>
 #include <ngrest/utils/fromcstring.h>
 #include <ngrest/utils/tocstring.h>
@@ -59,8 +60,9 @@ struct MessageData
     ElapsedTimer timer;
     uint64_t id;
     MessageContext context;
-    MemPool poolStr;
-    MemPool poolBody;
+    MemPooler* pooler;
+    MemPool* poolStr;
+    MemPool* poolBody;
     bool usePoolBody = false;
     bool isChunked = false;
     uint64_t contentLength = INVALID_VALUE;
@@ -74,17 +76,28 @@ struct MessageData
     MessageWriteState headerState;
     MessageWriteState bodyState;
 
-    MessageData(uint64_t id_, Transport* transport, Engine* engine):
+    MessageData(uint64_t id_, Transport* transport, Engine* engine, MemPooler* pooler_):
         timer(true),
         id(id_),
-        poolStr(2048),
-        poolBody(1024)
+        pooler(pooler_),
+        poolStr(pooler_->obtain(2048)),
+        poolBody(pooler_->obtain(1024))
     {
         LogDebug() << "Start handling request " << id;
+        context.pool = pooler->obtain();
         context.engine = engine;
         context.transport = transport;
-        context.request = context.pool.alloc<HttpRequest>();
-        context.response = context.pool.alloc<HttpResponse>();
+        context.request = context.pool->alloc<HttpRequest>();
+        context.response = context.pool->alloc<HttpResponse>();
+        context.response->poolBody = pooler->obtain();
+    }
+
+    ~MessageData()
+    {
+        pooler->recycle(poolStr);
+        pooler->recycle(poolBody);
+        pooler->recycle(context.response->poolBody);
+        pooler->recycle(context.pool);
     }
 };
 
@@ -123,8 +136,13 @@ public:
 
 
 ClientHandler::ClientHandler(Engine& engine_, Transport& transport_):
-    engine(engine_), transport(transport_)
+    engine(engine_), transport(transport_), pooler(new MemPooler())
 {
+}
+
+ClientHandler::~ClientHandler()
+{
+    delete pooler;
 }
 
 void ClientHandler::connected(int fd, const sockaddr* addr)
@@ -179,7 +197,7 @@ bool ClientHandler::readyRead(int fd)
     MessageData* messageData;
 
     if (clientData->requests.empty()) {
-        messageData = new MessageData(++lastId, &transport, &engine);
+        messageData = new MessageData(++lastId, &transport, &engine, pooler);
         clientData->requests.push_back(messageData);
     } else {
         messageData = clientData->requests.back();
@@ -188,18 +206,18 @@ bool ClientHandler::readyRead(int fd)
         if (messageData->processing) {
             // request is finished to read and now processing.
             // creating new request
-            messageData = new MessageData(++lastId, &transport, &engine);
+            messageData = new MessageData(++lastId, &transport, &engine, pooler);
             clientData->requests.push_back(messageData);
         }
     }
 
     HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
     for (;;) {
-        MemPool& pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
-        uint64_t prevSize = pool.getSize();
+        MemPool* pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
+        uint64_t prevSize = pool->getSize();
         uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
                 ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
-        char* buffer = pool.grow(sizeToRead);
+        char* buffer = pool->grow(sizeToRead);
         ssize_t count = ::read(fd, buffer, sizeToRead);
         if (count == 0) {
             // this should only happen in case of ioctl(fd, FIONREAD...) failure
@@ -217,18 +235,18 @@ bool ClientHandler::readyRead(int fd)
             }
 
             // all available data read
-            pool.shrinkLastChunk(sizeToRead);
+            pool->shrinkLastChunk(sizeToRead);
             break;
         }
 
         if (count < static_cast<int64_t>(sizeToRead))
-            pool.shrinkLastChunk(sizeToRead - count);
+            pool->shrinkLastChunk(sizeToRead - count);
 
         if (messageData->httpBodyRemaining != INVALID_VALUE)
             messageData->httpBodyRemaining -= count;
 
         if (messageData->httpBodyOffset == 0) {
-            MemPool::Chunk* chunk = pool.flatten(false);
+            MemPool::Chunk* chunk = pool->flatten(false);
             // pool == poolStr until header is not fully read
             buffer = chunk->buffer + prevSize;
 
@@ -286,15 +304,15 @@ bool ClientHandler::readyRead(int fd)
                                       "Request is too large!");
                         const uint64_t totalRequestLength = messageData->httpBodyOffset +
                                 messageData->contentLength;
-                        messageData->httpBodyRemaining = totalRequestLength - pool.getSize();
-                        messageData->poolBody.reserve(totalRequestLength + 1);
+                        messageData->httpBodyRemaining = totalRequestLength - pool->getSize();
+                        messageData->poolBody->reserve(totalRequestLength + 1);
 
                         // if we didn't receive the whole body yet
                         // store received part of body to another pool to avoid
                         // Header* pointers damage on poolStr->flatten
                         if (messageData->httpBodyRemaining) {
                             // copy already received part of data to poolBody
-                            messageData->poolBody.putData(chunk->buffer + messageData->httpBodyOffset,
+                            messageData->poolBody->putData(chunk->buffer + messageData->httpBodyOffset,
                                                           chunk->size - messageData->httpBodyOffset);
                             messageData->usePoolBody = true;
                         }
@@ -397,7 +415,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
         NGREST_ASSERT(*curr, "Failed to parse HTTP header: unable to read value");
         char* value = token(curr, '\n');
         trimRight(value, curr - 2);
-        Header* header = messageData->context.pool.alloc<Header>();
+        Header* header = messageData->context.pool->alloc<Header>();
         header->name = name;
         header->value = value;
         if (lastHeader == nullptr) {
@@ -418,14 +436,14 @@ void ClientHandler::processRequest(int clientFd, MessageData* messageData)
 
     if (messageData->usePoolBody) {
         // handle body from poolBody with zero offset
-        MemPool::Chunk* chunk = messageData->poolBody.flatten();
+        MemPool::Chunk* chunk = messageData->poolBody->flatten();
         httpRequest->bodySize = chunk->size;
         httpRequest->body = chunk->buffer;
     } else {
         // handle body from poolStr with offset
-        NGREST_ASSERT_NULL(messageData->poolStr.getChunkCount() == 1); // should never happen
+        NGREST_ASSERT_NULL(messageData->poolStr->getChunkCount() == 1); // should never happen
 
-        const MemPool::Chunk* chunk = messageData->poolStr.flatten(); // already flat, but we need NUL
+        const MemPool::Chunk* chunk = messageData->poolStr->flatten(); // already flat, but we need NUL
         NGREST_ASSERT(messageData->httpBodyOffset <= chunk->size, "Request > size");
         httpRequest->bodySize = chunk->size - messageData->httpBodyOffset;
         if (httpRequest->bodySize)
@@ -433,16 +451,16 @@ void ClientHandler::processRequest(int clientFd, MessageData* messageData)
     }
 
     messageData->context.callback = messageData->context.pool
-            .alloc<ClientHandlerCallback>(this, clientFd, messageData);
+            ->alloc<ClientHandlerCallback>(this, clientFd, messageData);
     engine.dispatchMessage(&messageData->context);
 }
 
-inline void writeHttpHeader(MemPool& pool, const char* name, const char* value)
+inline void writeHttpHeader(MemPool* pool, const char* name, const char* value)
 {
-    pool.putCString(name);
-    pool.putData(": ", 2);
-    pool.putCString(value);
-    pool.putData("\r\n", 2);
+    pool->putCString(name);
+    pool->putData(": ", 2);
+    pool->putCString(value);
+    pool->putData("\r\n", 2);
 }
 
 void ClientHandler::processResponse(int clientFd, MessageData* messageData)
@@ -458,16 +476,16 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
 
     messageData->writing = true;
 
-    messageData->poolStr.reset();
+    messageData->poolStr->reset();
 
     // build response
     HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
-    messageData->poolStr.putData("HTTP/1.1 ", 9);
+    messageData->poolStr->putData("HTTP/1.1 ", 9);
     if (response->statusCode == HTTP_STATUS_UNDEFINED)
         response->statusCode = HTTP_STATUS_200_OK;
-    messageData->poolStr.putCString(HttpStatusInfo::httpStatusToString(
+    messageData->poolStr->putCString(HttpStatusInfo::httpStatusToString(
                                     static_cast<HttpStatus>(response->statusCode)));
-    messageData->poolStr.putData("\r\n", 2);
+    messageData->poolStr->putData("\r\n", 2);
     for (const Header* header = response->headers; header; header = header->next)
         writeHttpHeader(messageData->poolStr, header->name, header->value);
 
@@ -475,21 +493,21 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     writeHttpHeader(messageData->poolStr, "Server", "ngrest");
 
     // content-length
-    uint64_t bodySize = response->poolBody.getSize();
+    uint64_t bodySize = response->poolBody->getSize();
     const int buffSize = 32;
     char buff[buffSize];
     NGREST_ASSERT(toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
     writeHttpHeader(messageData->poolStr, "Content-Length", buff);
 
     // split body
-    messageData->poolStr.putData("\r\n", 2);
+    messageData->poolStr->putData("\r\n", 2);
 
-    messageData->headerState.chunk = messageData->poolStr.getChunks();
-    messageData->headerState.end = messageData->poolStr.getLastChunk() + 1;
+    messageData->headerState.chunk = messageData->poolStr->getChunks();
+    messageData->headerState.end = messageData->poolStr->getLastChunk() + 1;
     messageData->headerState.pos = 0;
-    if (!response->poolBody.isClean()) {
-        messageData->bodyState.chunk = response->poolBody.getChunks();
-        messageData->bodyState.end = response->poolBody.getLastChunk() + 1;
+    if (!response->poolBody->isClean()) {
+        messageData->bodyState.chunk = response->poolBody->getChunks();
+        messageData->bodyState.end = response->poolBody->getLastChunk() + 1;
         messageData->bodyState.pos = 0;
     }
 
@@ -512,8 +530,8 @@ void ClientHandler::processError(int clientFd, MessageData* messageData, const E
     }
     Header headerContentType("Content-Type", "text/plain");
     response->headers = &headerContentType;
-    response->poolBody.reset();
-    response->poolBody.putCString(error.what());
+    response->poolBody->reset();
+    response->poolBody->putCString(error.what());
     processResponse(clientFd, messageData);
 }
 

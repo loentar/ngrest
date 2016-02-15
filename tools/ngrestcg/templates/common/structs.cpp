@@ -13,7 +13,7 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::serialize(::ngrest
 ##endif
 ##var lastNodeName
 ##foreach $(struct.fields)
-    ::ngrest::NamedNode* $(field.name)Node = context->pool.alloc< ::ngrest::NamedNode>("$(field.name)");
+    ::ngrest::NamedNode* $(field.name)Node = context->pool->alloc< ::ngrest::NamedNode>("$(field.name)");
 ##ifeq($($lastNodeName),)
     static_cast< ::ngrest::Object*>(node)->firstChild = $(field.name)Node;
 ##else

@@ -133,6 +133,11 @@ public:
 
     void reserve(uint64_t size);
 
+    inline uint64_t getChunkSize() const
+    {
+        return chunkSize;
+    }
+
 private:
     void newChunk(uint64_t size = NGREST_MEMPOOL_CHUNK_SIZE);
 

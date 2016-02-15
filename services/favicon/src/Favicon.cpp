@@ -34,10 +34,10 @@ void Favicon::favicon(MessageContext& context)
                        "This service only supports HTTP transport");
 
     HttpResponse* response = static_cast<HttpResponse*>(context.response);
-    Header* headerContentType = context.pool.alloc<Header>("Content-Type", "image/x-icon");
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "image/x-icon");
     response->headers = headerContentType;
 
-    context.response->poolBody.putData(reinterpret_cast<const char*>(favicon_ico), favicon_ico_len);
+    context.response->poolBody->putData(reinterpret_cast<const char*>(favicon_ico), favicon_ico_len);
 }
 
 }

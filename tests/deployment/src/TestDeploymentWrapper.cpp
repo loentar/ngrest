@@ -62,10 +62,10 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
 
         const std::string& result = service->echoSync(value);
 
-        Object* responseNode = context->pool.alloc<Object>();
+        Object* responseNode = context->pool->alloc<Object>();
 
-        NamedNode* resultNode = context->pool.alloc<NamedNode>("result");
-        resultNode->node = context->pool.alloc<Value>(ValueType::String, result.c_str());
+        NamedNode* resultNode = context->pool->alloc<NamedNode>("result");
+        resultNode->node = context->pool->alloc<Value>(ValueType::String, result.c_str());
 
         responseNode->firstChild = resultNode;
 
@@ -94,10 +94,10 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
 
             void success(const std::string& result) override
             {
-                Object* responseNode = context->pool.alloc<Object>();
+                Object* responseNode = context->pool->alloc<Object>();
 
-                NamedNode* resultNode = context->pool.alloc<NamedNode>("result");
-                resultNode->node = context->pool.alloc<Value>(ValueType::String, result.c_str());
+                NamedNode* resultNode = context->pool->alloc<NamedNode>("result");
+                resultNode->node = context->pool->alloc<Value>(ValueType::String, result.c_str());
 
                 responseNode->firstChild = resultNode;
 
@@ -116,7 +116,7 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
             MessageContext* context;
         };
 
-        service->echoASync(value, *context->pool.alloc<Callback_echoASync>(context));
+        service->echoASync(value, context->pool->alloc<Callback_echoASync>(context));
 
     } else {
         NGREST_THROW_ASSERT("No operation " + operation->name + " found");

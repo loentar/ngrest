@@ -186,33 +186,33 @@ void ServerStatus::getServices(MessageContext& context)
                        "This service only supports HTTP transport");
 
     HttpResponse* response = static_cast<HttpResponse*>(context.response);
-    Header* headerContentType = context.pool.alloc<Header>("Content-Type", "text/html");
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
     response->headers = headerContentType;
 
-    MemPool& pool = context.response->poolBody;
+    MemPool* pool = context.response->poolBody;
 
-    pool.putCString("<html><head>"
+    pool->putCString("<html><head>"
                     "<title>Deployed services - ngrest</title>"
                     "<style>");
-    pool.putCString(css);
-    pool.putCString("</style></head><body>"
+    pool->putCString(css);
+    pool->putCString("</style></head><body>"
                     "<h1><a href='/ngrest/services'>ngrest</a><h1>"
                     "<h2>Deployed services:</h2>");
     const std::vector<ServiceWrapper*>& services = context.engine->getDispatcher().getServices();
     for (const ServiceWrapper* service : services) {
         const ServiceDescription* serviceDescr = service->getDescription();
-        pool.putCString("<p><h3>");
-        pool.putCString(("<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
+        pool->putCString("<p><h3>");
+        pool->putCString(("<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
                          + serviceDescr->name + "</a>").c_str());
-        pool.putCString("</h3><ul>");
+        pool->putCString("</h3><ul>");
         for (const OperationDescription& opDescr : serviceDescr->operations) {
-            pool.putCString(("<li><a href=\"/ngrest/operation/" + serviceDescr->name + "/"
+            pool->putCString(("<li><a href=\"/ngrest/operation/" + serviceDescr->name + "/"
                              + opDescr.name + "\">" + opDescr.name + "</a></li>").c_str());
         }
-        pool.putCString("</ul></p>");
+        pool->putCString("</ul></p>");
     }
 
-    pool.putCString("</body></html>");
+    pool->putCString("</body></html>");
 }
 
 void ServerStatus::getService(const std::string& name, MessageContext& context)
@@ -225,39 +225,39 @@ void ServerStatus::getService(const std::string& name, MessageContext& context)
     const ServiceWrapper* service = context.engine->getDispatcher().getService(name);
     NGREST_ASSERT_HTTP(service, HTTP_STATUS_404_NOT_FOUND, "Service not found: " + name);
 
-    Header* headerContentType = context.pool.alloc<Header>("Content-Type", "text/html");
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
     response->headers = headerContentType;
 
-    MemPool& pool = context.response->poolBody;
+    MemPool* pool = context.response->poolBody;
 
     const ServiceDescription* descr = service->getDescription();
 
-    pool.putCString("<html><head><title>");
-    pool.putCString(name.c_str());
-    pool.putCString(" - ngrest</title><style>");
-    pool.putCString(css);
-    pool.putCString("</style></head><body>"
+    pool->putCString("<html><head><title>");
+    pool->putCString(name.c_str());
+    pool->putCString(" - ngrest</title><style>");
+    pool->putCString(css);
+    pool->putCString("</style></head><body>"
                     "<h1><a href='/ngrest/services'>ngrest</a><h1>"
                     "<h2>");
-    pool.putCString(("<a href=\"/ngrest/service/" + descr->name + "\">"
+    pool->putCString(("<a href=\"/ngrest/service/" + descr->name + "\">"
                     + descr->name + "</a>").c_str());
-    pool.putCString("</h2><p><h3>");
-    pool.putCString(descr->description.c_str());
-    pool.putCString("</h3><pre>");
-    pool.putCString(descr->details.c_str());
-    pool.putCString("</pre></p><ul>");
+    pool->putCString("</h2><p><h3>");
+    pool->putCString(descr->description.c_str());
+    pool->putCString("</h3><pre>");
+    pool->putCString(descr->details.c_str());
+    pool->putCString("</pre></p><ul>");
     for (const OperationDescription& opDescr : descr->operations) {
-        pool.putCString(("<li><hr/><p><a href=\"/ngrest/operation/" + descr->name + "/"
+        pool->putCString(("<li><hr/><p><a href=\"/ngrest/operation/" + descr->name + "/"
                          + opDescr.name + "\">" + opDescr.name + "</a>").c_str());
-        pool.putCString("<h4>");
-        pool.putCString(opDescr.description.c_str());
-        pool.putCString("</h4><small><pre>");
-        pool.putCString(opDescr.details.c_str());
-        pool.putCString("</pre></small></p></li>");
+        pool->putCString("<h4>");
+        pool->putCString(opDescr.description.c_str());
+        pool->putCString("</h4><small><pre>");
+        pool->putCString(opDescr.details.c_str());
+        pool->putCString("</pre></small></p></li>");
     }
-    pool.putCString("</ul>");
+    pool->putCString("</ul>");
 
-    pool.putCString("</body></html>");
+    pool->putCString("</body></html>");
 }
 
 void ServerStatus::getOperation(const std::string& serviceName, const std::string& operationName,
@@ -285,12 +285,12 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
                        + serviceName + "/" + operationName);
 
 
-    Header* headerContentType = context.pool.alloc<Header>("Content-Type", "text/html");
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
     response->headers = headerContentType;
 
     const std::string& serviceLocation = getServiceLocation(serviceDescr);
 
-    MemPool& pool = context.response->poolBody;
+    MemPool* pool = context.response->poolBody;
 
     std::string templ = R"(
 <html>
@@ -411,7 +411,7 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
         {"jsform", jsFrom},
     });
 
-    pool.putCString(templ.c_str());
+    pool->putCString(templ.c_str());
 }
 
 }

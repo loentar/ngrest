@@ -32,10 +32,10 @@ namespace json {
 
 class JsonWriterImpl {
 public:
-    MemPool& pool;
+    MemPool* pool;
     int indent;
 
-    inline JsonWriterImpl(MemPool& memPool, int indent_):
+    inline JsonWriterImpl(MemPool* memPool, int indent_):
         pool(memPool),
         indent(indent_)
     {
@@ -47,29 +47,29 @@ public:
 
         case NodeType::Object: {
             const Object* object = static_cast<const Object*>(node);
-            pool.putChar('{');
+            pool->putChar('{');
             for (const NamedNode* child = object->firstChild; child; child = child->nextSibling) {
                 if (child != object->firstChild)
-                    pool.putChar(',');
-                pool.putChar('"');
-                pool.putCString(child->name);
-                pool.putChar('"');
-                pool.putChar(':');
+                    pool->putChar(',');
+                pool->putChar('"');
+                pool->putCString(child->name);
+                pool->putChar('"');
+                pool->putChar(':');
                 writeNode(child->node);
             }
-            pool.putChar('}');
+            pool->putChar('}');
             break;
         }
 
         case NodeType::Array: {
             const Array* array = static_cast<const Array*>(node);
-            pool.putChar('[');
+            pool->putChar('[');
             for (const LinkedNode* child = array->firstChild; child; child = child->nextSibling) {
                 if (child != array->firstChild)
-                    pool.putChar(',');
+                    pool->putChar(',');
                 writeNode(child->node);
             }
-            pool.putChar(']');
+            pool->putChar(']');
             break;
         }
 
@@ -77,26 +77,26 @@ public:
             const Value* value = static_cast<const Value*>(node);
             switch (value->valueType) {
             case ValueType::Undefined:
-                pool.putData("undefined", 9);
+                pool->putData("undefined", 9);
                 break;
 
             case ValueType::Null:
-                pool.putData("null", 4);
+                pool->putData("null", 4);
                 break;
 
             case ValueType::NaN:
-                pool.putData("NaN", 3);
+                pool->putData("NaN", 3);
                 break;
 
             case ValueType::String:
-                pool.putChar('"');
-                pool.putCString(value->value);
-                pool.putChar('"');
+                pool->putChar('"');
+                pool->putCString(value->value);
+                pool->putChar('"');
                 break;
 
             case ValueType::Number:
             case ValueType::Boolean:
-                pool.putCString(value->value);
+                pool->putCString(value->value);
                 break;
             }
             break;
@@ -110,9 +110,9 @@ public:
     }
 };
 
-void JsonWriter::write(const Node* node, MemPool& memPool, int indent)
+void JsonWriter::write(const Node* node, MemPool* memPool, int indent)
 {
-    NGREST_ASSERT(memPool.isClean(), "Mempool must be clean!");
+    NGREST_ASSERT(memPool->isClean(), "Mempool must be clean!");
 
     JsonWriterImpl(memPool, indent).writeNode(node);
 }

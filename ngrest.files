@@ -66,6 +66,8 @@ core/utils/src/Log.cpp
 core/utils/src/Log.h
 core/utils/src/LogStream.h
 core/utils/src/MemPool.cpp
+core/utils/src/MemPooler.cpp
+core/utils/src/MemPooler.h
 core/utils/src/MemPool.h
 core/utils/src/ngrestutilsexport.h
 core/utils/src/PluginExport.h

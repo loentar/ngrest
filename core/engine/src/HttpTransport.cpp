@@ -38,7 +38,7 @@ HttpTransport::HttpTransport():
 {
 }
 
-Node* HttpTransport::parseRequest(MemPool& pool, const Request* request)
+Node* HttpTransport::parseRequest(MemPool* pool, const Request* request)
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
     LogDebug() << "HTTP Request: " << httpRequest->methodStr << " " << httpRequest->path;
@@ -63,7 +63,7 @@ Node* HttpTransport::parseRequest(MemPool& pool, const Request* request)
     }
 }
 
-void HttpTransport::writeResponse(MemPool& pool, const Request* request, Response* response)
+void HttpTransport::writeResponse(MemPool* pool, const Request* request, Response* response)
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
     const Header* contentType = httpRequest->getHeader("content-type");
@@ -71,7 +71,7 @@ void HttpTransport::writeResponse(MemPool& pool, const Request* request, Respons
     // response with JSON if no "content-type" header set
     if (!contentType || !strcmp(contentType->value, "application/json")) {
         HttpResponse* httpResponse = static_cast<HttpResponse*>(response);
-        Header* headerContentType = pool.alloc<Header>("Content-Type", "application/json");
+        Header* headerContentType = pool->alloc<Header>("Content-Type", "application/json");
         httpResponse->headers = headerContentType;
 
         if (httpResponse->node)

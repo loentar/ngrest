@@ -30,6 +30,7 @@ namespace ngrest {
 class Exception;
 class Engine;
 class Transport;
+class MemPooler;
 struct MessageData;
 struct ClientInfo;
 
@@ -37,6 +38,7 @@ class ClientHandler: public ClientCallback
 {
 public:
     ClientHandler(Engine& engine, Transport& transport);
+    ~ClientHandler();
 
     virtual void connected(int fd, const sockaddr* addr) override;
     virtual void disconnected(int fd) override;
@@ -57,6 +59,7 @@ private:
     std::unordered_map<int, ClientInfo*> clients;
     Engine& engine;
     Transport& transport;
+    MemPooler* pooler;
 };
 
 }

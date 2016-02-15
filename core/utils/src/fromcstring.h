@@ -154,7 +154,7 @@ inline bool fromCString(const char* string, long double& value)
 }
 
 template <typename Type>
-inline Type FromCStringDefault(const char* string, Type defaultValue)
+inline Type fromCStringDefault(const char* string, Type defaultValue)
 {
     Type result = 0;
     return (string != nullptr && fromCString(string, result)) ? result : defaultValue;

@@ -35,7 +35,7 @@ public:
     int line = 1;
     char* begin;
     char* curr;
-    MemPool& pool;
+    MemPool* pool;
 
     inline void skipWs()
     {
@@ -101,7 +101,7 @@ public:
     }
 
 
-    inline JsonReaderImpl(char* buff, MemPool& memPool):
+    inline JsonReaderImpl(char* buff, MemPool* memPool):
         begin(buff),
         curr(buff),
         pool(memPool)
@@ -120,7 +120,7 @@ public:
             return readObject();
 
         case '"': // string
-            return pool.alloc<Value>(ValueType::String, tokenString());
+            return pool->alloc<Value>(ValueType::String, tokenString());
         }
 
         // number or special value
@@ -129,20 +129,20 @@ public:
 
         // number
         if ((*token >= '0' && *token <= '9') || *token == '-')
-            return pool.alloc<Value>(ValueType::Number, token);
+            return pool->alloc<Value>(ValueType::Number, token);
 
         if (!strncmp(token, "true", len) || !strncmp(token, "false", len))
-            return pool.alloc<Value>(ValueType::Boolean, token);
+            return pool->alloc<Value>(ValueType::Boolean, token);
 
         // handle undefined, NaN, null
         if (!strncmp(token, "null", len))
-            return pool.alloc<Value>(ValueType::Null);
+            return pool->alloc<Value>(ValueType::Null);
 
         if (!strncmp(token, "undefined", len))
-            return pool.alloc<Value>(ValueType::Undefined);
+            return pool->alloc<Value>(ValueType::Undefined);
 
         if (!strncmp(token, "NaN", len))
-            return pool.alloc<Value>(ValueType::NaN);
+            return pool->alloc<Value>(ValueType::NaN);
 
         NGREST_THROW_ASSERT("Unexpected token");
     }
@@ -165,7 +165,7 @@ public:
     {
         ++curr; // skip '['
 
-        Array* array = pool.alloc<Array>();
+        Array* array = pool->alloc<Array>();
 
         skipWs();
         // empty array
@@ -179,7 +179,7 @@ public:
         char* valueEnd;
 
         for (;;) {
-            linkedNode = pool.alloc<LinkedNode>(readAny());
+            linkedNode = pool->alloc<LinkedNode>(readAny());
 
             if (prevLinkedNode == nullptr) {
                 array->firstChild = linkedNode;
@@ -211,7 +211,7 @@ public:
         // {"name": ...., "name2":...}
         ++curr; // skip '{'
 
-        Object* object = pool.alloc<Object>();
+        Object* object = pool->alloc<Object>();
 
         skipWs();
         // empty object
@@ -226,7 +226,7 @@ public:
 
         for (;;) {
             NGREST_ASSERT(*curr == '"', "Missing '\"' while reading object name");
-            namedNode = pool.alloc<NamedNode>(tokenString());
+            namedNode = pool->alloc<NamedNode>(tokenString());
 
             skipWs();
             NGREST_ASSERT(*curr == ':', "Missing ':' after object name");
@@ -260,7 +260,7 @@ public:
     }
 };
 
-Node* JsonReader::read(char* buff, MemPool& memPool)
+Node* JsonReader::read(char* buff, MemPool* memPool)
 {
     return JsonReaderImpl(buff, memPool).readArrayOrObject();
 }

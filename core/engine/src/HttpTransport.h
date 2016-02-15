@@ -31,10 +31,10 @@ public:
     HttpTransport();
 
     // pool temporary pool for storing data
-    virtual Node* parseRequest(MemPool& pool, const Request* request) override;
+    virtual Node* parseRequest(MemPool* pool, const Request* request) override;
 
     // pool temporary pool for storing data
-    virtual void writeResponse(MemPool& pool, const Request* request, Response* response) override;
+    virtual void writeResponse(MemPool* pool, const Request* request, Response* response) override;
 
     virtual int getRequestMethod(const Request* request) override;
 };

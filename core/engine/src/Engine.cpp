@@ -41,7 +41,7 @@ public:
     void success()
     {
         // only write response in case of it was not written
-        if (!context->response->poolBody.getSize())
+        if (!context->response->poolBody->getSize())
             context->transport->writeResponse(context->pool, context->request, context->response);
         context->callback = origCallback;
         context->callback->success();
@@ -72,7 +72,7 @@ void Engine::dispatchMessage(MessageContext* context)
 
     try {
         // this will replace context callback and restore it after dispatching the message
-        context->pool.alloc<EngineHookCallback>(context);
+        context->pool->alloc<EngineHookCallback>(context);
 
         if (context->request->body) {
             context->request->node = context->transport->parseRequest(context->pool, context->request);

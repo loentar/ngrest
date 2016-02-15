@@ -18,22 +18,39 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#ifndef NGREST_JSONWRITER_H
-#define NGREST_JSONWRITER_H
+#ifndef NGREST_MEMPOOLER_H
+#define NGREST_MEMPOOLER_H
+
+#include <vector>
+#include <unordered_map>
+
+#include "MemPool.h"
 
 namespace ngrest {
 
-class MemPool;
-class Node;
+struct Pools
+{
+    std::vector<MemPool*> used;
+    std::vector<MemPool*> unused;
+};
 
-namespace json {
-
-class JsonWriter {
+class MemPooler
+{
 public:
-    static void write(const Node* node, MemPool* memPool, int indent = 0);
+    MemPooler();
+    ~MemPooler();
+
+    MemPool* obtain(uint64_t chunkSize = NGREST_MEMPOOL_CHUNK_SIZE);
+    void recycle(MemPool* pool);
+
+private:
+    MemPooler(const MemPooler&);
+    MemPooler& operator=(const MemPooler&);
+
+private:
+    std::unordered_map<uint64_t, Pools> pools;
 };
 
 }
-}
 
-#endif
+#endif // NGREST_MEMPOOLER_H

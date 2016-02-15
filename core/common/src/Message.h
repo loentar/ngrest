@@ -54,7 +54,7 @@ struct Request
     char* body = nullptr;
     uint64_t bodySize = 0;
 
-    Node* node;
+    Node* node = nullptr;
 
     // name must be in lower case
     const Header* getHeader(const char* name) const;
@@ -64,9 +64,9 @@ struct Response
 {
     const Header* headers = nullptr;
 
-    Node* node;
+    Node* node = nullptr;
 
-    MemPool poolBody;
+    MemPool* poolBody = nullptr;
 };
 
 class MessageCallback: public VoidCallback
@@ -81,7 +81,7 @@ struct MessageContext
     Request* request = nullptr;
     Response* response = nullptr;
     MessageCallback* callback = nullptr;
-    MemPool pool;
+    MemPool* pool = nullptr;
 };
 
 } // namespace ngrest

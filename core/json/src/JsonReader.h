@@ -30,7 +30,7 @@ namespace json {
 
 class JsonReader {
 public:
-    static Node* read(char* buff, MemPool& memPool);
+    static Node* read(char* buff, MemPool* memPool);
 };
 
 }

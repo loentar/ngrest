@@ -382,7 +382,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         }
     } else {
         // create empty object to serialize query to it
-        requestNode = context->pool.alloc<Object>();
+        requestNode = context->pool->alloc<Object>();
         context->request->node = requestNode;
     }
 
@@ -401,10 +401,10 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
             dividerSize = 0;
         }
 
-        const char* name = context->pool.putCString(parameter.name.c_str(), true);
-        const char* value = context->pool.putCString(pathCStr + begin, end - begin, true);
+        const char* name = context->pool->putCString(parameter.name.c_str(), true);
+        const char* value = context->pool->putCString(pathCStr + begin, end - begin, true);
 
-        NamedNode* namedNode = context->pool.alloc<NamedNode>();
+        NamedNode* namedNode = context->pool->alloc<NamedNode>();
         namedNode->name = name;
 
         if (lastNamedNode) {
@@ -414,7 +414,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         }
         lastNamedNode = namedNode;
 
-        Value* valueNode = context->pool.alloc<Value>(ValueType::String);
+        Value* valueNode = context->pool->alloc<Value>(ValueType::String);
         valueNode->value = value;
         namedNode->node = valueNode;
 
@@ -425,9 +425,9 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
 #ifdef DEBUG
     json::JsonWriter::write(requestNode, context->response->poolBody);
     LogDebug() << "Generated request:\n---------------------\n"
-               << context->response->poolBody.flatten()->buffer
+               << context->response->poolBody->flatten()->buffer
                << "\n---------------------\n";
-    context->response->poolBody.reset();
+    context->response->poolBody->reset();
 #endif
 
     LogDebug() << "Invoking service operation " << service->wrapper->getDescription()->name
