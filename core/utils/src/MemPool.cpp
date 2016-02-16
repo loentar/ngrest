@@ -131,8 +131,8 @@ void MemPool::reserve(uint64_t size)
 
 void MemPool::newChunk(uint64_t size)
 {
-    if (chunkIndex < chunksCount) {
-        Chunk* chunk = chunks + chunkIndex;
+    if ((chunkIndex + 1) < chunksCount) {
+        Chunk* chunk = chunks + chunkIndex + 1;
         if (chunk->bufferSize < size) {
             char* newBuffer = reinterpret_cast<char*>(realloc(chunk->buffer, size));
             if (!newBuffer)
@@ -143,6 +143,7 @@ void MemPool::newChunk(uint64_t size)
         }
         chunk->size = 0;
         currChunk = chunk;
+        ++chunkIndex;
         return;
     }
 

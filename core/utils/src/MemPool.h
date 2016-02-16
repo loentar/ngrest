@@ -123,9 +123,10 @@ public:
     inline uint64_t getSize() const
     {
         uint64_t result = 0;
-        const MemPool::Chunk* chunk = chunks;
-        for (int i = 0; i < chunksCount; ++i, ++chunk)
-            result += chunk->size;
+        if (currChunk) {
+            for (const MemPool::Chunk* chunk = chunks; chunk <= currChunk; ++chunk)
+                result += chunk->size;
+        }
         return result;
     }
 
