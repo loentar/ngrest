@@ -26,6 +26,7 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -239,6 +240,9 @@ bool Server::handleIncomingConnection()
             close(fdIn);
             continue;
         }
+
+        int nodelayOpt = 1;
+        setsockopt(fdIn, IPPROTO_TCP, TCP_NODELAY, &nodelayOpt, sizeof(nodelayOpt));
 
         /* add it to the list of fds to monitor. */
         event->data.fd = fdIn;

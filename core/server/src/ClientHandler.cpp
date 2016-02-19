@@ -22,6 +22,7 @@
 #include <error.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <time.h>
 
 #include <list>
 
@@ -68,7 +69,6 @@ struct MessageData
     uint64_t contentLength = INVALID_VALUE;
     uint64_t httpBodyOffset = 0;
     uint64_t httpBodyRemaining = INVALID_VALUE;
-//    uint64_t currentChunkRemaining = 0;
     bool processing = false;
 
     // response data
@@ -89,7 +89,7 @@ struct MessageData
         context.transport = transport;
         context.request = context.pool->alloc<HttpRequest>();
         context.response = context.pool->alloc<HttpResponse>();
-        context.response->poolBody = pooler->obtain();
+        context.response->poolBody = pooler->obtain(65536); // 64 KB chunks for output buffer
     }
 
     ~MessageData()
