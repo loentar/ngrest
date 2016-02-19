@@ -463,6 +463,35 @@ inline void writeHttpHeader(MemPool* pool, const char* name, const char* value)
     pool->putData("\r\n", 2);
 }
 
+template <int size>
+inline bool getServerTime(char(&timeStr)[size])
+{
+    struct tm localTime;
+
+#if defined WIN32
+    SYSTEMTIME systemTime;
+    GetLocalTime(&systemTime);
+
+    localTime.tm_sec = systemTime.wSecond;
+    localTime.tm_min = systemTime.wMinute;
+    localTime.tm_hour = systemTime.wHour;
+    localTime.tm_mday = systemTime.wDay;
+    localTime.tm_mon = systemTime.wMonth - 1;
+    localTime.tm_year = systemTime.wYear - 1900;
+    localTime.tm_wday = systemTime.wDayOfWeek;
+    localTime.tm_yday = 0;
+    localTime.tm_isdst = 0;
+#else
+    time_t timeT;
+
+    time(&timeT);
+    if (!gmtime_r(&timeT, &localTime))
+        return false;
+#endif
+
+    return strftime(timeStr, size, "%a, %b %d %Y %H:%M:%S GMT", &localTime) < size;
+}
+
 void ClientHandler::processResponse(int clientFd, MessageData* messageData)
 {
     auto it = clients.find(clientFd);
@@ -498,6 +527,9 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     char buff[buffSize];
     NGREST_ASSERT(toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
     writeHttpHeader(messageData->poolStr, "Content-Length", buff);
+    if (getServerTime(buff))
+        writeHttpHeader(messageData->poolStr, "Date", buff);
+    writeHttpHeader(messageData->poolStr, "Connection", "keep-alive");
 
     // split body
     messageData->poolStr->putData("\r\n", 2);
