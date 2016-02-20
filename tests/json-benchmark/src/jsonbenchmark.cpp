@@ -48,7 +48,15 @@ void writeToFile(const char* fileName, const char* json, unsigned long size)
 {
     int fd = ::open(fileName, O_WRONLY | O_CREAT, 0644);
     if (fd >= 0) {
-        ::write(fd, json, size);
+        while (size) {
+            ssize_t written = ::write(fd, json, size);
+            if (written == -1) {
+                perror("Can't write");
+                break;
+            }
+            json += written;
+            size -= written;
+        }
         ::close(fd);
     }
 }
@@ -114,12 +122,12 @@ int main()
 
         start = getTime();
         ngrest::MemPool poolJson;
-        ngrest::Node* root = ngrest::json::JsonReader::read(chunk->buffer, poolJson);
+        ngrest::Node* root = ngrest::json::JsonReader::read(chunk->buffer, &poolJson);
 
         mid = getTime();
 
-        ngrest::MemPool poolOut;
-        ngrest::json::JsonWriter::write(root, poolOut);
+        ngrest::MemPool poolOut(65536);
+        ngrest::json::JsonWriter::write(root, &poolOut);
         end = getTime();
 
         std::cout << "NGREST:   "

@@ -116,7 +116,7 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
             MessageContext* context;
         };
 
-        service->echoASync(value, context->pool->alloc<Callback_echoASync>(context));
+        service->echoASync(value, *context->pool->alloc<Callback_echoASync>(context));
 
     } else {
         NGREST_THROW_ASSERT("No operation " + operation->name + " found");

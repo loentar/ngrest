@@ -145,7 +145,7 @@ $($callbackType) result\
 ##ifneq($(param.dataType.name),Callback)
 $(param.name)\
 ##else
-context->pool->alloc<Callback_$(operation.name)>(context)\
+*context->pool->alloc<Callback_$(operation.name)>(context)\
 ##endif
 ##endfor
 );

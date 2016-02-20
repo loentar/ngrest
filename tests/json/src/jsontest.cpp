@@ -58,9 +58,9 @@ int main()
         for (int t = 0; t < testsCount; ++t) {
             ngrest::MemPool pool;
             ngrest::MemPool poolOut;
-            ngrest::Node* root = ngrest::json::JsonReader::read(tests[t], pool);
+            ngrest::Node* root = ngrest::json::JsonReader::read(tests[t], &pool);
 
-            ngrest::json::JsonWriter::write(root, poolOut, 2);
+            ngrest::json::JsonWriter::write(root, &poolOut, 2);
 
             int chunksCount = poolOut.getChunkCount();
             const ngrest::MemPool::Chunk* chunks = poolOut.getChunks();
