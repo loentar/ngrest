@@ -29,7 +29,7 @@ namespace ngrest {
 template<typename Type>
 std::string toString(Type value)
 {
-    char buffer[NUM_TO_STR_BUFF_SIZE];
+    char buffer[NGREST_NUM_TO_STR_BUFF_SIZE];
     toCString(value, buffer, sizeof(buffer));
     return buffer;
 }
@@ -37,7 +37,7 @@ std::string toString(Type value)
 template<typename Type>
 std::string& toString(Type value, std::string& result)
 {
-    char buffer[NUM_TO_STR_BUFF_SIZE];
+    char buffer[NGREST_NUM_TO_STR_BUFF_SIZE];
     if (toCString(value, buffer, sizeof(buffer)))
         result = buffer;
     return result;
@@ -46,7 +46,7 @@ std::string& toString(Type value, std::string& result)
 template<typename Type>
 std::string toString(Type value, bool* ok)
 {
-    char buffer[NUM_TO_STR_BUFF_SIZE];
+    char buffer[NGREST_NUM_TO_STR_BUFF_SIZE];
     bool isOk = toCString(value, buffer, sizeof(buffer));
     if (ok)
         *ok = isOk;
@@ -56,7 +56,7 @@ std::string toString(Type value, bool* ok)
 template<typename Type>
 std::string& toString(Type value, std::string& result, bool* ok)
 {
-    char buffer[NUM_TO_STR_BUFF_SIZE];
+    char buffer[NGREST_NUM_TO_STR_BUFF_SIZE];
     bool isOk = toCString(value, buffer, sizeof(buffer));
     if (ok)
         *ok = isOk;
@@ -69,7 +69,7 @@ std::string& toString(Type value, std::string& result, bool* ok)
 template<typename Type>
 std::string toHexString(Type value)
 {
-    char buffer[NUM_TO_STR_BUFF_SIZE];
+    char buffer[NGREST_NUM_TO_STR_BUFF_SIZE];
     toHexCString(value, buffer, sizeof(buffer));
     return buffer;
 }

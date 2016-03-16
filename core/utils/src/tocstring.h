@@ -35,8 +35,8 @@ namespace ngrest {
 typedef char byte;
 typedef unsigned char unsignedByte;
 
-#ifndef NUM_TO_STR_BUFF_SIZE
-static const int NUM_TO_STR_BUFF_SIZE = 32;
+#ifndef NGREST_NUM_TO_STR_BUFF_SIZE
+#define NGREST_NUM_TO_STR_BUFF_SIZE 32
 #endif
 
 
@@ -127,7 +127,7 @@ inline bool toCString(long double value, char* buffer, int bufferSize)
 
 inline bool toCString(float value, char* buffer, int bufferSize, const char* precision)
 {
-    char format[NUM_TO_STR_BUFF_SIZE];
+    char format[NGREST_NUM_TO_STR_BUFF_SIZE];
     if (ngrest_snprintf(format, bufferSize, "%%%sf", precision) >= bufferSize)
         return false;
 
@@ -136,7 +136,7 @@ inline bool toCString(float value, char* buffer, int bufferSize, const char* pre
 
 inline bool toCString(double value, char* buffer, int bufferSize, const char* precision)
 {
-    char format[NUM_TO_STR_BUFF_SIZE];
+    char format[NGREST_NUM_TO_STR_BUFF_SIZE];
     if (ngrest_snprintf(format, bufferSize, "%%%sf", precision) >= bufferSize)
         return false;
 
@@ -145,7 +145,7 @@ inline bool toCString(double value, char* buffer, int bufferSize, const char* pr
 
 inline bool toCString(long double value, char* buffer, int bufferSize, const char* precision)
 {
-    char format[NUM_TO_STR_BUFF_SIZE];
+    char format[NGREST_NUM_TO_STR_BUFF_SIZE];
 #ifdef WIN32
     if (ngrest_snprintf(format, bufferSize, "%%%sLe", precision) >= bufferSize)
 #else

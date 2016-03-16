@@ -6,8 +6,8 @@
 \
 ##case generic
 ##ifneq($(.name.!match/bool/),true)
-    char $($name)Buff[NUM_TO_STR_BUFF_SIZE];
-    NGREST_ASSERT(::ngrest::toCString($($var), $($name)Buff, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
+    char $($name)Buff[NGREST_NUM_TO_STR_BUFF_SIZE];
+    NGREST_ASSERT(::ngrest::toCString($($var), $($name)Buff, NGREST_NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
     const char* $($name)CStr = context->pool->putCString($($name)Buff, true);
 ##endif
     $($node) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::\
@@ -73,8 +73,8 @@ $($var) ? "true" : "false"\
 ##switch $(.templateParams.templateParam1.type)
 ##case generic
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
-    char $($name)BuffItem[NUM_TO_STR_BUFF_SIZE];
-    NGREST_ASSERT(::ngrest::toCString($($name)Item.first, $($name)BuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
+    char $($name)BuffItem[NGREST_NUM_TO_STR_BUFF_SIZE];
+    NGREST_ASSERT(::ngrest::toCString($($name)Item.first, $($name)BuffItem, NGREST_NUM_TO_STR_BUFF_SIZE), "Failed to serialize $(.nsName)");
     const char* $($name)CStrItem = context->pool->putCString($($name)BuffItem, true);
 ##var inlineValue $($name)CStrItem
 ##else

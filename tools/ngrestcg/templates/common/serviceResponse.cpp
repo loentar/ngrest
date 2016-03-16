@@ -8,8 +8,8 @@
 \
 ##case generic
 ##ifneq($(.name.!match/bool/),true)
-        char resultBuff[NUM_TO_STR_BUFF_SIZE];
-        NGREST_ASSERT(::ngrest::toCString(result, resultBuff, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
+        char resultBuff[NGREST_NUM_TO_STR_BUFF_SIZE];
+        NGREST_ASSERT(::ngrest::toCString(result, resultBuff, NGREST_NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
         const char* resultCStr = context->pool->putCString(resultBuff, true);
 ##endif
         resultNode->node = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::\
@@ -75,8 +75,8 @@ result ? "true" : "false"\
 ##switch $(.templateParams.templateParam1.type)
 ##case generic
 ##ifneq($(.templateParams.templateParam1.name.!match/bool/),true)
-        char resultBuffItem[NUM_TO_STR_BUFF_SIZE];
-        NGREST_ASSERT(::ngrest::toCString(it.first, resultBuffItem, NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
+        char resultBuffItem[NGREST_NUM_TO_STR_BUFF_SIZE];
+        NGREST_ASSERT(::ngrest::toCString(it.first, resultBuffItem, NGREST_NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
         const char* $($name)CStr = context->pool->putCString(resultBuffItem, true);
 ##var inlineValue $($name)CStr
 ##else
