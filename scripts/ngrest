@@ -359,6 +359,7 @@ EOF
   if [ -z "${DISABLE_WATCHER:-}" ]
   then
     # test if inotifywait is installed
+    RES=0
     inotifywait -h >/dev/null 2>&1 || RES=$?
     if [ $RES -eq 127 ] # command not found
     then
