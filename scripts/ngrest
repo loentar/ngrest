@@ -356,6 +356,21 @@ EOF
     export NGREST_LOG_VERBOSITY="LEVEL DATETIME TEXT"
   fi
 
+  if [ -z "${DISABLE_WATCHER:-}" ]
+  then
+    # test if inotifywait is installed
+    inotifywait -h >/dev/null 2>&1
+    if [ $? -eq 127 ] # command not found
+    then
+      DISABLE_WATCHER=1
+      color "33"
+      echo "Cannot find inotifywait. Starting your project without file watcher support." >&2
+      echo "Please install inotify-tools package or to suppress this warning:" >&2
+      echo "  DISABLE_WATCHER=1 ngrest" >&2
+      color "0"
+    fi
+  fi
+
   echo -e "\nStarting your project in local deployment mode..."
   echo -e "Press [Ctrl+C] to stop your project\n"
   if [ -n "${DISABLE_WATCHER:-}" ]
@@ -430,7 +445,10 @@ upgrade() {
   then
     echo "No upgrades found"
   else
-    UPGRADE=1 bash < ~/.ngrest/ngrest/scripts/inst
+    # reading script into memory to prevent upgrade errors
+    # caused by script is changed on execution
+    INST_SCRIPT=$(<~/.ngrest/ngrest/scripts/inst)
+    UPGRADE=1 bash <<< "$INST_SCRIPT"
   fi
 }
 
