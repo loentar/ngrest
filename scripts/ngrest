@@ -359,8 +359,8 @@ EOF
   if [ -z "${DISABLE_WATCHER:-}" ]
   then
     # test if inotifywait is installed
-    inotifywait -h >/dev/null 2>&1
-    if [ $? -eq 127 ] # command not found
+    inotifywait -h >/dev/null 2>&1 || RES=$?
+    if [ $RES -eq 127 ] # command not found
     then
       DISABLE_WATCHER=1
       color "33"
