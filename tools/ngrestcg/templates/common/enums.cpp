@@ -12,7 +12,7 @@ const char* $(enum.ownerName.!replace/::/Serializer::/)Serializer::toCString($(e
         return "$(member.name)";
 ##endfor
     default:
-        NGREST_THROW_ASSERT("Can't serialize enum $(enum.name) from value: [" + toString(static_cast<int>(value)) + "]");
+        NGREST_THROW_ASSERT("Can't serialize enum $(enum.name) from value: [" + ::ngrest::toString(static_cast<int>(value)) + "]");
     }
 }
 

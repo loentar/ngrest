@@ -23,6 +23,7 @@
 
 namespace ngrest {
 
+class Node;
 class Service;
 class ServiceDescription;
 class OperationDescription;
