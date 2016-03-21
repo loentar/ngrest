@@ -891,6 +891,11 @@ public:
                 skipWs();
                 readBefore(name, " \r\n\t;{}");
 
+                if (name == "class") { // ignore "class" keyword after enum
+                    skipWs();
+                    readBefore(name, " \r\n\t;{}");
+                }
+
                 Enum& en = typeInList(structure.enums, name, currentNs, ownerName);
 
                 parseEnum(en);
@@ -1011,7 +1016,6 @@ public:
     {
         char ch = '\0';
         std::string tmp;
-        std::string description;
 
         CSP_ASSERT(!file.eof(), "unexpected EOF(after enum name): " + en.name,
                    interface.fileName, line);
@@ -1331,6 +1335,10 @@ public:
             std::string name;
             skipWs();
             readBefore(name, " \r\n\t;{}");
+            if (name == "class") { // ignore "class" keyword after enum
+                skipWs();
+                readBefore(name, " \r\n\t;{}");
+            }
 
             Enum& en = typeInList(interface.enums, name, currentNs);
 
