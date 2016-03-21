@@ -65,6 +65,15 @@ Example 2. Start your project and set server's port to 9090:
 EOF
 }
 
+help_build() {
+  cat >&2 << EOF
+Usage: ngrest build
+
+Build current project and create service binaries in '.ngrest/local/build/services'.
+
+EOF
+}
+
 help_clean() {
   cat >&2 << EOF
 Usage: ngrest clean
@@ -91,6 +100,16 @@ Example 2. Upgrade to commit 2092ea0...:
 EOF
 }
 
+help_bundle_server() {
+  cat >&2 << EOF
+Usage: ngrest bundle-server [<archive_name_noext>]
+
+Creates ngrest server bundle to install it to another machine.
+Uses 'archive_name_noext' as filename for output archive.
+
+EOF
+}
+
 help() {
   case "${1:-}" in
   create)
@@ -101,8 +120,16 @@ help() {
     help_run
     ;;
 
+  build)
+    help_build
+    ;;
+
   clean)
     help_clean
+    ;;
+
+  bundle-server)
+    help_bundle_server
     ;;
 
   upgrade)
@@ -115,9 +142,11 @@ Usage: ngrest [help] [<command>] [<arguments>]
 
 Commands:
   create         Create a new project.
-  run            (default) Run current project in local deployment mode.
+  run            (default) Build and run current project in local deployment mode.
+  build          Build current project.
   clean          Cleans build and program cache.
   upgrade        Upgrade ngrest to the latest available version.
+  bundle-server  Creates ngrest server bundle to install it to another machine.
   help           Display help for the command.
 
 EOF
@@ -220,6 +249,10 @@ EOF
 }
 
 build() {
+  PROJECT_DIR=$PWD
+  mkdir -p .ngrest/local/build
+  cd .ngrest/local/build
+
   [ -e .ngrest_version ] && BUILT_WITH_VERSION=$(<.ngrest_version) || BUILT_WITH_VERSION=
   CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse HEAD)
   if [ "$BUILT_WITH_VERSION" != "$CURRENT_VERSION" -a -n "$BUILT_WITH_VERSION" ]
@@ -237,6 +270,7 @@ build() {
   cp $PWD/deploy/share/ngrest/services/* services/
 
   [ "$BUILT_WITH_VERSION" = "$CURRENT_VERSION" ] || echo "$CURRENT_VERSION" > .ngrest_version
+  echo "build finished."
 }
 
 color() {
@@ -336,9 +370,6 @@ EOF
   fi
 
   PORT=${NGREST_SERVER_PORT:-9098}
-  PROJECT_DIR=$PWD
-  mkdir -p .ngrest/local/build
-  cd .ngrest/local/build
 
   build
 
@@ -453,6 +484,38 @@ upgrade() {
   fi
 }
 
+bundle_server() {
+  CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse --short HEAD)
+  OUT_FILE_BASE=${1:-$PWD/ngrest-server-bundle-$CURRENT_VERSION}
+  TMP_DIR=$(mktemp -d)
+  trap "rm -r $TMP_DIR" EXIT
+  fakeroot bash << EOD
+set -eu
+mkdir $TMP_DIR/ngrest
+echo "performing ngrest server bundle..."
+cp -r $HOME/.ngrest/ngrest-build/deploy/{bin,lib,share} $TMP_DIR/ngrest
+chown -R 0:0 $TMP_DIR/ngrest
+mv $TMP_DIR/ngrest/bin/ngrestserver $TMP_DIR/ngrest/bin/ngrestserver-bin
+echo -e '#!/bin/bash\n\ncd \$(dirname \$0)\nexport LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$PWD/../lib\nexec ./ngrestserver-bin \$@' >$TMP_DIR/ngrest/bin/ngrestserver
+chmod 755 $TMP_DIR/ngrest/bin/ngrestserver
+rm -rf $TMP_DIR/ngrest/bin/ngrestcg $TMP_DIR/ngrest/lib/libngrestcgparser.so $TMP_DIR/ngrest/share/ngrest/codegen
+rm -f $TMP_DIR/ngrest/service{crudservice.so,echoservice.so,ngresttestservice.so}
+cd $TMP_DIR
+tar Jc ngrest >ngrest.tar.xz
+cd - >/dev/null
+mv $TMP_DIR/ngrest.tar.xz $OUT_FILE_BASE.tar.xz
+cat << EEE
+Created $OUT_FILE_BASE.tar.xz
+
+You can install it using:
+  tar Jxf ${OUT_FILE_BASE##*/}.tar.xz -C/opt
+
+To start ngrest server:
+  /opt/ngrest/bin/ngrestserver
+EEE
+EOD
+}
+
 COMMAND=${1:-}
 shift || true
 
@@ -467,6 +530,10 @@ case $COMMAND in
     help $@
     ;;
 
+  build)
+    build
+    ;;
+
   run)
     run
     ;;
@@ -479,7 +546,15 @@ case $COMMAND in
     upgrade
     ;;
 
+  bundle-server)
+    bundle_server
+    ;;
+
   "")
     run
+    ;;
+
+  *)
+    help
     ;;
 esac
