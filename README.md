@@ -6,6 +6,10 @@ Some benchmark results https://docs.google.com/spreadsheets/d/1M8qtkO6dBa6Q2UPTe
 
 ngrest is written on C++11 and uses CMake for build.
 
+## Support
+
+Feel free to ask ngrest related questions here: https://groups.google.com/forum/#!forum/ngrest
+
 ## Install
 
 Currently only Linux supported, but there are plans to extend support for other popular operating systems.
