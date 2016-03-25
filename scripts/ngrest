@@ -78,7 +78,8 @@ help_clean() {
   cat >&2 << EOF
 Usage: ngrest clean
 
-Cleans build and program caches. Useful when you change CMAKE/MAKE flags
+Clean build and program caches.
+Useful when you change CMAKE/MAKE flags or prepairing to create source tarball.
 
 EOF
 }
@@ -104,11 +105,56 @@ help_bundle_server() {
   cat >&2 << EOF
 Usage: ngrest bundle-server [<archive_name_noext>]
 
-Creates ngrest server bundle to install it to another machine.
+Create ngrest server bundle to install it to another host.
 Uses 'archive_name_noext' as filename for output archive.
 
 EOF
 }
+
+help_deploy_server() {
+  cat >&2 << EOF
+Usage: ngrest deploy-server [user@]host [path]
+
+Install local version of ngrest server to remote host.
+By default path = /opt. This will deploy ngrest server into /opt/ngrest
+
+Note: Before deploying you must make parent directory writable (sudo chmod 777 /opt)
+    or create path with writable permission:
+      sudo mkdir /opt/ngrest
+      sudo chown user:user /opt/ngrest
+
+Example:
+
+  ngrest deploy-server 192.168.0.1
+
+EOF
+}
+
+help_bundle() {
+  cat >&2 << EOF
+Usage: ngrest bundle [<archive_name_noext>]
+
+Create bundle of the current project to install it to another host.
+Uses 'archive_name_noext' as filename for output archive.
+
+EOF
+}
+
+help_deploy() {
+  cat >&2 << EOF
+Usage: ngrest deploy [user@]host [server_path]
+
+Deploy local version of the current project to remote host.
+ngrest server must be installed on server_path.
+By default server_path = /opt/ngrest.
+
+Example:
+
+  ngrest deploy 192.168.0.1
+
+EOF
+}
+
 
 help() {
   case "${1:-}" in
@@ -132,6 +178,18 @@ help() {
     help_bundle_server
     ;;
 
+  deploy-server)
+    help_deploy_server
+    ;;
+
+  bundle)
+    help_bundle
+    ;;
+
+  deploy)
+    help_deploy
+    ;;
+
   upgrade)
     help_upgrade
     ;;
@@ -144,9 +202,12 @@ Commands:
   create         Create a new project.
   run            (default) Build and run current project in local deployment mode.
   build          Build current project.
-  clean          Cleans build and program cache.
+  clean          Clean build and program cache.
   upgrade        Upgrade ngrest to the latest available version.
-  bundle-server  Creates ngrest server bundle to install it to another machine.
+  bundle-server  Create ngrest server bundle to install it to another machine.
+  deploy-server  Deploy local version of ngrest server to remote host.
+  bundle         Create bundle of the current project to install it to another host.
+  deploy         Deploy local version of the current project to remote host.
   help           Display help for the command.
 
 EOF
@@ -350,7 +411,7 @@ restart_on_upgrade() {
   kill -TERM $CHILDREN 2>/dev/null || true
 }
 
-run() {
+check_get_name() {
   if [ ! -e .ngrest/name ]
   then
     cat >&2 << EOF
@@ -363,6 +424,11 @@ For more help, see "ngrest help".
 EOF
     exit 1
   fi
+  NAME=$(<.ngrest/name)
+}
+
+run() {
+  check_get_name
 
   if [ -z "${NO_LOG_COLOR:-}" ]
   then
@@ -487,8 +553,9 @@ upgrade() {
 bundle_server() {
   CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse --short HEAD)
   OUT_FILE_BASE=${1:-$PWD/ngrest-server-bundle-$CURRENT_VERSION}
+  [ "${OUT_FILE_BASE::1}" == "/" ] || OUT_FILE_BASE=$PWD/$OUT_FILE_BASE
   TMP_DIR=$(mktemp -d)
-  trap "rm -r $TMP_DIR" EXIT
+  trap "rm -rf $TMP_DIR" EXIT
   fakeroot bash << EOD
 set -eu
 mkdir $TMP_DIR/ngrest
@@ -499,12 +566,16 @@ mv $TMP_DIR/ngrest/bin/ngrestserver $TMP_DIR/ngrest/bin/ngrestserver-bin
 echo -e '#!/bin/bash\n\ncd \$(dirname \$0)\nexport LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$PWD/../lib\nexec ./ngrestserver-bin \$@' >$TMP_DIR/ngrest/bin/ngrestserver
 chmod 755 $TMP_DIR/ngrest/bin/ngrestserver
 rm -rf $TMP_DIR/ngrest/bin/ngrestcg $TMP_DIR/ngrest/lib/libngrestcgparser.so $TMP_DIR/ngrest/share/ngrest/codegen
-rm -f $TMP_DIR/ngrest/service{crudservice.so,echoservice.so,ngresttestservice.so}
+rm -f $TMP_DIR/ngrest/share/ngrest/services/{crudservice.so,echoservice.so,ngresttestservice.so}
+[ -n "${NOSTRIP:-}" ] || strip --strip-unneeded $TMP_DIR/ngrest/bin/ngrestserver-bin $TMP_DIR/ngrest/lib/*.so $TMP_DIR/ngrest/share/ngrest/services/*.so || true
+echo $CURRENT_VERSION >$TMP_DIR/ngrest/VERSION
+cp $HOME/.ngrest/ngrest/LICENSE $TMP_DIR/ngrest/
 cd $TMP_DIR
 tar Jc ngrest >ngrest.tar.xz
 cd - >/dev/null
 mv $TMP_DIR/ngrest.tar.xz $OUT_FILE_BASE.tar.xz
-cat << EEE
+[ -n "${QUIET:-}" ] || cat << EEE
+
 Created $OUT_FILE_BASE.tar.xz
 
 You can install it using:
@@ -514,6 +585,98 @@ To start ngrest server:
   /opt/ngrest/bin/ngrestserver
 EEE
 EOD
+  rm -rf $TMP_DIR
+  trap "" EXIT
+}
+
+deploy_server() {
+  SERVER=${1:-}
+  SERVER_PATH=${2:-/opt}
+  if [ -z "$SERVER" ]
+  then
+    echo "host parameter is missing" >&2
+    help_deploy_server
+    exit 1
+  fi
+
+  TMP_DEPLOY_DIR=$(mktemp -d)
+  cd $TMP_DEPLOY_DIR
+  QUIET=1 bundle_server
+  BUNDLE=$OUT_FILE_BASE.tar.xz
+  BUNDLE_CONTENTS=$(base64 -w0 $BUNDLE)
+
+  echo "connecting to $SERVER..."
+  ssh -qt $SERVER /bin/bash << EOF
+set -eu
+echo "Deploying..."
+TMP_DIR=\$(mktemp -d)
+cd \$TMP_DIR
+base64 -d <<< "$BUNDLE_CONTENTS" | tar Jx -C $SERVER_PATH
+echo "deploy completed"
+EOF
+  rm -rf $TMP_DEPLOY_DIR
+}
+
+bundle() {
+  check_get_name
+  NGREST_VERSION=$(git -C ~/.ngrest/ngrest rev-parse --short HEAD)
+  OUT_FILE_BASE=${1:-$PWD/$NAME-ngrest-$NGREST_VERSION}
+  [ "${OUT_FILE_BASE::1}" == "/" ] || OUT_FILE_BASE=$PWD/$OUT_FILE_BASE
+
+  TMP_DIR=$(mktemp -d)
+  trap "rm -rf $TMP_DIR" EXIT
+
+  echo "performing $NAME bundle..."
+  fakeroot bash << EOD
+set -eu
+
+cp -Rf .ngrest/local/build/deploy/* $TMP_DIR
+chown -R 0:0 $TMP_DIR
+cd $TMP_DIR
+[ -n "${NOSTRIP:-}" ] || strip --strip-unneeded share/ngrest/services/*.so || true
+tar Jc share > $OUT_FILE_BASE.tar.xz
+cd - >/dev/null
+[ -n "${QUIET:-}" ] || cat << EEE
+
+Created $OUT_FILE_BASE.tar.xz
+
+You can install it using:
+  tar Jxf ${OUT_FILE_BASE##*/}.tar.xz -C/opt/ngrest/
+EEE
+EOD
+  trap "" EXIT
+  rm -r $TMP_DIR
+}
+
+deploy() {
+  SERVER=${1:-}
+  SERVER_PATH=${2:-/opt/ngrest}
+  if [ -z "$SERVER" ]
+  then
+    echo "host parameter is missing" >&2
+    help_deploy
+    exit 1
+  fi
+
+  TMP_DEPLOY_DIR=$(mktemp -d)
+  QUIET=1 bundle $TMP_DEPLOY_DIR/deploy-ngrest-project
+  cd $TMP_DEPLOY_DIR
+  BUNDLE=$OUT_FILE_BASE.tar.xz
+  BUNDLE_CONTENTS=$(base64 -w0 $BUNDLE)
+
+  echo "connecting to $SERVER..."
+  ssh -qt $SERVER /bin/bash << EOF
+set -eu
+echo "Deploying..."
+TMP_DIR=\$(mktemp -d)
+cd \$TMP_DIR
+INSTALLED_VERSION=\$(<$SERVER_PATH/VERSION)
+[ "$NGREST_VERSION" == "\$INSTALLED_VERSION" ] || \
+    echo -e "\e[33;1mWARNING: Server version mismatch! $NGREST_VERSION != \$INSTALLED_VERSION" >&2
+base64 -d <<< "$BUNDLE_CONTENTS" | tar Jx -C $SERVER_PATH
+echo "deploy completed"
+EOF
+  rm -rf $TMP_DEPLOY_DIR
 }
 
 COMMAND=${1:-}
@@ -547,7 +710,19 @@ case $COMMAND in
     ;;
 
   bundle-server)
-    bundle_server
+    bundle_server $@
+    ;;
+
+  deploy-server)
+    deploy_server $@
+    ;;
+
+  bundle)
+    bundle $@
+    ;;
+
+  deploy)
+    deploy $@
     ;;
 
   "")
