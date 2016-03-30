@@ -22,6 +22,7 @@
 #define HTTPEXCEPTION_H
 
 #include <ngrest/utils/Exception.h>
+#include "ngrestcommonexport.h"
 #include "HttpStatus.h"
 
 
@@ -37,7 +38,7 @@
 namespace ngrest {
 
 //! HTTP exception
-class NGREST_UTILS_EXPORT HttpException: public Exception
+class NGREST_COMMON_EXPORT HttpException: public Exception
 {
 public:
     //! exception constructor
@@ -46,11 +47,8 @@ public:
         \param  description description
         \param  status HTTP status code
       */
-    inline HttpException(const char* fileLine, const char* function, const std::string& description,
-                  HttpStatus status):
-        Exception(fileLine, function, description), httpStatus(status)
-    {
-    }
+    HttpException(const char* fileLine, const char* function, const std::string& description,
+                  HttpStatus status);
 
     inline HttpStatus getHttpStatus() const
     {

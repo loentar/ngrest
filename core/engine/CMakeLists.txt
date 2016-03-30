@@ -8,6 +8,8 @@ FILE(GLOB NGRESTENGINE_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 
 file(COPY ${NGRESTENGINE_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/engine/)
 
+add_definitions(-DNGREST_ENGINE_DLL_EXPORTS)
+
 add_library(ngrestengine SHARED ${NGRESTENGINE_SOURCES})
 
 target_link_libraries(ngrestengine ngrestutils ngrestcommon ngrestjson)

@@ -81,7 +81,7 @@ int main(int argc, const char* argv[])
     bool updateOnly = false;
     ngrest::codegen::StringMap env;
 
-    const std::string& templatesDir = codegenDir + "/templates/";
+    const std::string& templatesDir = codegenDir + NGREST_PATH_SEPARATOR "templates" NGREST_PATH_SEPARATOR;
     const std::string& pluginsDir = codegenDir + "/parsers/";
     const std::string& pluginPrefix = "ngrestcgparser-";
 

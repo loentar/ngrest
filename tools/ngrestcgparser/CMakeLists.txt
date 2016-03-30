@@ -8,6 +8,8 @@ FILE(GLOB NGRESTCGPARSER_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 
 file(COPY ${NGRESTCGPARSER_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/codegen/)
 
+add_definitions(-DNGREST_CODEGENPARSER_DLL_EXPORTS)
+
 add_library(ngrestcgparser SHARED ${NGRESTCGPARSER_SOURCES})
 
 target_link_libraries(ngrestcgparser ngrestutils)

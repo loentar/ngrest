@@ -28,7 +28,7 @@
 
 namespace ngrest {
 
-class ObjectModelUtils
+class NGREST_COMMON_EXPORT ObjectModelUtils
 {
 public:
     static inline const NamedNode* getNamedChild(const Object* object, const char* name, NodeType type)

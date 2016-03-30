@@ -37,9 +37,8 @@ public:
 
 #ifdef WIN32
         typedef PluginType* (*ngrestGetPlugin)();
-        PNgrestGetPluginAddress getPluginAddr = reinterpret_cast<ngrestGetPlugin>(
-                    getSymbol(NGREST_PLUGIN_EXPORTED_SYMBOL_STR));
-        NGREST_ASSERT(getPluginAddr, "Error while getting NgrestGetPluginAddress");
+        ngrestGetPlugin getPluginAddr = reinterpret_cast<ngrestGetPlugin>(getSymbol("ngrestGetPlugin"));
+        NGREST_ASSERT(getPluginAddr, "Error getting address of ngrestGetPlugin");
         pluginSymbol = reinterpret_cast<PluginType*>(getPluginAddr());
 #else
         pluginSymbol = reinterpret_cast<PluginType*>(getSymbol(NGREST_PLUGIN_EXPORTED_SYMBOL_STR));

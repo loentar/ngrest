@@ -22,10 +22,11 @@
 #define NGREST_SERVICE_H
 
 #include <string>
+#include "ngrestcommonexport.h"
 
 namespace ngrest {
 
-class Service
+class NGREST_COMMON_EXPORT Service
 {
 public:
     Service();

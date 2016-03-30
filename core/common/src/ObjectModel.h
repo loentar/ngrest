@@ -21,6 +21,8 @@
 #ifndef NGREST_OBJECTMODEL_H
 #define NGREST_OBJECTMODEL_H
 
+#include "ngrestcommonexport.h"
+
 namespace ngrest {
 
 enum class NodeType
@@ -42,7 +44,7 @@ enum class ValueType
     Boolean
 };
 
-struct Node
+struct NGREST_COMMON_EXPORT Node
 {
     const NodeType type;
 
@@ -52,7 +54,7 @@ struct Node
     }
 };
 
-struct LinkedNode: public Node {
+struct NGREST_COMMON_EXPORT LinkedNode: public Node {
     Node* node;
     LinkedNode* nextSibling = nullptr;
 
@@ -63,7 +65,7 @@ struct LinkedNode: public Node {
     }
 };
 
-struct NamedNode: public Node {
+struct NGREST_COMMON_EXPORT NamedNode: public Node {
     const char* name;
     Node* node;
     NamedNode* nextSibling = nullptr;
@@ -76,7 +78,7 @@ struct NamedNode: public Node {
     }
 };
 
-struct Object: public Node
+struct NGREST_COMMON_EXPORT Object: public Node
 {
     NamedNode* firstChild = nullptr;
 
@@ -88,7 +90,7 @@ struct Object: public Node
     NamedNode* findChildByName(const char* name) const;
 };
 
-struct Array: public Node
+struct NGREST_COMMON_EXPORT Array: public Node
 {
     LinkedNode* firstChild = nullptr;
 
@@ -98,7 +100,7 @@ struct Array: public Node
     }
 };
 
-struct Value: public Node
+struct NGREST_COMMON_EXPORT Value: public Node
 {
     ValueType valueType;
     const char* value;

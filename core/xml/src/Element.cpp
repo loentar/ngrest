@@ -19,9 +19,9 @@
  */
 
 #include <iostream>
+#include "Element.h"
 #include "Attribute.h"
 #include "Namespace.h"
-#include "Element.h"
 #include "Exception.h"
 
 namespace ngrest {

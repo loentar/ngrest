@@ -9,3 +9,8 @@ FILE(GLOB NGRESTSERVER_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 add_executable(ngrestserver ${NGRESTSERVER_SOURCES})
 
 target_link_libraries(ngrestserver ngrestutils ngrestcommon ngrestjson ngrestengine)
+
+check_library_exists(ws2_32 accept "" HAS_WS2_32)
+if (HAS_WS2_32)
+    target_link_libraries(ngrestserver ws2_32)
+endif()

@@ -2,6 +2,7 @@ CMakeLists.txt
 core/CMakeLists.txt
 core/common/CMakeLists.txt
 core/common/src/Callback.h
+core/common/src/HttpException.cpp
 core/common/src/HttpException.h
 core/common/src/HttpMessage.h
 core/common/src/HttpMethod.h
@@ -9,6 +10,7 @@ core/common/src/HttpStatus.cpp
 core/common/src/HttpStatus.h
 core/common/src/Message.cpp
 core/common/src/Message.h
+core/common/src/ngrestcommonexport.h
 core/common/src/ObjectModel.cpp
 core/common/src/ObjectModel.h
 core/common/src/ObjectModelUtils.h
@@ -21,6 +23,7 @@ core/engine/src/Engine.cpp
 core/engine/src/Engine.h
 core/engine/src/HttpTransport.cpp
 core/engine/src/HttpTransport.h
+core/engine/src/ngrestengineexport.h
 core/engine/src/ServiceDescription.cpp
 core/engine/src/ServiceDescription.h
 core/engine/src/ServiceDispatcher.cpp

@@ -53,9 +53,9 @@ void File::list(StringList& list, const std::string& mask /*= "*" */,
 
     if (file != -1) {
         do {
-            if (!isDots(searchData.name) &&
+            if (((!isDots(searchData.name)) &&
                     (((attrs & AttributeDirectory) != 0)
-                     && (searchData.attrib & _A_SUBDIR) != 0) ||
+                     && (searchData.attrib & _A_SUBDIR) != 0)) ||
                     ((attrs & AttributeAnyFile) != 0))
                 list.push_back(searchData.name);
         } while (!_findnext(file, &searchData));

@@ -22,11 +22,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#ifndef WIN32
 #include <sys/socket.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
+#else
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <mstcpip.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -42,10 +48,12 @@ namespace ngrest {
 
 Server::Server()
 {
+#ifdef HAS_EPOLL
     event = reinterpret_cast<epoll_event*>(calloc(1, sizeof(epoll_event)));
 
     /* Buffer where events are returned */
     events = reinterpret_cast<epoll_event*>(calloc(MAXEVENTS, sizeof(epoll_event)));
+#endif
 }
 
 Server::~Server()
@@ -76,6 +84,7 @@ bool Server::create(const StringMap& args)
         return false;
     }
 
+#ifdef HAS_EPOLL
     fdEpoll = epoll_create1(0);
     if (fdEpoll == -1) {
         perror("epoll_create");
@@ -89,6 +98,9 @@ bool Server::create(const StringMap& args)
         perror("epoll_ctl");
         return false;
     }
+#else
+#warning FIXME
+#endif
 
     return true;
 }
@@ -110,6 +122,7 @@ int Server::exec()
 
     /* The event loop */
     while (!isStopping) {
+#ifdef HAS_EPOLL
         int n = epoll_wait(fdEpoll, events, MAXEVENTS, -1);
         for (int i = 0; i < n && !isStopping; ++i) {
             const uint32_t event = events[i].events;
@@ -141,6 +154,9 @@ int Server::exec()
                 }
             }
         }
+#else
+#warning FIXME
+#endif
     }
 
     LogInfo() << "Server finished";
@@ -202,6 +218,7 @@ int Server::createServerSocket(const std::string& port)
 
 bool Server::setupNonblock(int fd)
 {
+#ifndef WIN32
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) {
         perror("fcntl");
@@ -214,6 +231,9 @@ bool Server::setupNonblock(int fd)
         perror("fcntl");
         return false;
     }
+#else
+#warning FIXME
+#endif
 
     return true;
 }
@@ -242,8 +262,14 @@ bool Server::handleIncomingConnection()
         }
 
         int nodelayOpt = 1;
+#ifndef WIN32
         setsockopt(fdIn, IPPROTO_TCP, TCP_NODELAY, &nodelayOpt, sizeof(nodelayOpt));
+#else
+        setsockopt(fdIn, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nodelayOpt),
+                   sizeof(nodelayOpt));
+#endif
 
+#ifndef WIN32
         /* add it to the list of fds to monitor. */
         event->data.fd = fdIn;
         event->events = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -252,6 +278,9 @@ bool Server::handleIncomingConnection()
             perror("epoll_ctl");
 
         callback->connected(event->data.fd, &inAddr);
+#else
+#warning FIXME
+#endif
     }
 
     return true;
@@ -259,6 +288,7 @@ bool Server::handleIncomingConnection()
 
 void Server::handleRequest(int fd)
 {
+#ifndef WIN32
     int64_t bytesAvail = 0;
     int res = ioctl(fd, FIONREAD, &bytesAvail);
     // ioctlsocket(socket, FIONREAD, &bytesAvail)
@@ -274,6 +304,9 @@ void Server::handleRequest(int fd)
 
     close(fd); // disconnect client in case of errors
     callback->disconnected(fd);
+#else
+#warning FIXME
+#endif
 }
 
 }

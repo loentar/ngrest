@@ -22,10 +22,11 @@
 #define NGREST_RUNTIME_H
 
 #include <string>
+#include "ngrestutilsexport.h"
 
 namespace ngrest {
 
-class Runtime
+class NGREST_UTILS_EXPORT Runtime
 {
 public:
     static const std::string& getApplicationRootPath();

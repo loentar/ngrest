@@ -18,34 +18,14 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#ifndef NGREST_HTTPMESSAGE_H
-#define NGREST_HTTPMESSAGE_H
-
-#include "HttpMethod.h"
-#include "HttpStatus.h"
-#include "Message.h"
+#include "HttpException.h"
 
 namespace ngrest {
 
-struct NGREST_COMMON_EXPORT HttpRequest: public Request
+HttpException::HttpException(const char* fileLine, const char* function, const std::string& description,
+                             ngrest::HttpStatus status):
+    Exception(fileLine, function, description), httpStatus(status)
 {
-    HttpMethod method = HttpMethod::UNKNOWN;
-    const char* methodStr = nullptr;
-
-    const char* clientHost = nullptr;
-    const char* clientPort = nullptr;
-};
-
-
-struct NGREST_COMMON_EXPORT HttpResponse: public Response
-{
-    int statusCode = HTTP_STATUS_UNDEFINED;
-
-//    // name must be in lower case
-//    const Header* getHeader(const char* name) const;
-};
-
 }
 
-#endif // NGREST_HTTPMESSAGE_H
-
+}

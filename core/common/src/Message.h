@@ -25,6 +25,7 @@
 
 #include <ngrest/common/Callback.h>
 #include <ngrest/utils/MemPool.h>
+#include "ngrestcommonexport.h"
 
 namespace ngrest {
 
@@ -33,7 +34,7 @@ class Transport;
 struct Node;
 struct MessageContext;
 
-struct Header
+struct NGREST_COMMON_EXPORT Header
 {
     const char* name;
     const char* value;
@@ -46,7 +47,7 @@ struct Header
 };
 
 
-struct Request
+struct NGREST_COMMON_EXPORT Request
 {
     const char* path = nullptr;
     const Header* headers = nullptr;
@@ -60,7 +61,7 @@ struct Request
     const Header* getHeader(const char* name) const;
 };
 
-struct Response
+struct NGREST_COMMON_EXPORT Response
 {
     const Header* headers = nullptr;
 
@@ -69,12 +70,12 @@ struct Response
     MemPool* poolBody = nullptr;
 };
 
-class MessageCallback: public VoidCallback
+class NGREST_COMMON_EXPORT MessageCallback: public VoidCallback
 {
 };
 
 class Engine;
-struct MessageContext
+struct NGREST_COMMON_EXPORT MessageContext
 {
     Engine* engine = nullptr;
     Transport* transport = nullptr;

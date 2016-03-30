@@ -22,13 +22,14 @@
 #define NGREST_ELAPSEDTIMER_H
 
 #include <stdint.h>
+#include "ngrestutilsexport.h"
 
 namespace ngrest {
 
 /**
  * @brief class to calculate elapsed time
  */
-class ElapsedTimer
+class NGREST_UTILS_EXPORT ElapsedTimer
 {
 public:
     inline ElapsedTimer(bool startNow = false)

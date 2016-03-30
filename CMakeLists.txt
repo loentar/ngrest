@@ -4,6 +4,8 @@ project (ngrest)
 set(NGREST_VERSION "0.2")
 
 include(CheckCXXCompilerFlag)
+include(CheckLibraryExists)
+include(CheckIncludeFileCXX)
 
 check_cxx_compiler_flag(-std=gnu++11 HAS_CXX11)
 if (HAS_CXX11)
@@ -27,8 +29,15 @@ if (HAS_WALL)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 endif()
 
+check_library_exists(dl dlopen "" HAS_DL)
+check_include_file_cxx(sys/epoll.h HAS_EPOLL)
+if (HAS_EPOLL)
+    add_definitions(-DHAS_EPOLL)
+endif()
+
+
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
+    add_definitions(-DDEBUG)
 endif()
 
 set(PROJECT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/deploy)

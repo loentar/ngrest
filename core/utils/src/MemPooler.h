@@ -34,7 +34,7 @@ struct Pools
     std::vector<MemPool*> unused;
 };
 
-class MemPooler
+class NGREST_UTILS_EXPORT MemPooler
 {
 public:
     MemPooler();

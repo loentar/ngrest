@@ -19,6 +19,8 @@
  */
 
 #ifdef WIN32
+
+#include <Windows.h>
 #include <iostream>
 #include "console.h"
 
@@ -52,7 +54,7 @@ public:
 
     std::ostream& setAttribute(std::ostream& stream, WORD attr)
     {
-        if (stream != std::cout)
+        if (&stream != &std::cout)
         {
             return stream;
         }

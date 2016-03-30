@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include "ngrestutilsexport.h"
 
-#ifdef _MSC_VER
+#ifdef WIN32
 #define NGREST_PATH_SEPARATOR "\\"
 #else
 #define NGREST_PATH_SEPARATOR "/"

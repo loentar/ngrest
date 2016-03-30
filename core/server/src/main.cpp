@@ -34,6 +34,10 @@
 #include "Server.h"
 #include "ClientHandler.h"
 
+#ifdef WIN32
+typedef void(__cdecl *sighandler_t)(int);
+#endif
+
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
               << "  -s        set extra path to locate services" << std::endl

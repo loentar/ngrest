@@ -23,13 +23,14 @@
 
 #include <stdint.h>
 #include <new>
+#include "ngrestutilsexport.h"
 
 namespace ngrest {
 
 #define NGREST_MEMPOOL_CHUNK_SIZE 4096
 
 /* Pool to store large amount of small POCOs and joined strings */
-class MemPool
+class NGREST_UTILS_EXPORT MemPool
 {
 public:
     struct Chunk

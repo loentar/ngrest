@@ -30,6 +30,13 @@
 #define ngrest_snprintf snprintf
 #endif
 
+#if defined WIN32 && defined __GNUC__
+#pragma GCC diagnostic push
+// suppress buggy warnings
+#pragma GCC diagnostic ignored "-Wformat="
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
+#endif
+
 namespace ngrest {
 
 typedef char byte;
@@ -203,5 +210,9 @@ inline bool toHexCString(const void* ptr, char* buffer, int bufferSize)
 }
 
 }
+
+#if defined WIN32 && defined __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #endif // NGREST_UTILS_TOCSTRING_H

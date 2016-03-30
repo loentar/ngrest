@@ -21,6 +21,8 @@
 #ifndef NGREST_HTTPSTATUS_H
 #define NGREST_HTTPSTATUS_H
 
+#include "ngrestcommonexport.h"
+
 namespace ngrest {
 
 enum HttpStatus
@@ -101,7 +103,7 @@ enum HttpStatus
     HTTP_STATUS_511_NETWORK_AUTHENTICATION_REQUIRED = 511 // Network Authentication Required};
 };
 
-class HttpStatusInfo {
+class NGREST_COMMON_EXPORT HttpStatusInfo {
 public:
     static const char* httpStatusToString(HttpStatus status);
 };

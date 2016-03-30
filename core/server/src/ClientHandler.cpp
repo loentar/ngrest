@@ -20,8 +20,13 @@
 
 #include <unistd.h>
 #include <error.h>
+#ifndef WIN32
 #include <sys/socket.h>
 #include <netdb.h>
+#else
+#include <Ws2tcpip.h>
+#undef DELETE // conflicts with HttpMethod::DELETE
+#endif
 #include <time.h>
 
 #include <list>

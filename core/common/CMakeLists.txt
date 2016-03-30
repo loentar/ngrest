@@ -8,6 +8,8 @@ FILE(GLOB NGRESTCOMMON_HEADERS ${PROJECT_SOURCE_DIR}/*.h)
 
 file(COPY ${NGRESTCOMMON_HEADERS} DESTINATION ${PROJECT_INCLUDE_DIR}/ngrest/common/)
 
+add_definitions(-DNGREST_COMMON_DLL_EXPORTS)
+
 add_library(ngrestcommon SHARED ${NGRESTCOMMON_SOURCES})
 
 target_link_libraries(ngrestcommon ngrestutils)
