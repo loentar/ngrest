@@ -45,6 +45,11 @@ public:
     virtual void error(int fd) override;
     virtual bool readyRead(int fd) override;
     virtual bool readyWrite(int fd) override;
+#ifdef USE_GET_WRITE_QUEUE
+    inline virtual const fd_set& getWriteQueue() const override {
+        return writeQueue;
+    }
+#endif
 
     void parseHttpHeader(char* buffer, MessageData* messageData);
     void processRequest(int clientFd, MessageData* messageData);
@@ -60,6 +65,9 @@ private:
     Engine& engine;
     Transport& transport;
     MemPooler* pooler;
+#ifdef USE_GET_WRITE_QUEUE
+    fd_set writeQueue;
+#endif
 };
 
 }

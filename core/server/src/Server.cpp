@@ -22,9 +22,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#ifdef HAS_EPOLL
+#include <sys/epoll.h>
+#endif
 #ifndef WIN32
 #include <sys/socket.h>
-#include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <netdb.h>
 #include <netinet/tcp.h>
@@ -38,13 +40,42 @@
 #include <errno.h>
 
 #include <ngrest/utils/Log.h>
+#include <ngrest/utils/Error.h>
 
 #include "ClientCallback.h"
 #include "Server.h"
 
 #define MAXEVENTS 64
 
+#ifndef HAS_EPOLL
+#warning No epoll support - switching to compatibility mode
+#endif
+
 namespace ngrest {
+
+#ifdef WIN32
+class SocketInitializer
+{
+public:
+    SocketInitializer()
+    {
+        WSADATA wsaData;
+        int res = WSAStartup(MAKEWORD(2, 0), &wsaData);
+        if (res) {
+            LogError() << "WSAStartup FAILED: " << Error::getError(WSAGetLastError());
+            exit(1);
+        }
+    }
+
+    ~SocketInitializer()
+    {
+        WSACleanup();
+    }
+};
+
+static SocketInitializer socketInitializer;
+#endif
+
 
 Server::Server()
 {
@@ -53,6 +84,8 @@ Server::Server()
 
     /* Buffer where events are returned */
     events = reinterpret_cast<epoll_event*>(calloc(MAXEVENTS, sizeof(epoll_event)));
+#else
+    LogWarning() << "This version compiled without epoll support.";
 #endif
 }
 
@@ -60,8 +93,10 @@ Server::~Server()
 {
     if (fdServer != 0)
         close(fdServer);
+#ifdef HAS_EPOLL
     free(events);
     free(event);
+#endif
 }
 
 bool Server::create(const StringMap& args)
@@ -99,7 +134,7 @@ bool Server::create(const StringMap& args)
         return false;
     }
 #else
-#warning FIXME
+    FD_ZERO(&activeFds);
 #endif
 
     return true;
@@ -120,7 +155,13 @@ int Server::exec()
     LogInfo() << "Simple ngrest server started on port " << port << ".";
     LogInfo() << "Deployed services: http://localhost:" << port << "/ngrest/services";
 
-    /* The event loop */
+#ifndef HAS_EPOLL
+    fd_set readFds;
+    fd_set writeFds;
+    timeval timeout;
+#endif
+
+    // The event loop
     while (!isStopping) {
 #ifdef HAS_EPOLL
         int n = epoll_wait(fdEpoll, events, MAXEVENTS, -1);
@@ -131,7 +172,7 @@ int Server::exec()
                    (!(events[i].events & (EPOLLIN | EPOLLOUT)))) {
                 /* An error has occured on this fd, or the socket is not
                  ready for reading/writing(why were we notified then?) */
-                LogError() << "epoll error";
+                LogError() << "epoll error" << Error::getLastError();
                 if (callback)
                     callback->error(events[i].data.fd);
                 close(events[i].data.fd);
@@ -150,12 +191,41 @@ int Server::exec()
                 } else if (event & EPOLLOUT) {
                     callback->readyWrite(events[i].data.fd);
                 } else {
-                    LogError() << "Unknown EPOLL event";
+                    LogError() << "Unknown EPOLL event" << Error::getLastError();
                 }
             }
         }
 #else
-#warning FIXME
+        // Block until input arrives on one or more active sockets.
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+        readFds = activeFds;
+        FD_SET(fdServer, &readFds); // add server socket
+        writeFds = callback->getWriteQueue();
+        int readyFd = select(FD_SETSIZE, &readFds, &writeFds, NULL, &timeout);
+        if (readyFd == 0)
+            continue;
+
+        if (readyFd < 0) {
+            LogError() << "select" << Error::getLastError();
+            return EXIT_FAILURE;
+        }
+
+
+        // Service all the sockets with input pending.
+        for (int i = 0; i < FD_SETSIZE; ++i) {
+            if (FD_ISSET(i, &readFds)) {
+                if (i == fdServer) {
+                    handleIncomingConnection();
+                } else {
+                    handleRequest(i);
+                }
+            }
+
+            if (FD_ISSET(i, &writeFds)) {
+                callback->readyWrite(i);
+            }
+        }
 #endif
     }
 
@@ -191,8 +261,8 @@ int Server::createServerSocket(const std::string& port)
         if (sock == -1)
             continue;
 
-        int i = 1;
-        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*) &i, sizeof(i));
+        int reuse = 1;
+        setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&reuse), sizeof(reuse));
 
         res = bind(sock, curr->ai_addr, curr->ai_addrlen);
         if (res == 0) {
@@ -221,18 +291,23 @@ bool Server::setupNonblock(int fd)
 #ifndef WIN32
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags == -1) {
-        perror("fcntl");
+        LogError() << "Error getting socket flags" << Error::getLastError();
         return false;
     }
 
     flags |= O_NONBLOCK;
     int res = fcntl(fd, F_SETFL, flags);
     if (res == -1) {
-        perror("fcntl");
+        LogError() << "Error setting socket flags" << Error::getLastError();
         return false;
     }
 #else
-#warning FIXME
+    u_long ulVal = 1;
+    int res = ioctlsocket(fd, FIONBIO, &ulVal);
+    if (res != 0) {
+        LogError() << Error::getError(WSAGetLastError());
+        return false;
+    }
 #endif
 
     return true;
@@ -246,15 +321,15 @@ bool Server::handleIncomingConnection()
         int fdIn = accept(fdServer, &inAddr, &inLen);
         if (fdIn == -1) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-                /* We have processed all incoming connections. */
+                // We have processed all incoming connections.
                 break;
             } else {
-                perror("accept");
+                LogError() << "accept" << Error::getLastError();
                 break;
             }
         }
 
-        /* Make the incoming socket non-blocking */
+        // Make the incoming socket non-blocking
         int res = setupNonblock(fdIn);
         if (res == -1) {
             close(fdIn);
@@ -262,25 +337,21 @@ bool Server::handleIncomingConnection()
         }
 
         int nodelayOpt = 1;
-#ifndef WIN32
-        setsockopt(fdIn, IPPROTO_TCP, TCP_NODELAY, &nodelayOpt, sizeof(nodelayOpt));
-#else
         setsockopt(fdIn, IPPROTO_TCP, TCP_NODELAY, reinterpret_cast<const char*>(&nodelayOpt),
                    sizeof(nodelayOpt));
-#endif
 
-#ifndef WIN32
-        /* add it to the list of fds to monitor. */
+        // add it to the list of fds to monitor.
+#ifdef HAS_EPOLL
         event->data.fd = fdIn;
         event->events = EPOLLIN | EPOLLOUT | EPOLLET;
         res = epoll_ctl(fdEpoll, EPOLL_CTL_ADD, fdIn, event);
         if (res == -1)
-            perror("epoll_ctl");
-
-        callback->connected(event->data.fd, &inAddr);
+            LogError() << "Failed to add client " << Error::getLastError();
 #else
-#warning FIXME
+        FD_SET(fdIn, &activeFds);
 #endif
+
+        callback->connected(fdIn, &inAddr);
     }
 
     return true;
@@ -288,10 +359,12 @@ bool Server::handleIncomingConnection()
 
 void Server::handleRequest(int fd)
 {
-#ifndef WIN32
     int64_t bytesAvail = 0;
+#ifndef WIN32
     int res = ioctl(fd, FIONREAD, &bytesAvail);
-    // ioctlsocket(socket, FIONREAD, &bytesAvail)
+#else
+    int res = ioctlsocket(fd, FIONREAD, reinterpret_cast<u_long*>(&bytesAvail));
+#endif
 
     // if res = 0, the query is ok, trust bytesAvail
     // else if there are some bytes to read or the query is failed - we will try to read
@@ -302,11 +375,12 @@ void Server::handleRequest(int fd)
         LogDebug() << "client #" << fd << " closed connection";
     }
 
+#ifndef HAS_EPOLL
+    FD_CLR(fd, &activeFds);
+#endif
+
     close(fd); // disconnect client in case of errors
     callback->disconnected(fd);
-#else
-#warning FIXME
-#endif
 }
 
 }

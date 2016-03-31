@@ -143,6 +143,9 @@ public:
 ClientHandler::ClientHandler(Engine& engine_, Transport& transport_):
     engine(engine_), transport(transport_), pooler(new MemPooler())
 {
+#ifdef USE_GET_WRITE_QUEUE
+    FD_ZERO(&writeQueue);
+#endif
 }
 
 ClientHandler::~ClientHandler()
@@ -583,7 +586,7 @@ inline bool writeChunks(int fd, ssize_t& res, MessageWriteState& state)
 
             // other error
             LogError() << "Failed to write response:" << Error::getLastError();
-            return true;
+            break;
         }
 
         if (static_cast<uint64_t>(res) != state.chunk->size) {
@@ -603,14 +606,26 @@ bool ClientHandler::writeNextPart(int clientFd, ClientInfo* clientInfo, MessageD
     ssize_t res = 0;
 
     // write header to client
-    if (!writeChunks(clientFd, res, messageData->headerState))
+    if (!writeChunks(clientFd, res, messageData->headerState)) {
+#ifdef USE_GET_WRITE_QUEUE
+        FD_SET(clientFd, &writeQueue);
+#endif
         return false;  // EAGAIN
+    }
 
     if (res != -1 && messageData->bodyState.chunk) {
         // write response body to client
-        if (!writeChunks(clientFd, res, messageData->bodyState))
+        if (!writeChunks(clientFd, res, messageData->bodyState)) {
+#ifdef USE_GET_WRITE_QUEUE
+            FD_SET(clientFd, &writeQueue);
+#endif
             return false;  // EAGAIN
+        }
     }
+
+#ifdef USE_GET_WRITE_QUEUE
+    FD_CLR(clientFd, &writeQueue);
+#endif
 
     LogDebug() << "Request " << messageData->id << " handled in "
                << messageData->timer.elapsed() << " microsecond(s)";

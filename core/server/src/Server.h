@@ -23,7 +23,9 @@
 
 #include "servercommon.h"
 
+#ifdef HAS_EPOLL
 struct epoll_event;
+#endif
 
 namespace ngrest {
 
@@ -53,8 +55,12 @@ private:
     bool isStopping = false;
     int fdServer = 0;
     int fdEpoll = 0;
+#ifdef HAS_EPOLL
     epoll_event* event = nullptr;
     epoll_event* events = nullptr;
+#else
+    fd_set activeFds;
+#endif
     ClientCallback* callback = nullptr;
     std::string port;
 };

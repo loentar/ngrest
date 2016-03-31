@@ -21,6 +21,10 @@
 #ifndef NGREST_CLIENTCALLBACK_H
 #define NGREST_CLIENTCALLBACK_H
 
+#ifdef USE_GET_WRITE_QUEUE
+#include <sys/select.h>
+#endif
+
 struct sockaddr;
 
 namespace ngrest {
@@ -36,6 +40,9 @@ public:
     virtual void error(int fd) = 0;
     virtual bool readyRead(int fd) = 0;
     virtual bool readyWrite(int fd) = 0;
+#ifdef USE_GET_WRITE_QUEUE
+    virtual const fd_set& getWriteQueue() const = 0;
+#endif
 };
 
 }
