@@ -22,7 +22,11 @@
 #define NGREST_CLIENTCALLBACK_H
 
 #ifdef USE_GET_WRITE_QUEUE
+#ifndef WIN32
 #include <sys/select.h>
+#else
+#include <winsock2.h>
+#endif
 #endif
 
 struct sockaddr;

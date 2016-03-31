@@ -21,6 +21,14 @@
 #ifndef NGREST_SERVER_H
 #define NGREST_SERVER_H
 
+#ifdef USE_GET_WRITE_QUEUE
+#ifndef WIN32
+#include <sys/select.h>
+#else
+#include <winsock2.h>
+#endif
+#endif
+
 #include "servercommon.h"
 
 #ifdef HAS_EPOLL
