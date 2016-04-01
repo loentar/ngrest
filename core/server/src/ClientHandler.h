@@ -40,11 +40,11 @@ public:
     ClientHandler(Engine& engine, Transport& transport);
     ~ClientHandler();
 
-    virtual void connected(int fd, const sockaddr* addr) override;
-    virtual void disconnected(int fd) override;
-    virtual void error(int fd) override;
-    virtual bool readyRead(int fd) override;
-    virtual bool readyWrite(int fd) override;
+    virtual void connected(Socket fd, const sockaddr* addr) override;
+    virtual void disconnected(Socket fd) override;
+    virtual void error(Socket fd) override;
+    virtual bool readyRead(Socket fd) override;
+    virtual bool readyWrite(Socket fd) override;
 #ifdef USE_GET_WRITE_QUEUE
     inline virtual const fd_set& getWriteQueue() const override {
         return writeQueue;
@@ -52,16 +52,16 @@ public:
 #endif
 
     void parseHttpHeader(char* buffer, MessageData* messageData);
-    void processRequest(int clientFd, MessageData* messageData);
-    void processResponse(int clientFd, MessageData* messageData);
-    void processError(int clientFd, MessageData* messageData, const Exception& error);
+    void processRequest(Socket clientFd, MessageData* messageData);
+    void processResponse(Socket clientFd, MessageData* messageData);
+    void processError(Socket clientFd, MessageData* messageData, const Exception& error);
 
 private:
-    bool writeNextPart(int clientFd, ClientInfo* clientInfo, MessageData* messageData);
+    bool writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData);
 
 private:
     uint64_t lastId = 0;
-    std::unordered_map<int, ClientInfo*> clients;
+    std::unordered_map<Socket, ClientInfo*> clients;
     Engine& engine;
     Transport& transport;
     MemPooler* pooler;

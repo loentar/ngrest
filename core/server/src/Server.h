@@ -54,14 +54,14 @@ public:
     void quit();
 
 private:
-    int createServerSocket(const std::string& port);
-    bool setupNonblock(int fd);
+    Socket createServerSocket(const std::string& port);
+    bool setupNonblock(Socket fd);
     bool handleIncomingConnection();
-    void handleRequest(int fd);
+    void handleRequest(Socket fd);
 
 private:
     bool isStopping = false;
-    int fdServer = 0;
+    Socket fdServer = 0;
     int fdEpoll = 0;
 #ifdef HAS_EPOLL
     epoll_event* event = nullptr;

@@ -29,6 +29,8 @@
 #endif
 #endif
 
+#include "servercommon.h"
+
 struct sockaddr;
 
 namespace ngrest {
@@ -39,11 +41,11 @@ public:
     {
     }
 
-    virtual void connected(int fd, const sockaddr* addr) = 0;
-    virtual void disconnected(int fd) = 0;
-    virtual void error(int fd) = 0;
-    virtual bool readyRead(int fd) = 0;
-    virtual bool readyWrite(int fd) = 0;
+    virtual void connected(Socket fd, const sockaddr* addr) = 0;
+    virtual void disconnected(Socket fd) = 0;
+    virtual void error(Socket fd) = 0;
+    virtual bool readyRead(Socket fd) = 0;
+    virtual bool readyWrite(Socket fd) = 0;
 #ifdef USE_GET_WRITE_QUEUE
     virtual const fd_set& getWriteQueue() const = 0;
 #endif

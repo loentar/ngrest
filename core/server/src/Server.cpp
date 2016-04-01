@@ -107,14 +107,14 @@ bool Server::create(const StringMap& args)
         port = it->second;
 
     fdServer = createServerSocket(port);
-    if (fdServer == -1)
+    if (fdServer == NGREST_SOCKET_ERROR)
         return false;
 
     if (!setupNonblock(fdServer))
         return false;
 
-    int res = listen(fdServer, SOMAXCONN);
-    if (res == -1) {
+    Socket res = listen(fdServer, SOMAXCONN);
+    if (res == NGREST_SOCKET_ERROR) {
         perror("listen");
         return false;
     }
@@ -197,33 +197,48 @@ int Server::exec()
         }
 #else
         // Block until input arrives on one or more active sockets.
-        timeout.tv_sec = 10;
+        timeout.tv_sec = 1; // limit timeout to just one second to check isStopping flag
         timeout.tv_usec = 0;
         readFds = activeFds;
         FD_SET(fdServer, &readFds); // add server socket
         writeFds = callback->getWriteQueue();
-        int readyFd = select(FD_SETSIZE, &readFds, &writeFds, NULL, &timeout);
-        if (readyFd == 0)
+        int readyFds = select(FD_SETSIZE, &readFds, &writeFds, NULL, &timeout);
+        if (readyFds == 0)
             continue;
 
-        if (readyFd < 0) {
+        if (readyFds < 0) {
             LogError() << "select" << Error::getLastError();
             return EXIT_FAILURE;
         }
 
-
+        int processedFds = 0;
         // Service all the sockets with input pending.
-        for (int i = 0; i < FD_SETSIZE; ++i) {
-            if (FD_ISSET(i, &readFds)) {
-                if (i == fdServer) {
+        for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
+#ifndef WIN32
+            Socket fd = readFds[i];
+#else
+            Socket fd = readFds.fd_array[i];
+#endif
+            if (FD_ISSET(fd, &readFds)) {
+                if (fd == fdServer) {
                     handleIncomingConnection();
                 } else {
-                    handleRequest(i);
+                    handleRequest(fd);
                 }
+                ++processedFds;
             }
 
-            if (FD_ISSET(i, &writeFds)) {
-                callback->readyWrite(i);
+            if (processedFds == readyFds)
+                break;
+
+#ifndef WIN32
+            fd = writeFds[i];
+#else
+            fd = writeFds.fd_array[i];
+#endif
+            if (FD_ISSET(fd, &writeFds)) {
+                callback->readyWrite(fd);
+                ++processedFds;
             }
         }
 #endif
@@ -238,12 +253,12 @@ void Server::quit()
     isStopping = true;
 }
 
-int Server::createServerSocket(const std::string& port)
+Socket Server::createServerSocket(const std::string& port)
 {
     struct addrinfo hints;
     struct addrinfo* addr;
     struct addrinfo* curr;
-    int sock = -1;
+    Socket sock = -1;
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;     /* Return IPv4 and IPv6 choices */
@@ -258,7 +273,7 @@ int Server::createServerSocket(const std::string& port)
 
     for (curr = addr; curr != nullptr; curr = curr->ai_next) {
         sock = socket(curr->ai_family, curr->ai_socktype, curr->ai_protocol);
-        if (sock == -1)
+        if (sock == NGREST_SOCKET_ERROR)
             continue;
 
         int reuse = 1;
@@ -286,7 +301,7 @@ int Server::createServerSocket(const std::string& port)
 }
 
 
-bool Server::setupNonblock(int fd)
+bool Server::setupNonblock(Socket fd)
 {
 #ifndef WIN32
     int flags = fcntl(fd, F_GETFL, 0);
@@ -318,8 +333,8 @@ bool Server::handleIncomingConnection()
     while (!isStopping) {
         struct sockaddr inAddr;
         socklen_t inLen = sizeof(inAddr);
-        int fdIn = accept(fdServer, &inAddr, &inLen);
-        if (fdIn == -1) {
+        Socket fdIn = accept(fdServer, &inAddr, &inLen);
+        if (fdIn == NGREST_SOCKET_ERROR) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                 // We have processed all incoming connections.
                 break;
@@ -357,13 +372,14 @@ bool Server::handleIncomingConnection()
     return true;
 }
 
-void Server::handleRequest(int fd)
+void Server::handleRequest(Socket fd)
 {
-    int64_t bytesAvail = 0;
 #ifndef WIN32
+    int64_t bytesAvail = 0;
     int res = ioctl(fd, FIONREAD, &bytesAvail);
 #else
-    int res = ioctlsocket(fd, FIONREAD, reinterpret_cast<u_long*>(&bytesAvail));
+    u_long bytesAvail = 0;
+    int res = ioctlsocket(fd, FIONREAD, &bytesAvail);
 #endif
 
     // if res = 0, the query is ok, trust bytesAvail

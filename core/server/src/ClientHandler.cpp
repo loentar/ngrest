@@ -119,7 +119,7 @@ struct ClientInfo
 class ClientHandlerCallback: public MessageCallback
 {
 public:
-    ClientHandlerCallback(ClientHandler* handler_, int clientFd_, MessageData* messageData_):
+    ClientHandlerCallback(ClientHandler* handler_, Socket clientFd_, MessageData* messageData_):
         handler(handler_), clientFd(clientFd_), messageData(messageData_)
     {
     }
@@ -135,7 +135,7 @@ public:
     }
 
     ClientHandler* handler;
-    int clientFd;
+    Socket clientFd;
     MessageData* messageData;
 };
 
@@ -153,7 +153,7 @@ ClientHandler::~ClientHandler()
     delete pooler;
 }
 
-void ClientHandler::connected(int fd, const sockaddr* addr)
+void ClientHandler::connected(Socket fd, const sockaddr* addr)
 {
     ClientInfo*& client = clients[fd];
     if (client == nullptr) {
@@ -175,7 +175,7 @@ void ClientHandler::connected(int fd, const sockaddr* addr)
     }
 }
 
-void ClientHandler::disconnected(int fd)
+void ClientHandler::disconnected(Socket fd)
 {
     ClientInfo* clientInfo = clients[fd];
     if (clientInfo->requests.empty()) {
@@ -186,12 +186,12 @@ void ClientHandler::disconnected(int fd)
     clients.erase(fd);
 }
 
-void ClientHandler::error(int fd)
+void ClientHandler::error(Socket fd)
 {
     LogError() << "Error client #" << fd;
 }
 
-bool ClientHandler::readyRead(int fd)
+bool ClientHandler::readyRead(Socket fd)
 {
     auto it = clients.find(fd);
     if (it == clients.end()) {
@@ -226,7 +226,7 @@ bool ClientHandler::readyRead(int fd)
         uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
                 ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
         char* buffer = pool->grow(sizeToRead);
-        ssize_t count = ::read(fd, buffer, sizeToRead);
+        ssize_t count = ::recv(fd, buffer, sizeToRead, 0);
         if (count == 0) {
             // this should only happen in case of ioctl(fd, FIONREAD...) failure
             // EOF. The remote has closed the connection.
@@ -344,7 +344,7 @@ bool ClientHandler::readyRead(int fd)
     return true;
 }
 
-bool ClientHandler::readyWrite(int fd)
+bool ClientHandler::readyWrite(Socket fd)
 {
     auto it = clients.find(fd);
     if (it == clients.end()) {
@@ -435,7 +435,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
     }
 }
 
-void ClientHandler::processRequest(int clientFd, MessageData* messageData)
+void ClientHandler::processRequest(Socket clientFd, MessageData* messageData)
 {
     messageData->processing = true;
 
@@ -500,7 +500,7 @@ inline bool getServerTime(char(&timeStr)[size])
     return strftime(timeStr, size, "%a, %b %d %Y %H:%M:%S GMT", &localTime) < size;
 }
 
-void ClientHandler::processResponse(int clientFd, MessageData* messageData)
+void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
 {
     auto it = clients.find(clientFd);
     if (it == clients.end()) {
@@ -554,7 +554,7 @@ void ClientHandler::processResponse(int clientFd, MessageData* messageData)
     writeNextPart(clientFd, clientInfo, messageData);
 }
 
-void ClientHandler::processError(int clientFd, MessageData* messageData, const Exception& error)
+void ClientHandler::processError(Socket clientFd, MessageData* messageData, const Exception& error)
 {
     LogDebug() << "Error while handling request " << messageData->context.request->path;
 
@@ -575,10 +575,10 @@ void ClientHandler::processError(int clientFd, MessageData* messageData, const E
     processResponse(clientFd, messageData);
 }
 
-inline bool writeChunks(int fd, ssize_t& res, MessageWriteState& state)
+inline bool writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
 {
     while (state.chunk != state.end) {
-        res = ::write(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos);
+        res = ::send(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos, 0);
         if (res == -1) {
             // output buffer is full.
             if (errno == EAGAIN)
@@ -601,7 +601,7 @@ inline bool writeChunks(int fd, ssize_t& res, MessageWriteState& state)
     return true;
 }
 
-bool ClientHandler::writeNextPart(int clientFd, ClientInfo* clientInfo, MessageData* messageData)
+bool ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
 {
     ssize_t res = 0;
 
