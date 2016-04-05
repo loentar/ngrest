@@ -12,9 +12,11 @@ Feel free to ask ngrest related questions here: https://groups.google.com/forum/
 
 ## Install
 
-Currently only Linux supported, but there are plans to extend support for other popular operating systems.
+Currently only Linux and Windows supported, but there are plans to extend support for other popular operating systems.
 
-Installation with screenshots: https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots
+Installation with screenshots for Linux: https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots
+
+Installation with screenshots for Windows: https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots-Windows
 
 To install ngrest, open terminal and copy-paste:
 
