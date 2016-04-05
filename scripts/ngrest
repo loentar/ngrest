@@ -596,7 +596,7 @@ upgrade() {
   [ -z "${1:-}" ] || RES=$(git checkout $1 >/dev/null)
   CURRENT_VERSION=$(git rev-parse HEAD)
 
-  if [ "$CURRENT_VERSION" = "$LAST_VERSION" -a -e $NGREST_HOME/../.build_ok ]
+  if [ "$CURRENT_VERSION" = "$LAST_VERSION" -a -e "$NGREST_HOME/../.build_ok" ]
   then
     echo "No upgrades found"
   else

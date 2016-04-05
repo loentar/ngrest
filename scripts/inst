@@ -104,6 +104,7 @@ fi
 
 echo "Building ngrest. It may take few minutes..."
 $MAKE >make-build.log
+PATH="$OLDPATH"
 touch .build_ok
 echo "Build OK"
 
