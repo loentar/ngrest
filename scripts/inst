@@ -5,6 +5,20 @@ set -eu
 TO_INSTALL=
 TO_INSTALL_OPT=
 
+# detect OS
+OS=
+case $(uname -s) in
+  MINGW*)
+    OS=MINGW
+    ;;
+  Linux)
+    OS=Linux
+    ;;
+  *)
+    echo "This OS is not yet supported" >&2
+    exit 1
+esac
+
 for app in git cmake g++
 do
   $app --version >/dev/null 2>&1 || TO_INSTALL+="$app "
@@ -18,85 +32,117 @@ fi
 
 if [ -n "$TO_INSTALL" ]
 then
-  pkg=
-
-  # detect package manager
-  for p in apt-get yum
-  do
-    if $p -v >/dev/null 2>&1
-    then
-      pkg=$p
-      break
-    fi
-  done
-
-  if [ -z "$pkg" ]
+  if [ $OS = MINGW ]
   then
-    echo "Cannot detect package manager"
+    echo "Cannot detect installation of: $TO_INSTALL"
     exit 1
-  fi
+  else
+    pkg=
 
-  echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
-  echo "To continue please enter your password, or press Ctrl+C to install it manually."
-  sudo $pkg install -y $TO_INSTALL </dev/null
-  sudo $pkg install -y $TO_INSTALL_OPT </dev/null || true
+    # detect package manager
+    for p in apt-get yum
+    do
+      if $p -v >/dev/null 2>&1
+      then
+        pkg=$p
+        break
+      fi
+    done
+
+    if [ -z "$pkg" ]
+    then
+      echo "Cannot detect package manager"
+      exit 1
+    fi
+
+    echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
+    echo "To continue please enter your password, or press Ctrl+C to install it manually."
+    sudo $pkg install -y $TO_INSTALL </dev/null
+    sudo $pkg install -y $TO_INSTALL_OPT </dev/null || true
+  fi
 fi
 
-export NGREST_HOME=$HOME/.ngrest
+if [ $OS = MINGW ]
+then
+  export NGREST_HOME=$APPDATA/ngrest
+else
+  export NGREST_HOME=$HOME/.ngrest
+fi
 
-mkdir -p $NGREST_HOME
-cd $NGREST_HOME
+mkdir -p "$NGREST_HOME"
+cd "$NGREST_HOME"
 
 SRC_DIR=$NGREST_HOME/ngrest
 BUILD_DIR=$SRC_DIR-build
 
-rm -rf $BUILD_DIR
+rm -rf "$BUILD_DIR"
 
 if [ -z "${UPGRADE:-}" ]
 then
-  test ! -e $SRC_DIR || mv $SRC_DIR $SRC_DIR~$(date +%F-%T)
+  test ! -e "$SRC_DIR" || mv "$SRC_DIR" "$SRC_DIR~$(date +%Y%m%d-%H%M%S)"
   git clone https://github.com/loentar/ngrest.git
 fi
 
-mkdir $BUILD_DIR
-cd $BUILD_DIR
+mkdir "$BUILD_DIR"
+cd "$BUILD_DIR"
 
 rm -f .build_ok
 echo "Configuring ngrest for the build..."
-cmake ${CMAKE_FLAGS:-} $SRC_DIR >cmake-build.log
-echo "Building ngrest. It may take few minutes..."
-make >make-build.log
-touch .build_ok
-
-# install to ~/bin if user already created it
-if [[ $PATH =~ ~/bin ]]
+if [ $OS = MINGW ]
 then
-  USERINST=1
+  OLDPATH=$PATH
+  # CMAKE don't like to find sh.exe in path, removing it from path
+  PATH="${PATH//\/usr\/bin/}"
+  PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
+  export PATH
+  cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$SRC_DIR" >cmake-build.log
+  MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
+else
+  cmake "${CMAKE_FLAGS:-}" "$SRC_DIR" >cmake-build.log
+  MAKE=make
 fi
 
-if [ -z "${USERINST:-}" ]
+echo "Building ngrest. It may take few minutes..."
+$MAKE >make-build.log
+touch .build_ok
+echo "Build OK"
+
+if [ $OS = MINGW ]
 then
-  #ln -nsf $BUILD_DIR/deploy ngrest
-  echo "Installing ngrest script into /usr/local/bin/"
-  sudo cp -f $SRC_DIR/scripts/ngrest /usr/local/bin/
-  sudo chown 0:0 /usr/local/bin/ngrest
-  sudo chmod 755 /usr/local/bin/ngrest
+  mkdir -p "$APPDATA/ngrest/bin/"
+  cp -f "$SRC_DIR/scripts/ngrest" "$APPDATA/ngrest/bin/"
+  echo -e "@bash \"\$APPDATA/ngrest/bin/ngrest\"" > "$APPDATA/ngrest/bin/ngrest.cmd"
 else
-  echo "Installing ngrest script into ~/bin/"
-  if [[ ! $PATH =~ ~/bin ]]
+  # install to ~/bin if user already created it
+  if [[ $PATH =~ ~/bin ]]
   then
-    cat << EOF 
+    USERINST=1
+  fi
+
+  if [ -z "${USERINST:-}" ]
+  then
+    #ln -nsf $BUILD_DIR/deploy ngrest
+    echo "Installing ngrest script into /usr/local/bin/"
+    sudo cp -f $SRC_DIR/scripts/ngrest /usr/local/bin/
+    sudo chown 0:0 /usr/local/bin/ngrest
+    sudo chmod 755 /usr/local/bin/ngrest
+  else
+    echo "Installing ngrest script into ~/bin/"
+    if [[ ! $PATH =~ ~/bin ]]
+    then
+      cat << EOF
  *** Please note: You must re-login after installation completed. Else 'ngrest' command may not work ***
 If you cannot access 'ngrest' command after re-login you need to add this line into your startup scripts: ~/.bashrc or ~/.profile
 
   PATH="$HOME/bin:$PATH"
 
 EOF
-  fi
+    fi
 
-  mkdir -p ~/bin
-  cp -f $SRC_DIR/scripts/ngrest ~/bin/
-  chmod 755 ~/bin/ngrest
+    mkdir -p ~/bin
+    cp -f $SRC_DIR/scripts/ngrest ~/bin/
+    chmod 755 ~/bin/ngrest
+  fi
 fi
 
 if [ -z "${UPGRADE:-}" ]

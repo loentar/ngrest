@@ -33,7 +33,6 @@
 #else
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <mstcpip.h>
 #endif
 #include <unistd.h>
 #include <fcntl.h>
@@ -54,6 +53,11 @@
 namespace ngrest {
 
 #ifdef WIN32
+
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+
 class SocketInitializer
 {
 public:

@@ -37,6 +37,9 @@ else()
     add_definitions(-DUSE_GET_WRITE_QUEUE)
 endif()
 
+if (MINGW)
+    add_definitions(-D_WIN32_WINNT=0x0501)
+endif()
 
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
     add_definitions(-DDEBUG)

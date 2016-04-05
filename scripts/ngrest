@@ -2,10 +2,44 @@
 
 set -eu
 
-export NGREST_HOME=~/.ngrest/ngrest-build/deploy
+# detect OS
+OS=
+case $(uname -s) in
+  MINGW*)
+    OS=MINGW
+    ;;
+  Linux)
+    OS=Linux
+    ;;
+  *)
+    echo "This OS is not yet supported" >&2
+    exit 1
+esac
+
+if [ $OS = MINGW ]
+then
+  export NGREST_HOME_SRC=$APPDATA/ngrest/ngrest
+else
+  export NGREST_HOME_SRC=~/.ngrest/ngrest
+fi
+
+export NGREST_HOME=$NGREST_HOME_SRC-build/deploy
 export PATH=$PATH:$NGREST_HOME/bin
 nl="
 "
+
+if [ $OS = MINGW ]
+then
+  mktemp() {
+    n=/tmp/$(date +%Y%m%d%H%M%S)
+    mkdir "$n"
+    echo "$n"
+  }
+
+  fakeroot() {
+    $1
+  }
+fi
 
 help_create() {
   cat >&2 << EOF
@@ -228,7 +262,8 @@ create() {
     # generate project name from service name
     SERVICE_NAME=${1:-}
     PROJECT_NAME=${SERVICE_NAME##*\.}
-    PROJECT_NAME=${PROJECT_NAME,,}
+    # bash 3.1 compat
+    PROJECT_NAME=$(tr '[:upper:]' '[:lower:]' <<< "$PROJECT_NAME")
     shift
   else
     PROJECT_NAME=${1:-}
@@ -261,7 +296,9 @@ create() {
 
   while [ -n "$SERVICE_NAME" ]
   do
-    if [[ ! "$SERVICE_NAME" =~ ^([a-z][a-z0-9_]*\.)*[a-zA-Z]([a-zA-Z_0-9]*)$ ]]
+    # bash 3.1 compat
+    TEST_NAME=$(sed '/^\([a-z][a-z0-9_]*\.\)*[a-zA-Z]\([a-zA-Z_0-9]*\)$/!d' <<< "$SERVICE_NAME")
+    if [ -z "$TEST_NAME" ]
     then
       echo "Invalid service name: [$SERVICE_NAME]" >&2
       echo "Service name must only contain digits, letters, underscore and dot symbol and must start with a letter" >&2
@@ -315,7 +352,7 @@ build() {
   cd .ngrest/local/build
 
   [ -e .ngrest_version ] && BUILT_WITH_VERSION=$(<.ngrest_version) || BUILT_WITH_VERSION=
-  CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse HEAD)
+  CURRENT_VERSION=$(git -C "$NGREST_HOME_SRC" rev-parse HEAD)
   if [ "$BUILT_WITH_VERSION" != "$CURRENT_VERSION" -a -n "$BUILT_WITH_VERSION" ]
   then
     echo "Cleaning build $(<$PROJECT_DIR/.ngrest/name) due to ngrest upgrade..."
@@ -324,8 +361,23 @@ build() {
 
   echo "Building project $(<$PROJECT_DIR/.ngrest/name)..."
   CMAKE_FLAGS=${CMAKE_FLAGS:-'-DCMAKE_BUILD_TYPE=DEBUG'}
-  cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
-  make ${MAKE_FLAGS:-} >make.log || return $?
+
+  if [ $OS = MINGW ]
+  then
+    OLDPATH=$PATH
+    # CMAKE don't like to find sh.exe in path, removing it from path
+    PATH="${PATH//\/usr\/bin/}"
+    PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
+    export PATH
+    cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$PROJECT_DIR" >cmake.log || return $?
+    MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
+  else
+    cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
+    MAKE=make
+  fi
+
+  $MAKE ${MAKE_FLAGS:-} >make.log || return $?
+  [ $OS != MINGW ] || PATH="$OLDPATH"
   mkdir -p services
   rm -f services/*
   cp $PWD/deploy/share/ngrest/services/* services/
@@ -453,6 +505,11 @@ run() {
     export NGREST_LOG_VERBOSITY="LEVEL DATETIME TEXT"
   fi
 
+  if [ $OS = MINGW ]
+  then
+    DISABLE_WATCHER=1
+  fi
+
   if [ -z "${DISABLE_WATCHER:-}" ]
   then
     # test if inotifywait is installed
@@ -531,7 +588,7 @@ run() {
 
 upgrade() {
   echo "Checking for upgrades..."
-  cd ~/.ngrest/ngrest
+  cd "$NGREST_HOME_SRC"
 
   LAST_VERSION=$(git rev-parse HEAD)
   [ -n "${1:-}" ] || git checkout master >/dev/null
@@ -545,13 +602,22 @@ upgrade() {
   else
     # reading script into memory to prevent upgrade errors
     # caused by script is changed on execution
-    INST_SCRIPT=$(<~/.ngrest/ngrest/scripts/inst)
+    INST_SCRIPT=$(<"$NGREST_HOME_SRC/scripts/inst")
     UPGRADE=1 bash <<< "$INST_SCRIPT"
   fi
 }
 
+check_not_mingw() {
+  if [ $OS = MINGW ]
+  then
+    echo "This command not supported under MinGW. Sorry." >&2
+    exit 1
+  fi
+}
+
 bundle_server() {
-  CURRENT_VERSION=$(git -C ~/.ngrest/ngrest rev-parse --short HEAD)
+  check_not_mingw
+  CURRENT_VERSION=$(git -C "$NGREST_HOME_SRC" rev-parse --short HEAD)
   OUT_FILE_BASE=${1:-$PWD/ngrest-server-bundle-$CURRENT_VERSION}
   [ "${OUT_FILE_BASE::1}" == "/" ] || OUT_FILE_BASE=$PWD/$OUT_FILE_BASE
   TMP_DIR=$(mktemp -d)
@@ -590,6 +656,7 @@ EOD
 }
 
 deploy_server() {
+  check_not_mingw
   SERVER=${1:-}
   SERVER_PATH=${2:-/opt}
   if [ -z "$SERVER" ]
@@ -618,8 +685,9 @@ EOF
 }
 
 bundle() {
+  check_not_mingw
   check_get_name
-  NGREST_VERSION=$(git -C ~/.ngrest/ngrest rev-parse --short HEAD)
+  NGREST_VERSION=$(git -C "$NGREST_HOME_SRC" rev-parse --short HEAD)
   OUT_FILE_BASE=${1:-$PWD/$NAME-ngrest-$NGREST_VERSION}
   [ "${OUT_FILE_BASE::1}" == "/" ] || OUT_FILE_BASE=$PWD/$OUT_FILE_BASE
 
@@ -649,6 +717,7 @@ EOD
 }
 
 deploy() {
+  check_not_mingw
   SERVER=${1:-}
   SERVER_PATH=${2:-/opt/ngrest}
   if [ -z "$SERVER" ]

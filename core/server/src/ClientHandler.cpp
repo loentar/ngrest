@@ -19,8 +19,8 @@
  */
 
 #include <unistd.h>
-#include <error.h>
 #ifndef WIN32
+#include <error.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #else

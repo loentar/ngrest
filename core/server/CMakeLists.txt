@@ -10,7 +10,7 @@ add_executable(ngrestserver ${NGRESTSERVER_SOURCES})
 
 target_link_libraries(ngrestserver ngrestutils ngrestcommon ngrestjson ngrestengine)
 
-check_library_exists(ws2_32 accept "" HAS_WS2_32)
-if (HAS_WS2_32)
+# ws2_32 detection fails on mingw32
+if (MINGW)
     target_link_libraries(ngrestserver ws2_32)
 endif()
