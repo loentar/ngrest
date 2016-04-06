@@ -16,7 +16,7 @@
 ##foreach $(interface.includes)
 #include "$(include.filePath)$(include.name)Wrapper.h"
 ##endfor
-#include "$(interface.filePath)$(interface.name).h"
+#include "$(interface.filePath)$(interface.fileName)"
 \
 \
 ##ifneq($(interface.services.$count),0)

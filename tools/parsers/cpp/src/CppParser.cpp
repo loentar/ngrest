@@ -382,10 +382,12 @@ public:
     void ignoreFunction()
     {
         char ch = '\0';
+        char prevCh;
         int recursion = 0;
 
         while (file.good() && !file.eof()) {
             skipWs();
+            prevCh = ch;
             file >> ch;
 
             if (ch == ';' && recursion == 0) {
@@ -402,6 +404,18 @@ public:
                 }
             } else if (ch == '{')  {
                 ++recursion;
+            } else if (ch == '#') { // skip {} in preprocessor
+                while (file.good() && !file.eof() && ch != '\n')
+                    file >> ch;
+            } else if (ch == '"' || ch == '\'') { // skip {} in strings
+                char quote = ch;
+                while (file.good() && !file.eof()) {
+                    prevCh = ch;
+                    file >> ch;
+                    if (ch == quote && prevCh != '\\')
+                        break;
+                }
+
             }
         }
     }
@@ -692,16 +706,16 @@ public:
         }
 
         skipWs();
-        file >> ch;
+        ch = file.peek();
         if (ch == 'c') {
             readBefore(tmp, ";");
-            if (tmp == "onst") // const
+            if (tmp == "const")
                 operation.isConst = true;
 
             skipWs();
             file >> ch;
         }
-        CSP_ASSERT(ch == ';', "';' expected", interface.fileName, line);
+        ignoreFunction();
 
         skipSingleLineComment();
     }
@@ -1480,9 +1494,13 @@ public:
         CSP_ASSERT(file.good(), std::string("can't open file: ") + fileName + ": "
                    + std::string(strerror(errno)), interface.fileName, line);
         try {
-            interface.name = interface.fileName.substr(interface.fileName.size() - 2, 2) == ".h" ?
-                        interface.fileName.substr(0, interface.fileName.size() - 2) :
-                        interface.fileName;
+            interface.name = interface.fileName;
+            const std::string::size_type size = interface.name.size();
+            if (size > 2 && !interface.name.compare(size - 2, 2, ".h")) {
+                interface.name.erase(size - 2);
+            } else if (size > 4 && !interface.name.compare(size - 4, 4, ".hpp")) {
+                interface.name.erase(size - 4);
+            }
 
             parseHeader(interface);
             fixStuctParentNs();

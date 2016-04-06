@@ -250,6 +250,28 @@ EOF
 }
 
 create() {
+  CODEGEN_OPTIONS=
+  if [ "x${1::1}" = "x-" ]
+  then
+    case "${1:1:1}" in
+      d)
+        OPT=${1:2}
+        if [ -z "$OPT" ]
+        then
+          if [ -z "${2:-}" ]
+          then
+            echo "Missing option for -d" >&2
+            exit 1;
+          fi
+          OPT=$2
+          shift
+        fi
+        CODEGEN_OPTIONS+=",$OPT"
+        ;;
+    esac
+    shift
+  fi
+
   if [ -z "$1" ]
   then
     echo "Project name omitted" >&2
@@ -320,7 +342,7 @@ create() {
   )
   cd "$PROJECT_NAME"
   mkdir -p .ngrest/local
-  ngrestcg -t project -n "$PROJECT_NAME" -d services="$SERVICES" >.ngrest/local/codegen.log || (
+  ngrestcg -t project -n "$PROJECT_NAME" -d services="$SERVICES""$CODEGEN_OPTIONS" >.ngrest/local/codegen.log || (
     echo "Failed to create project [$PROJECT_NAME] with services [$SERVICES]" >&2
     cat .ngrest/local/codegen.log
     cd -
