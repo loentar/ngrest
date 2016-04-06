@@ -109,6 +109,7 @@ examples/crud/src/Crud.h
 examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
+README.md
 scripts/inst
 scripts/ngrest
 services/CMakeLists.txt
@@ -153,6 +154,8 @@ tools/ngrestcg/src/main.cpp
 tools/ngrestcg/src/XmlGen.cpp
 tools/ngrestcg/src/XmlGen.h
 tools/ngrestcg/templates/addservice/CMakeLists.txt
+tools/ngrestcg/templates/addservicehpp/CMakeLists.txt
+tools/ngrestcg/templates/addservicehpp/Service.hpp
 tools/ngrestcg/templates/addservice/Service.cpp
 tools/ngrestcg/templates/addservice/Service.h
 tools/ngrestcg/templates/common/deserialization.cpp
