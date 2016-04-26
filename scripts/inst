@@ -104,7 +104,10 @@ fi
 
 echo "Building ngrest. It may take few minutes..."
 $MAKE >make-build.log
-PATH="$OLDPATH"
+if [ $OS = MINGW ]
+then
+  PATH="$OLDPATH"
+fi
 touch .build_ok
 echo "Build OK"
 
