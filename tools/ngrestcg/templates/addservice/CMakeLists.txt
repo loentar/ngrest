@@ -20,7 +20,7 @@ file(GLOB $($service.!toupper)_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
 
 list(APPEND $($service.!toupper)_SOURCES ${$($service.!toupper)_CODEGEN_SOURCES})
 
-include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR} $ENV{NGREST_EXT_INCLUDES})
 
 add_library($($service.!tolower) MODULE ${$($service.!toupper)_SOURCES})
 
@@ -29,4 +29,4 @@ set_target_properties($($service.!tolower) PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SERVICES_DIR}"
 )
 
-target_link_libraries($($service.!tolower) ngrestutils ngrestcommon ngrestjson ngrestengine)
+target_link_libraries($($service.!tolower) ngrestutils ngrestcommon ngrestjson ngrestengine $ENV{NGREST_EXT_LIBS})

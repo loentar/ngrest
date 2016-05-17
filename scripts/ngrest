@@ -18,15 +18,51 @@ esac
 
 if [ $OS = MINGW ]
 then
-  export NGREST_HOME_SRC=$APPDATA/ngrest/ngrest
+  export NGREST_ROOT=$APPDATA
 else
-  export NGREST_HOME_SRC=~/.ngrest/ngrest
+  export NGREST_ROOT=~/.ngrest
 fi
+export NGREST_HOME_SRC=$NGREST_ROOT/ngrest
+export NGREST_PACKAGES_DIR=$NGREST_ROOT/packages
 
 export NGREST_HOME=$NGREST_HOME_SRC-build/deploy
 export PATH=$PATH:$NGREST_HOME/bin
+export NGREST_EXT_LIBS=
+export NGREST_EXT_INCLUDES=
 nl="
 "
+
+declare -A extensions
+
+if [ -e .ngrest/packages ]
+then
+  added_packages=($(<.ngrest/packages))
+  if [ -z "${added_packages:-}" ]
+  then
+    # workaround over unbound variable generated with empty list: added_packages=()
+    added_packages=
+  fi
+else
+  added_packages=
+fi
+
+if [ -e "$NGREST_PACKAGES_DIR/packages" ]
+then
+  # loentar/ngrest-db:0.1
+  packages=($(<"$NGREST_PACKAGES_DIR/packages"))
+  for p in ${packages[@]}
+  do
+    package=${p%%:*}
+    if [ -e "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-inject" ]
+    then
+        [[ " ${added_packages[@]} " =~ " $package " ]] && active=active || active=
+        . "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-inject"
+    fi
+  done
+else
+  packages=
+fi
+
 
 if [ $OS = MINGW ]
 then
@@ -189,6 +225,42 @@ Example:
 EOF
 }
 
+help_add() {
+  cat >&2 << EOF
+Usage: ngrest add <package_name> [args]
+
+Add a new ngrest extension package to the current project.
+
+'package_name' is formed from github url removing "http://github.com/".
+'args' are arguments passed to package.
+
+For example to add "https://github.com/loentar/ngrest-db" package with SQLite driver use:
+
+  ngrest add loentar/ngrest-db sqlite
+
+EOF
+}
+
+
+help_remove() {
+  cat >&2 << EOF
+Usage: ngrest remove <package_name>
+
+Remove a package from current project.
+
+'package_name' is the same as in "ngrest install".
+
+EOF
+}
+
+help_packages() {
+  cat >&2 << EOF
+Usage: ngrest packages
+
+List packages used by current project. Packages are printed with version numbers.
+
+EOF
+}
 
 help() {
   case "${1:-}" in
@@ -206,6 +278,18 @@ help() {
 
   clean)
     help_clean
+    ;;
+
+  add)
+    help_add
+    ;;
+
+  remove)
+    help_remove
+    ;;
+
+  packages)
+    help_packages
     ;;
 
   bundle-server)
@@ -229,6 +313,25 @@ help() {
     ;;
 
   *)
+    extensions_help=
+    if [ -n "${1:-}" ]
+    then
+      desc="${extensions[$1]:-}"
+      if [ -n "$desc" ]
+      then
+        echo "${desc#*$nl}" >&2
+        return
+      fi
+    fi
+
+    for key in "${!extensions[@]}"
+    do
+      desc="${extensions[$key]}"
+      while [ ${#key} -lt 14 ]; do key+=" "; done
+      extensions_help+="  $key ${desc%%$nl*}$nl"
+    done
+
+
     cat >&2 << EOF
 Usage: ngrest [help] [<command>] [<arguments>]
 
@@ -237,11 +340,15 @@ Commands:
   run            (default) Build and run current project in local deployment mode.
   build          Build current project.
   clean          Clean build and program cache.
+  add            Add a new package into current project.
+  remove         Remove a package from current project.
+  packages       List packages used by current project.
   upgrade        Upgrade ngrest to the latest available version.
   bundle-server  Create ngrest server bundle to install it to another machine.
   deploy-server  Deploy local version of ngrest server to remote host.
   bundle         Create bundle of the current project to install it to another host.
   deploy         Deploy local version of the current project to remote host.
+$extensions_help\
   help           Display help for the command.
 
 EOF
@@ -608,6 +715,146 @@ run() {
   fi
 }
 
+build_package() {
+  echo "Configuring $1 for the build..."
+  if [ $OS = MINGW ]
+  then
+    OLDPATH=$PATH
+    # CMAKE don't like to find sh.exe in path, removing it from path
+    PATH="${PATH//\/usr\/bin/}"
+    PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
+    export PATH
+    cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
+    MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
+  else
+    cmake "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
+    MAKE=make
+  fi
+
+  echo "Building $1. It may take few minutes..."
+  $MAKE >make-build.log
+  if [ $OS = MINGW ]
+  then
+    PATH="$OLDPATH"
+  fi
+  touch .build_ok
+  echo "Build OK"
+}
+
+check_install_package() {
+
+  pkg_installed=0
+  for p in ${packages[@]}
+  do
+    if [ "${p%%:*}" == "$1" ]
+    then
+      pkg_installed=1
+    fi
+  done
+
+  # not installed or dir does not exist
+  if [ $pkg_installed -eq 0 -o ! -e "$NGREST_PACKAGES_DIR/$1-build/.build_ok" ]
+  then
+    # clone extension's repo and build
+    PROJECT_PWD=$PWD
+    mkdir -p "$NGREST_PACKAGES_DIR"
+    cd "$NGREST_PACKAGES_DIR"
+    if [ ! -e "$1" ]
+    then
+      git clone "https://github.com/$1.git" "$1"
+    fi
+    rm -rf "$1-build"
+    mkdir -p "$1-build"
+    cd "$1-build"
+    build_package "$1" ../${1##*/}
+
+    cd "$PROJECT_PWD"
+
+    packages+=($1)
+
+    active=active
+    [ ! -e "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject" ] || . "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject"
+  fi
+}
+
+packages_list() {
+  check_get_name
+
+  if [ -z "$added_packages" ]
+  then
+    echo "No packages added" >&2
+    exit 0
+  fi
+
+  for pkg in "${added_packages[@]}"
+  do
+    echo "$pkg"
+  done
+}
+
+packages_add() {
+  package=${1:-}
+  if [ -z "$package" ]
+  then
+    echo "Package name omitted" >&2
+    help_add
+    exit 1
+  fi
+
+  shift
+
+  for added_package in "${added_packages[@]}"
+  do
+    if [ "$package" = "$added_package" ]
+    then
+      echo "Package $package is already added!" >&2
+      exit 1
+    fi
+  done
+
+  check_install_package "$package"
+
+  [ ! -e "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" ] || \
+    bash "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" add "$@"
+
+  echo "$package" >> .ngrest/packages
+
+  echo "Package $package has been added."
+}
+
+packages_remove() {
+  package=${1:-}
+  if [ -z "$package" ]
+  then
+    echo "Package name omitted" >&2
+    help_remove
+    exit 1
+  fi
+
+  found=0
+  for added_package in "${added_packages[@]}"
+  do
+    if [ "$package" = "$added_package" ]
+    then
+      found=1
+      break
+    fi
+  done
+
+  if [ $found -eq 0 ]
+  then
+    echo "No package $package added to current project."
+    exit 1
+  fi
+
+  [ ! -e "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" ] || bash "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" remove
+
+  sed -i~ "/^${package//\//\\/}\$/d" .ngrest/packages
+
+  echo "Package $package has been removed."
+}
+
+
 upgrade() {
   echo "Checking for upgrades..."
   cd "$NGREST_HOME_SRC"
@@ -784,6 +1031,18 @@ case $COMMAND in
     help $@
     ;;
 
+  add)
+    packages_add $@
+    ;;
+
+  remove)
+    packages_remove $@
+    ;;
+
+  packages)
+    packages_list
+    ;;
+
   build)
     build
     ;;
@@ -821,6 +1080,16 @@ case $COMMAND in
     ;;
 
   *)
+    if [ -n "$COMMAND" ]
+    then
+      if [ -n "${extensions[$COMMAND]:-}" ]
+      then
+        $COMMAND $@
+        exit
+      fi
+      echo "No such command: $COMMAND"
+    fi
+
     help
     ;;
 esac
