@@ -610,6 +610,10 @@ EOF
 
 run() {
   check_get_name
+  for added_package in "${added_packages[@]}"
+  do
+    check_install_package "$added_package"
+  done
 
   if [ -z "${NO_LOG_COLOR:-}" ]
   then
@@ -756,6 +760,9 @@ check_install_package() {
   if [ $pkg_installed -eq 0 -o ! -e "$NGREST_PACKAGES_DIR/$1-build/.build_ok" ]
   then
     # clone extension's repo and build
+    color "1"
+    echo "Package $1 is not installed locally. Installing..."
+    color "0"
     PROJECT_PWD=$PWD
     mkdir -p "$NGREST_PACKAGES_DIR"
     cd "$NGREST_PACKAGES_DIR"
@@ -774,6 +781,8 @@ check_install_package() {
 
     active=active
     [ ! -e "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject" ] || . "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject"
+
+    echo "$1" >> "$NGREST_PACKAGES_DIR/packages"
   fi
 }
 
