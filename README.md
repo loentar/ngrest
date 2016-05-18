@@ -275,6 +275,23 @@ If you want to downgrade to specific commit, add commit hash as last argument, f
 
 If there are any running projects it will be automatically rebuild and restarted.
 
+## Packages
+
+Here is a list of packages to extend ngrest functinality:
+
+|**Package**|**Repo URL**|**Description**|
+|-----------|------------|---------------|
+| loentar/ngrest-db | https://github.com/loentar/ngrest-db | Simple access to relational databases (Alpha). |
+
+## TODO
+
+ - Apache2 module
+ - nginx module
+ - nullable support
+ - support complex types in services tester
+ - support of sessions/cookies
+ - WADL support?
+
 ## Support
 
 Feel free to ask ngrest related questions here on the [Google groups](https://groups.google.com/forum/#!forum/ngrest).
