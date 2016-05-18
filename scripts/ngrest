@@ -324,7 +324,7 @@ help() {
       fi
     fi
 
-    for key in "${!extensions[@]}"
+    for key in ${!extensions[@]}
     do
       desc="${extensions[$key]}"
       while [ ${#key} -lt 14 ]; do key+=" "; done
@@ -610,7 +610,7 @@ EOF
 
 run() {
   check_get_name
-  for added_package in "${added_packages[@]}"
+  for added_package in ${added_packages[@]}
   do
     check_install_package "$added_package"
   done
@@ -795,7 +795,7 @@ packages_list() {
     exit 0
   fi
 
-  for pkg in "${added_packages[@]}"
+  for pkg in ${added_packages[@]}
   do
     echo "$pkg"
   done
@@ -812,7 +812,7 @@ packages_add() {
 
   shift
 
-  for added_package in "${added_packages[@]}"
+  for added_package in ${added_packages[@]}
   do
     if [ "$package" = "$added_package" ]
     then
@@ -841,7 +841,7 @@ packages_remove() {
   fi
 
   found=0
-  for added_package in "${added_packages[@]}"
+  for added_package in ${added_packages[@]}
   do
     if [ "$package" = "$added_package" ]
     then
