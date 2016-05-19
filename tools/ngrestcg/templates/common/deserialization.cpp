@@ -16,7 +16,7 @@
 \
 ### /// list
 ##case vector||list
-    const ::ngrest::Array* $($name)Arr = static_cast<const ::ngrest::Array*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$($name)", ::ngrest::NodeType::Array)->node);
+    const ::ngrest::Array* $($name)Arr = static_cast<const ::ngrest::Array*>(::ngrest::ObjectModelUtils::getNamedChild($($node), "$($name)", ::ngrest::NodeType::Array)->node);
     for (const ::ngrest::LinkedNode* $($name)Child = $($name)Arr->firstChild; $($name)Child; $($name)Child = $($name)Child->nextSibling) {
 ##ifneq($(.templateParams.templateParam1.type),generic||enum)
         $($var).push_back($(.templateParams.templateParam1.nsName)());
@@ -44,7 +44,7 @@
 ### /// map
 ##case map||unordered_map
     NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Object, "Object node type expected");
-    const ::ngrest::Object* $($name)Obj = static_cast<const ::ngrest::Object*>($($node));
+    const ::ngrest::Object* $($name)Obj = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild($($node), "$($name)", ::ngrest::NodeType::Array)->node);
     for (const ::ngrest::NamedNode* $($name)Child = static_cast<const ::ngrest::NamedNode*>($($name)Obj->firstChild); $($name)Child; $($name)Child = $($name)Child->nextSibling) {
         NGREST_ASSERT_NULL($($name)Child->name);
 ##switch $(.templateParams.templateParam1.type)
