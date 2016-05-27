@@ -24,6 +24,11 @@
 
 namespace ngrest {
 
+bool TestService::get() const
+{
+    return true;
+}
+
 std::string TestService::echoSync(const std::string& value)
 {
     return "You said " + value;
@@ -75,6 +80,11 @@ std::list<Test> TestService::templListOfStruct(const std::list<Test>& arg)
 }
 
 std::list<TestTypedef> TestService::templListOfTypedef(const std::list<TestTypedef>& arg)
+{
+    return arg;
+}
+
+StringList TestService::templListOfTypedefList(const StringList& arg)
 {
     return arg;
 }
@@ -144,10 +154,6 @@ Test::Nested TestService::testNestedStruct(Test::Nested arg)
     return arg;
 }
 
-bool TestService::get() const
-{
-    return true;
-}
 
 } // namespace ngrest
 

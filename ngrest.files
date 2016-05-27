@@ -114,6 +114,7 @@ scripts/inst
 scripts/ngrest
 services/CMakeLists.txt
 services/favicon/CMakeLists.txt
+services/favicon/gen_favicon_ico_h
 services/favicon/src/Favicon.cpp
 services/favicon/src/Favicon.h
 services/favicon/src/favicon_ico.h
@@ -138,6 +139,7 @@ tests/json/test.json
 tests/service/CMakeLists.txt
 tests/service/src/TestService.cpp
 tests/service/src/TestService.h
+tests/service/test_client
 tools/CMakeLists.txt
 tools/ngrestcg/CMakeLists.txt
 tools/ngrestcgparser/CMakeLists.txt

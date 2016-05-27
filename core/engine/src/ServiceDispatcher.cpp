@@ -27,6 +27,7 @@
 #include <ngrest/common/Service.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/ObjectModel.h>
+#include <ngrest/json/JsonReader.h>
 #include <ngrest/json/JsonWriter.h>
 
 #include "ServiceDescription.h"
@@ -35,6 +36,45 @@
 #include "ServiceDispatcher.h"
 
 namespace ngrest {
+
+inline char fromHexChar(char hex)
+{
+    if (hex >= '0' && hex <= '9')
+        return hex - '0';
+    if (hex >= 'a' && hex <= 'f')
+        return hex - 'a' + 0x0a;
+    if (hex >= 'A' && hex <= 'F')
+        return hex - 'A' + 0x0a;
+    return -1;
+}
+
+char* urldecode(char* url)
+{
+    bool write = false;
+    char high;
+    char low;
+    char* dst = url;
+    for (; *url; ++url, ++dst) {
+        if (*url == '%' && url[1] && url[2]) {
+            high = fromHexChar(url[1]);
+            low = fromHexChar(url[2]);
+            if (high != -1 && low != -1) {
+                *dst = high << 4 | low;
+                url += 2;
+                write = true;
+                continue;
+            }
+        } else if (*url == '+') {
+            *dst = ' ';
+        } else if (write) {
+            *dst = *url;
+        }
+    }
+    if (write)
+        *dst = '\0';
+
+    return dst;
+}
 
 struct Parameter
 {
@@ -402,7 +442,8 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         }
 
         const char* name = context->pool->putCString(parameter.name.c_str(), true);
-        const char* value = context->pool->putCString(pathCStr + begin, end - begin, true);
+        char* value = context->pool->putCString(pathCStr + begin, end - begin, true);
+        char* valueEnd = urldecode(value);
 
         NamedNode* namedNode = context->pool->alloc<NamedNode>();
         namedNode->name = name;
@@ -414,9 +455,21 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         }
         lastNamedNode = namedNode;
 
-        Value* valueNode = context->pool->alloc<Value>(ValueType::String);
-        valueNode->value = value;
-        namedNode->node = valueNode;
+        // detect type of value
+        if (*value == '[' || *value == '{') {
+            // array or object
+            namedNode->node = json::JsonReader::read(value, context->pool);
+        } else {
+            if (*value == '"') {
+                // force string. for strings starting with [ or {
+                ++value;
+                *(--valueEnd) = '\0';
+            }
+
+            Value* valueNode = context->pool->alloc<Value>(ValueType::String);
+            valueNode->value = value;
+            namedNode->node = valueNode;
+        }
 
         begin = end + dividerSize;
     }

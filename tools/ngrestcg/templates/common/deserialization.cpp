@@ -1,23 +1,35 @@
 // DESERIALIZE: $(.nsName) $(.type)
 \
+### fix node for container types
+##ifeq($(.type),template)
+##switch $(.name)
+##case list||vector
+    NGREST_ASSERT_NULL($($node));
+    NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Array, "Array node expected");
+##var node static_cast<const ::ngrest::Array*>($($node))
+##case map||unordered_map
+    NGREST_ASSERT_NULL($($node));
+    NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Object, "Object node expected");
+##var node static_cast<const ::ngrest::Object*>($($node))
+##endswitch
+##endif
+\
 ##switch $(.type)
 \
 ##case generic||string
     ::ngrest::ObjectModelUtils::getValue($($node), $($var));
 ##case enum
-    $($var) = $(.ns)$(.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue($($node), "$($name)"));
+    $($var) = $(.ns)$(.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getValue($($node)));
 ##case struct||typedef
-    const ::ngrest::NamedNode* $($name)Node = ::ngrest::ObjectModelUtils::getNamedChild(static_cast<const ::ngrest::Object*>($($node)), "$($name)", ::ngrest::NodeType::Object);
-    $(.ns)$(.name.!replace/::/Serializer::/)Serializer::deserialize($($name)Node->node, $($var));
+    $(.ns)$(.name.!replace/::/Serializer::/)Serializer::deserialize($($node), $($var));
 ##case template
 \
-    // count = $(.templateParams.$count) / $(.name)
+    // count = $(.templateParams.$count) / $(.name) / $($var) / $($name) / $($node)
 ##switch $(.name)
 \
 ### /// list
 ##case vector||list
-    const ::ngrest::Array* $($name)Arr = static_cast<const ::ngrest::Array*>(::ngrest::ObjectModelUtils::getNamedChild($($node), "$($name)", ::ngrest::NodeType::Array)->node);
-    for (const ::ngrest::LinkedNode* $($name)Child = $($name)Arr->firstChild; $($name)Child; $($name)Child = $($name)Child->nextSibling) {
+    for (const ::ngrest::LinkedNode* $($name)Child = $($node)->firstChild; $($name)Child; $($name)Child = $($name)Child->nextSibling) {
 ##ifneq($(.templateParams.templateParam1.type),generic||enum)
         $($var).push_back($(.templateParams.templateParam1.nsName)());
         $(.templateParams.templateParam1.nsName)& $($name)Item = $($var).back();
@@ -43,10 +55,9 @@
 \
 ### /// map
 ##case map||unordered_map
-    NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Object, "Object node type expected");
-    const ::ngrest::Object* $($name)Obj = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild($($node), "$($name)", ::ngrest::NodeType::Array)->node);
-    for (const ::ngrest::NamedNode* $($name)Child = static_cast<const ::ngrest::NamedNode*>($($name)Obj->firstChild); $($name)Child; $($name)Child = $($name)Child->nextSibling) {
+    for (const ::ngrest::NamedNode* $($name)Child = $($node)->firstChild; $($name)Child; $($name)Child = $($name)Child->nextSibling) {
         NGREST_ASSERT_NULL($($name)Child->name);
+        // deserialize key
 ##switch $(.templateParams.templateParam1.type)
 ##case generic
         $(.templateParams.templateParam1.nsName) $($name)Key;
@@ -65,6 +76,7 @@
 [$($name)Key];
 ##endif
 \
+        // deserialize value
 ##context $(.templateParams.templateParam2)
 ##pushvars
 ##var node $($name)Child->node

@@ -714,8 +714,9 @@ public:
 
             skipWs();
             file >> ch;
+        } else {
+            ignoreFunction();
         }
-        ignoreFunction();
 
         skipSingleLineComment();
     }

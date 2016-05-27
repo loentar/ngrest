@@ -342,7 +342,33 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
             bodyFields = {};
             headers = {'Content-Type': 'application/json'};
           }
-          bodyFields[input.name] = input.value;
+          if (input.className === 'object') {
+            try {
+              var value = JSON.parse(input.value);
+              if (!typeof value === 'object' || (value instanceof Array)) {
+                alert("parameter " + input.name + " must be object")
+                return;
+              }
+              bodyFields[input.name] = value;
+            } catch (e) {
+              alert("Error reading array parameter " + input.name + ": " + e.toString()
+                + "\nmust be JSON, e.g. {...}")
+            }
+          } else if (input.className === 'array') {
+            try {
+              var value = JSON.parse(input.value);
+              if (!(value instanceof Array)) {
+                alert("parameter " + input.name + " must be array")
+                return;
+              }
+              bodyFields[input.name] = value;
+            } catch (e) {
+              alert("Error reading array parameter " + input.name + ": " + e.toString()
+                + "\nmust be JSON Array, e.g. [...]")
+            }
+          } else {
+            bodyFields[input.name] = input.value;
+          }
         }
       }
 
@@ -376,8 +402,16 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
 
         form += "<tr>";
         form += "<td><label for='" + parameter + "'>" + parameter + "</label></td>";
-        form += "<td><input type='text' id='" + parameter + "' name='" + parameter + "' placeholder='"
-                  + paramTypeToString(param.type) + "'></input></td>";
+        if (param.type == ParameterDescription::Type::Object) {
+            form += "<td><textarea cols='50' rows='3' id='" + parameter + "' name='" + parameter + "' placeholder='"
+                      + paramTypeToString(param.type) + "' class='object'></textarea></td>";
+        } else if (param.type == ParameterDescription::Type::Array) {
+            form += "<td><textarea cols='50' rows='3' id='" + parameter + "' name='" + parameter + "' placeholder='"
+                    + paramTypeToString(param.type) + "' class='array'></textarea></td>";
+        } else {
+            form += "<td><input type='text' id='" + parameter + "' name='" + parameter + "' placeholder='"
+                      + paramTypeToString(param.type) + "'></input></td>";
+        }
         form += "</tr>";
 
         end = begin + 1;

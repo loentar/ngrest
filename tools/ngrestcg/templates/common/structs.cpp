@@ -43,10 +43,36 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::deserialize(const 
 ##foreach $(struct.fields)
 ##context $(field.dataType)
 ##pushvars
-##var var value.$(field.name)
+\
 ##var node object
+##var var value.$(field.name)
 ##var name $(field.name)
+##switch $(.type)
+##case generic||string
+    ::ngrest::ObjectModelUtils::getChildValue(object, "$(field.name)", $($var));
+##case enum
+    $($var) = $(.ns)$(.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(object, "$(field.name)"));
+##case struct||typedef
+##var node $($name)Object
+    const ::ngrest::Object* $($node) = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Object)->node);
+##case template
+##switch $(.name)
+##case list||vector
+##var node $($name)Array
+    const ::ngrest::Array* $($node) = static_cast<const ::ngrest::Array*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Array)->node);
+##case map||unordered_map
+##var node $($name)Object
+    const ::ngrest::Object* $($node) = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Object)->node);
+### /// unsupported
+##default
+##error Cannot deserialize template $(.name)
+##endswitch
+##default
+##error Cannot deserialize $(.name)
+##endswitch
+##ifneq($(.type),generic||string||enum) // already processed
 ##include <common/deserialization.cpp>
+##endif
 ##popvars
 ##endcontext
 ##endfor

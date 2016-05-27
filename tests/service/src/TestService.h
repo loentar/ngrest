@@ -48,7 +48,9 @@ struct Test
 
     int a;
     std::string b;
+    TestEnum testEnum;
     Nested n;
+    std::list<std::string> ls;
 };
 
 struct TestChild: public Test
@@ -58,6 +60,7 @@ struct TestChild: public Test
 
 typedef Test TestTypedef;
 typedef std::map<std::string, std::string> StringMap;
+typedef std::list<std::string> StringList;
 
 enum ValType
 {
@@ -89,6 +92,7 @@ public:
     std::vector<int> templVector(const std::vector<int>& arg);
     std::list<Test> templListOfStruct(const std::list<Test>& arg);
     std::list<TestTypedef> templListOfTypedef(const std::list<TestTypedef>& arg);
+    StringList templListOfTypedefList(const StringList& arg);
 
 
     std::list<std::list<int>> templListList(const std::list<std::list<int>>& arg);
