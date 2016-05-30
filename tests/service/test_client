@@ -92,10 +92,20 @@ do
     if [ "$res" != "$expect" ]
     then
       echo -e "\e[31;1mFAILED\n---- EXPECTED: ----\n$expect\n---- RECEIVED: ----\n$res\n----\n\e[0m\n"
+      ((++failed))
     else
       echo "OK"
+      ((++passed))
     fi
   fi
 done
+
+if [ $failed -eq 0 ]
+then
+  echo -e "\nAll $passed tests passed"
+else
+  echo -e "\nTests passed: $passed"
+  echo -e "\e[31;1mTests failed: $failed \e[0m"
+fi
 
 echo
