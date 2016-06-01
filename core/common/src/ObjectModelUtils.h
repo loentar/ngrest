@@ -38,7 +38,7 @@ public:
         NGREST_ASSERT(namedNode->node,
                       "Failed to read element " + std::string(name) + " node is null");
         NGREST_ASSERT(namedNode->node->type == type,
-                      "Failed to read element " + std::string(name) + " node type does not match");
+                      "Failed to read element " + std::string(name) + ": node type does not match");
         return namedNode;
     }
 

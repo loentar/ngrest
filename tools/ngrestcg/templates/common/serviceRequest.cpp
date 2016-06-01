@@ -111,6 +111,25 @@
 \
         }
 \
+##case Nullable
+##context $(param.dataType.templateParams.templateParam1)
+##pushvars
+##var name $(param.name)
+##var node namedNode$($name)->node
+        const ::ngrest::NamedNode* namedNode$($name) = request->findChildByName("$(param.name)");
+        if (namedNode$($name) != nullptr && namedNode$($name)->node != nullptr) {
+##ifeq($(.type),generic||string||enum)
+##var var $(param.name).get()
+##else
+##var var $(param.name)Nullable
+            $(.nsName)& $($var) = $(param.name).get();
+##endif
+##indent +2
+##include <common/deserialization.cpp>
+##indent -2
+        }
+##popvars
+##endcontext
 ### /// unsupported
 ##default
 ##error Deserialization of template type $(param.dataType.nsName) is not supported

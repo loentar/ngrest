@@ -43,18 +43,37 @@ tests=(
   'testNestedEnum?arg=%22Values%22|{"result":"Values"}'
   'testNestedStruct?arg=%7B%22b%22%3Atrue%7D|{"result":{"b":true}}'
 
+  # nullable
+  'ptrInt?arg=null|{"result":null}'
+  'ptrInt?arg=0|{"result":0}'
+  'ptrInt?arg=12|{"result":12}'
+  'ptrIntConst?arg=null|{"result":null}'
+  'ptrIntConst?arg=0|{"result":0}'
+
+  'ptrString?arg=null|{"result":null}'
+  'ptrString?arg=0|{"result":"0"}'
+  'ptrString?arg=test%20test|{"result":"test test"}'
+  'ptrString?arg="test%20test"|{"result":"test test"}'
+  'ptrString?arg="%7Btest%20test%7D"|{"result":"{test test}"}'
+
+  'ptrEnum?arg=null|{"result":null}'
+  'ptrEnum?arg=Two|{"result":"Two"}'
+  'ptrEnum?arg="Two"|{"result":"Two"}'
+
+  'ptrStruct?arg=null|{"result":null}'
+  'ptrStruct?arg=%7B%22a%22%3A1%2C%22b%22%3A%22test%22%2C%22testEnum%22%3A%22Some%22%2C%22n%22%3A%7B%22b%22%3Atrue%7D%2C%22ls%22%3A%5B%22asd%22%2C%22qwe%22%2C%223%22%5D%7D|{"result":{"a":1,"b":"test","testEnum":"Some","n":{"b":true},"ls":["asd","qwe","3"]}}'
+
+  'ptrStructList?arg=null|{"result":null}'
+  'ptrStructList?arg=%5B%7B%22a%22%3A1%2C%22b%22%3A%22test%22%2C%22testEnum%22%3A%22Some%22%2C%22n%22%3A%7B%22b%22%3Atrue%7D%2C%22ls%22%3A%5B%22asd%22%2C%22qwe%22%2C%223%22%5D%7D%5D|{"result":[{"a":1,"b":"test","testEnum":"Some","n":{"b":true},"ls":["asd","qwe","3"]}]}'
+
+  'ptrNull|{"result":{"intValue":null,"enumValue":null,"strValue":null,"structValue":null,"listValue":null,"mapValue":null}}'
+  'ptrNotNull|{"result":{"intValue":1,"enumValue":"Two","strValue":"Hello!","structValue":{"a":3,"b":"four","testEnum":"Here","n":{"b":true},"ls":[]},"listValue":["aaa","bbb","ccc"],"mapValue":{"1":"qqq","2":"www"}}}'
+
+  'ptrTest?arg=%7B%22intValue%22%3Anull%2C%22enumValue%22%3Anull%2C%22strValue%22%3Anull%2C%22structValue%22%3Anull%2C%22listValue%22%3Anull%2C%22mapValue%22%3Anull%7D|{"result":{"intValue":null,"enumValue":null,"strValue":null,"structValue":null,"listValue":null,"mapValue":null}}'
+
+  'ptrTestNull?arg=null|{"result":null}'
+  'ptrTestNull?arg=%7B%22intValue%22%3Anull%2C%22enumValue%22%3Anull%2C%22strValue%22%3Anull%2C%22structValue%22%3Anull%2C%22listValue%22%3Anull%2C%22mapValue%22%3Anull%7D|{"result":{"intValue":null,"enumValue":null,"strValue":null,"structValue":null,"listValue":null,"mapValue":null}}'
 )
-
-#std::shared_ptr<int> ptrInt(std::shared_ptr<int> arg);
-#std::shared_ptr<int> ptrIntConst(const std::shared_ptr<int>& arg);
-#std::shared_ptr<std::string> ptrString(std::shared_ptr<std::string> arg);
-#std::shared_ptr<ValType> ptrEnum(std::shared_ptr<ValType> arg);
-#std::shared_ptr<Test> ptrStruct(std::shared_ptr<Test> arg);
-#std::shared_ptr<std::list<Test>> ptrStructList(std::shared_ptr<std::list<Test>> arg);
-
-#TestPtr ptrNull();
-#TestPtr ptrNotNull();
-
 
 passed=0
 failed=0
@@ -76,7 +95,7 @@ do
     method=GET
   fi
   url="$baseurl$req"
-  echo -n "testing $method $url "
+  echo -n "testing $method $req "
   if [ -n "$reqBody" ]
   then
     res=$(curl -s -S -X $method -d @- -H "Content-Type:application/json" "$url" <<< "$reqBody")

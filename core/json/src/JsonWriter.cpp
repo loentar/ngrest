@@ -43,6 +43,11 @@ public:
 
     inline void writeNode(const Node* node)
     {
+        if (!node) {
+            pool->putData("null", 4);
+            return;
+        }
+
         switch (node->type) {
 
         case NodeType::Object: {
@@ -76,14 +81,6 @@ public:
         case NodeType::Value: {
             const Value* value = static_cast<const Value*>(node);
             switch (value->valueType) {
-            case ValueType::Undefined:
-                pool->putData("undefined", 9);
-                break;
-
-            case ValueType::Null:
-                pool->putData("null", 4);
-                break;
-
             case ValueType::NaN:
                 pool->putData("NaN", 3);
                 break;
@@ -98,6 +95,9 @@ public:
             case ValueType::Boolean:
                 pool->putCString(value->value);
                 break;
+
+            default:
+                NGREST_THROW_ASSERT("Unexpected type of value node");
             }
             break;
         }

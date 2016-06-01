@@ -211,18 +211,34 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
 ,
 ##endif
                     {"$(.name)", ::ngrest::ParameterDescription::Type::\
+##ifeq($(.dataType.type)-$(.dataType.name),template-Nullable)
+##context $(.dataType.templateParams.templateParam1)
+##include <common/jsonType.h>
+##endcontext
+, true\
+##else
 ##context $(.dataType)
 ##include <common/jsonType.h>
 ##endcontext
+, false\
+##endif
 }\
 ##endif
 ##endfor // params
 
                 },
                 ::ngrest::ParameterDescription::Type::\
+##ifeq($(.return.type)-$(.return.name),template-Nullable)
+##context $(.return.templateParams.templateParam1)
+##include <common/jsonType.h>
+##endcontext
+, true\
+##else
 ##context $(.return)
 ##include <common/jsonType.h>
 ##endcontext
+, false\
+##endif
 
             }\
 ##endfor // operations

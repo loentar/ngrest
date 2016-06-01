@@ -18,6 +18,8 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
+#include <string.h>
+
 #include <string>
 #include <unordered_map>
 
@@ -445,8 +447,7 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         char* value = context->pool->putCString(pathCStr + begin, end - begin, true);
         char* valueEnd = urldecode(value);
 
-        NamedNode* namedNode = context->pool->alloc<NamedNode>();
-        namedNode->name = name;
+        NamedNode* namedNode = context->pool->alloc<NamedNode>(name);
 
         if (lastNamedNode) {
             lastNamedNode->nextSibling = namedNode;
@@ -456,19 +457,18 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         lastNamedNode = namedNode;
 
         // detect type of value
-        if (*value == '[' || *value == '{') {
+        if (!strcmp(value, "null")) {
+            // namedNode->node = nullptr; // already nullptr
+        } else if (*value == '[' || *value == '{') {
             // array or object
             namedNode->node = json::JsonReader::read(value, context->pool);
         } else {
             if (*value == '"') {
-                // force string. for strings starting with [ or {
+                // quoted string/enum.
                 ++value;
                 *(--valueEnd) = '\0';
             }
-
-            Value* valueNode = context->pool->alloc<Value>(ValueType::String);
-            valueNode->value = value;
-            namedNode->node = valueNode;
+            namedNode->node = context->pool->alloc<Value>(ValueType::String, value);
         }
 
         begin = end + dividerSize;

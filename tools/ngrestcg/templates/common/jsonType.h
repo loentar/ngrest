@@ -14,7 +14,11 @@ Number\
 ##case struct||typedef
 Object\
 ##case template
+##ifeq($(.name),list||vector)
 Array\
+##else
+Object\
+##endif
 ##default
 Unknown\
 ##endswitch

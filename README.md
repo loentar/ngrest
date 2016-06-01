@@ -281,13 +281,12 @@ Here is a list of packages to extend ngrest functinality:
 
 |**Package**|**Repo URL**|**Description**|
 |-----------|------------|---------------|
-| loentar/ngrest-db | https://github.com/loentar/ngrest-db | Simple access to relational databases (Alpha). |
+| loentar/ngrest-db | https://github.com/loentar/ngrest-db | Simple access to relational databases. |
 
 ## TODO
 
  - Apache2 module
  - nginx module
- - nullable support
  - support complex types in services tester
  - support of sessions/cookies
  - WADL support?

@@ -154,6 +154,72 @@ Test::Nested TestService::testNestedStruct(Test::Nested arg)
     return arg;
 }
 
+ngrest::Nullable<int> TestService::ptrInt(ngrest::Nullable<int> arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<int> TestService::ptrIntConst(const ngrest::Nullable<int>& arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<std::string> TestService::ptrString(ngrest::Nullable<std::string> arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<ValType> TestService::ptrEnum(ngrest::Nullable<ValType> arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<Test> TestService::ptrStruct(ngrest::Nullable<Test> arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<std::list<Test> > TestService::ptrStructList(ngrest::Nullable<std::list<Test> > arg)
+{
+    return arg;
+}
+
+TestPtr TestService::ptrNull()
+{
+    return TestPtr {
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr,
+        nullptr
+    };
+
+}
+
+TestPtr TestService::ptrNotNull()
+{
+    return TestPtr {
+        1, // init via reference
+        Two, // init via reference
+        std::string("Hello!"), // init via reference
+        new Test { // init via ptr
+            3, "four", Test::Here, {true}
+        },
+        std::list<std::string> {"aaa", "bbb", "ccc"}, // init via reference
+        new std::map<int, std::string> {{1, "qqq"}, {2, "www"}} // init via ptr
+    };
+}
+
+TestPtr TestService::ptrTest(const TestPtr& arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<TestPtr> TestService::ptrTestNull(const ngrest::Nullable<TestPtr>& arg)
+{
+    return arg;
+}
 
 } // namespace ngrest
 

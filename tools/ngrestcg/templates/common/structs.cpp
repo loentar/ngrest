@@ -33,7 +33,7 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::serialize(::ngrest
 
 void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::deserialize(const ::ngrest::Node* node, $(struct.ownerName)& value)
 {
-### // no need to assert node is Object, it's already checked
+    NGREST_ASSERT(node->type == ::ngrest::NodeType::Object, "Unexpected node type while deserializing $(.nsName)");
     const ::ngrest::Object* object = static_cast<const ::ngrest::Object*>(node);
 ##ifneq($(struct.parentNsName),)
     // deserialize parent struct
@@ -55,14 +55,25 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::deserialize(const 
 ##case struct||typedef
 ##var node $($name)Object
     const ::ngrest::Object* $($node) = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Object)->node);
+##include <common/deserialization.cpp>
 ##case template
 ##switch $(.name)
 ##case list||vector
 ##var node $($name)Array
     const ::ngrest::Array* $($node) = static_cast<const ::ngrest::Array*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Array)->node);
+##include <common/deserialization.cpp>
 ##case map||unordered_map
 ##var node $($name)Object
     const ::ngrest::Object* $($node) = static_cast<const ::ngrest::Object*>(::ngrest::ObjectModelUtils::getNamedChild(object, "$(field.name)", ::ngrest::NodeType::Object)->node);
+##include <common/deserialization.cpp>
+##case Nullable
+    const ::ngrest::NamedNode* namedNode$($name) = object->findChildByName("$($name)");
+    if (namedNode$($name) != nullptr) {
+##var node namedNode$($name)->node
+##indent +
+##include <common/deserialization.cpp>
+##indent -
+    }
 ### /// unsupported
 ##default
 ##error Cannot deserialize template $(.name)
@@ -70,9 +81,6 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::deserialize(const 
 ##default
 ##error Cannot deserialize $(.name)
 ##endswitch
-##ifneq($(.type),generic||string||enum) // already processed
-##include <common/deserialization.cpp>
-##endif
 ##popvars
 ##endcontext
 ##endfor

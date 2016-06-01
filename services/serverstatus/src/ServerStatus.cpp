@@ -110,6 +110,11 @@ static const char* jsUtil = R"(
       return asyncWrapper;
     };
 
+
+    function nullableClicked(name) {
+        $('#' + name)[0].disabled = $('#check_' + name)[0].checked ? '' : 'disabled';
+    }
+
 )";
 
 class TemplateProcessor
@@ -325,6 +330,36 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     var form = $('form')[0];
     var result = $('#result')[0];
 
+    function parseField(input, inputValue) {
+      if (input.className === 'object') {
+        try {
+          var value = JSON.parse(inputValue);
+          if (!typeof value === 'object' || (value instanceof Array)) {
+            alert("parameter " + input.name + " must be object")
+            return;
+          }
+          return value;
+        } catch (e) {
+          alert("Error reading array parameter " + input.name + ": " + e.toString()
+            + "\nmust be JSON, e.g. {...}")
+        }
+      } else if (input.className === 'array') {
+        try {
+          var value = JSON.parse(input.value);
+          if (!(value instanceof Array)) {
+            alert("parameter " + input.name + " must be array")
+            return;
+          }
+          return value;
+        } catch (e) {
+          alert("Error reading array parameter " + input.name + ": " + e.toString()
+            + "\nmust be JSON Array, e.g. [...]")
+        }
+      } else {
+        return inputValue;
+      }
+    }
+
     form.onsubmit = function(e) {
       e.preventDefault();
 
@@ -334,41 +369,27 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
       var headers;
       for (var i = 0, l = inputs.length; i < l; ++i) {
         var input = inputs[i];
+        var value = input.value;
+        var parsedValue = null;
+        var check = $('#check_' + input.id);
+
+        if (check.length && !check[0].checked) {
+          value = null;
+        } else {
+          parsedValue = parseField(input, value);
+          if (parsedValue === undefined)
+            return;
+        }
+
         var param = '{' + input.name + '}';
         if (url.indexOf(param) != -1) {
-          url = url.replace(param, input.value);
+          url = url.replace(param, value);
         } else {
           if (!bodyFields) {
             bodyFields = {};
             headers = {'Content-Type': 'application/json'};
           }
-          if (input.className === 'object') {
-            try {
-              var value = JSON.parse(input.value);
-              if (!typeof value === 'object' || (value instanceof Array)) {
-                alert("parameter " + input.name + " must be object")
-                return;
-              }
-              bodyFields[input.name] = value;
-            } catch (e) {
-              alert("Error reading array parameter " + input.name + ": " + e.toString()
-                + "\nmust be JSON, e.g. {...}")
-            }
-          } else if (input.className === 'array') {
-            try {
-              var value = JSON.parse(input.value);
-              if (!(value instanceof Array)) {
-                alert("parameter " + input.name + " must be array")
-                return;
-              }
-              bodyFields[input.name] = value;
-            } catch (e) {
-              alert("Error reading array parameter " + input.name + ": " + e.toString()
-                + "\nmust be JSON Array, e.g. [...]")
-            }
-          } else {
-            bodyFields[input.name] = input.value;
-          }
+          bodyFields[input.name] = parsedValue;
         }
       }
 
@@ -401,7 +422,12 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
         const std::string& parameter = param.name;
 
         form += "<tr>";
-        form += "<td><label for='" + parameter + "'>" + parameter + "</label></td>";
+        form += "<td>";
+        form += "<label for='" + parameter + "'>" + parameter + "</label>";
+        if (param.nullable)
+            form += "<input type='checkbox' id='check_" + parameter + "' checked='checked' onclick='nullableClicked(\""
+                    + parameter + "\");'></input>";
+        form += "</td>";
         if (param.type == ParameterDescription::Type::Object) {
             form += "<td><textarea cols='50' rows='3' id='" + parameter + "' name='" + parameter + "' placeholder='"
                       + paramTypeToString(param.type) + "' class='object'></textarea></td>";

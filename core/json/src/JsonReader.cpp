@@ -136,10 +136,7 @@ public:
 
         // handle undefined, NaN, null
         if (!strncmp(token, "null", len))
-            return pool->alloc<Value>(ValueType::Null);
-
-        if (!strncmp(token, "undefined", len))
-            return pool->alloc<Value>(ValueType::Undefined);
+            return nullptr;
 
         if (!strncmp(token, "NaN", len))
             return pool->alloc<Value>(ValueType::NaN);
@@ -188,7 +185,7 @@ public:
             }
             prevLinkedNode = linkedNode;
 
-            valueEnd = (linkedNode->node->type == NodeType::Value) ? curr : nullptr;
+            valueEnd = (linkedNode->node && (linkedNode->node->type == NodeType::Value)) ? curr : nullptr;
             skipWs();
             NGREST_ASSERT(*curr != '\0', "Unexpected EOF while reading array");
 
@@ -241,7 +238,7 @@ public:
             }
             prevNamedNode = namedNode;
 
-            valueEnd = (namedNode->node->type == NodeType::Value) ? curr : nullptr;
+            valueEnd = (namedNode->node && (namedNode->node->type == NodeType::Value)) ? curr : nullptr;
             skipWs();
             NGREST_ASSERT(*curr != '\0', "Unexpected EOF while reading object");
 

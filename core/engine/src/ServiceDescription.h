@@ -43,6 +43,7 @@ struct ParameterDescription
 
     std::string name;  // parameter name
     Type type;         // type of parameter
+    bool nullable;     // can be null
 };
 
 //! operation description
@@ -58,6 +59,7 @@ struct OperationDescription
     std::string details;                           // text details of the operation
     std::vector<ParameterDescription> parameters;  // parameters
     ParameterDescription::Type result;             // type of result value
+    bool resultNullable;                           // result can be null
 };
 
 //! service description

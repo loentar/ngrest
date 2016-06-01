@@ -11,6 +11,7 @@ core/common/src/HttpStatus.h
 core/common/src/Message.cpp
 core/common/src/Message.h
 core/common/src/ngrestcommonexport.h
+core/common/src/Nullable.h
 core/common/src/ObjectModel.cpp
 core/common/src/ObjectModel.h
 core/common/src/ObjectModelUtils.h

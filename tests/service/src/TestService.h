@@ -25,6 +25,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <ngrest/common/Nullable.h>
 #include <ngrest/common/Service.h>
 #include <ngrest/common/Callback.h>
 #include <ngrest/common/ObjectModel.h>
@@ -67,6 +68,16 @@ enum ValType
     Zero,
     One,
     Two
+};
+
+struct TestPtr
+{
+    ngrest::Nullable<int> intValue;
+    ngrest::Nullable<ValType> enumValue;
+    ngrest::Nullable<std::string> strValue;
+    ngrest::Nullable<Test> structValue;
+    ngrest::Nullable<std::list<std::string>> listValue;
+    ngrest::Nullable<std::map<int, std::string>> mapValue;
 };
 
 // *location: ngrest/test
@@ -113,6 +124,20 @@ public:
     ValType testEnum(ValType arg);
     Test::TestEnum testNestedEnum(Test::TestEnum arg);
     Test::Nested testNestedStruct(Test::Nested arg);
+
+
+    ngrest::Nullable<int> ptrInt(ngrest::Nullable<int> arg);
+    ngrest::Nullable<int> ptrIntConst(const ngrest::Nullable<int>& arg);
+    ngrest::Nullable<std::string> ptrString(ngrest::Nullable<std::string> arg);
+    ngrest::Nullable<ValType> ptrEnum(ngrest::Nullable<ValType> arg);
+    ngrest::Nullable<Test> ptrStruct(ngrest::Nullable<Test> arg);
+    ngrest::Nullable<std::list<Test>> ptrStructList(ngrest::Nullable<std::list<Test>> arg);
+
+    TestPtr ptrNull();
+    TestPtr ptrNotNull();
+
+    TestPtr ptrTest(const TestPtr& arg);
+    ngrest::Nullable<TestPtr> ptrTestNull(const ngrest::Nullable<TestPtr>& arg);
 };
 
 } // namespace ngrest

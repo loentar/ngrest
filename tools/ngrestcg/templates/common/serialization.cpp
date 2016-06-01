@@ -109,6 +109,17 @@ $($var) ? "true" : "false"\
 ##endcontext
     }
 \
+##case Nullable
+    if ($($var).isValid()) {
+##context $(.templateParams.templateParam1)
+##pushvars
+##var var (*$($var))
+##indent +
+##include <common/serialization.cpp>
+##indent -
+##popvars
+##endcontext
+    }
 ### /// unsupported
 ##default
 ##error Serialization of template type $(.nsName) is not implemented

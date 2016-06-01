@@ -11,6 +11,22 @@
     NGREST_ASSERT_NULL($($node));
     NGREST_ASSERT($($node)->type == ::ngrest::NodeType::Object, "Object node expected");
 ##var node static_cast<const ::ngrest::Object*>($($node))
+##case Nullable
+    if ($($node) != nullptr) {
+##context $(.templateParams.templateParam1)
+##pushvars
+##ifeq($(.type),template)
+    $(.nsName)& $($var.!replace/./_/)$(.name) = $($var).get();
+##var var $($var.!replace/./_/)$(.name)
+##else
+##var var $($var).get()
+##endif
+##indent +
+##include "deserialization.cpp"
+##indent -
+##popvars
+##endcontext
+    }
 ##endswitch
 ##endif
 \
@@ -89,6 +105,8 @@
 ##endcontext
     } // for(NamedNode...
 \
+##case Nullable
+### already processed at top of thils file
 ### /// unsupported
 ##default
 ##error Serialization of template type $(.nsName) is not implemented

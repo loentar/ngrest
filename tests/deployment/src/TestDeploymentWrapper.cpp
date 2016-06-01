@@ -140,9 +140,10 @@ const ServiceDescription* TestDeploymentWrapper::getDescription() const
                 "",
                 "",
                 {
-                    {"value", ParameterDescription::Type::String}
+                    {"value", ParameterDescription::Type::String, false}
                 },
-                ParameterDescription::Type::String
+                ParameterDescription::Type::String,
+                false
             },
             {
                 "echoASync",
@@ -153,9 +154,10 @@ const ServiceDescription* TestDeploymentWrapper::getDescription() const
                 "",
                 "",
                 {
-                    {"value", ParameterDescription::Type::String}
+                    {"value", ParameterDescription::Type::String, false}
                 },
-                ParameterDescription::Type::String
+                ParameterDescription::Type::String,
+                false
             }
         }
     };

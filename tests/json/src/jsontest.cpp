@@ -41,7 +41,7 @@ int main()
         char test3[] = "{\"abc\": 1}";
         char test4[] = "{ \"q\": [ ] }";
         char test5[] = "{\"x\": {\"abc\": 1}}";
-        char test6[] = "{  \"x\" : {\"abc\": 1 }, \"y\": [1, 2e2, \"3\", null , undefined, NaN]}";
+        char test6[] = "{  \"x\" : {\"abc\": 1 }, \"y\": [1, 2e2, \"3\", null , NaN]}";
         char test7[] = "[{}, {\"\": \"\"}]";
         char test8[] = "[[[],[]],{\"1\": []}]";
         char* tests[testsCount] = {

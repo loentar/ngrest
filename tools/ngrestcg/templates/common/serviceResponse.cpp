@@ -111,6 +111,19 @@ result ? "true" : "false"\
 ##endcontext
         }
 \
+##case Nullable
+        if (result.isValid()) {
+##context $(.templateParams.templateParam1)
+##pushvars
+##var var (*result)
+##var name result
+##var node resultNode->node
+##indent +2
+##include <common/serialization.cpp>
+##indent -2
+##popvars
+##endcontext
+        }
 ### /// unsupported
 ##default
 ##error Serialization of template type $(.nsName) is not implemented

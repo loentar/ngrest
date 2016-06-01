@@ -37,7 +37,6 @@ enum class NodeType
 enum class ValueType
 {
     Undefined,
-    Null,
     NaN,
     String,
     Number,
