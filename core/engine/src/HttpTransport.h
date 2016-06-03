@@ -25,17 +25,38 @@
 
 namespace ngrest {
 
+/**
+ * @brief provides serialization/deserialization for the message
+ */
 class HttpTransport: public Transport
 {
 public:
+    /**
+     * @brief constructor
+     */
     HttpTransport();
 
-    // pool temporary pool for storing data
+    /**
+     * @brief parse request body into OM
+     * @param pool pool to store temporary data
+     * @param request in/out request
+     * @return parsed OM
+     */
     virtual Node* parseRequest(MemPool* pool, const Request* request) override;
 
-    // pool temporary pool for storing data
+    /**
+     * @brief write response OM to the response body
+     * @param pool pool to store temporary data
+     * @param request in request
+     * @param response out response
+     */
     virtual void writeResponse(MemPool* pool, const Request* request, Response* response) override;
 
+    /**
+     * @brief get request method code from request
+     * @param request request
+     * @return method code
+     */
     virtual int getRequestMethod(const Request* request) override;
 };
 

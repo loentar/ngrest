@@ -28,8 +28,18 @@ class Node;
 
 namespace json {
 
+/**
+ * @brief JSON reader. reads C-string buffer into OM
+ */
 class JsonReader {
 public:
+    /**
+     * @brief read and parse JSON into OM
+     * @param buff mutable buffer to read JSON from
+     * @param memPool memory pool to store OM data
+     * @return parsed OM
+     * @throw AssertException
+     */
     static Node* read(char* buff, MemPool* memPool);
 };
 

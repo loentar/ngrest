@@ -78,49 +78,58 @@
 
 namespace ngrest {
 
-//! base ngrest exception class
+/**
+ * @brief base exception class for all ngrest exceptions
+ */
 class NGREST_UTILS_EXPORT Exception: public std::exception
 {
 public:
-    //! exception constructor
-    /*! \param  fileLine source file name and line number
-        \param  function function signature
-        \param  description description
-      */
+    /**
+     * @brief exception constructor
+     * @param fileLine source file name and line number
+     * @param function function signature
+     * @param description description
+     */
     Exception(const char* fileLine, const char* function, const std::string& description);
 
-    //! destructor
+    /**
+     * @brief destructor
+     */
     inline virtual ~Exception() throw()
     {
     }
 
-    //! get description of exception thrown
-    /*! \return description
-      */
+    /**
+     * @brief get description of exception thrown
+     * @return description
+     */
     inline virtual const char* what() const throw()
     {
         return description.c_str();
     }
 
-    //! get description of exception thrown
-    /*! \return description
-      */
+    /**
+     * @brief  get description of exception thrown
+     * @return description
+     */
     inline virtual const std::string& strWhat() const throw()
     {
         return description;
     }
 
-    //! get source file and line where exception was raised
-    /*! \return source file and line
-      */
+    /**
+     * @brief get source file and line where exception was raised
+     * @return source file and line
+     */
     inline const char* getFileLine() const
     {
         return fileLine;
     }
 
-    //! get function name where exception was raised
-    /*! \return function name
-      */
+    /**
+     * @brief get function name where exception was raised
+     * @return function name
+     */
     inline const char* getFunction() const
     {
         return function;
@@ -136,11 +145,12 @@ private:
 class NGREST_UTILS_EXPORT AssertException: public Exception
 {
 public:
-    //! exception constructor
-    /*! \param  fileLine - source file name and line number
-        \param  function - function signature
-        \param  description - description
-      */
+    /**
+     * @brief  exception constructor
+     * @param fileLine - source file name and line number
+     * @param function - function signature
+     * @param description - description
+     */
     inline AssertException(const char* fileLine, const char* function, const std::string& description):
         Exception(fileLine, function, description)
     {

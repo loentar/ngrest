@@ -84,7 +84,7 @@ public:
 
     /**
      * @brief initializes nullable with given smart pointer
-     * @param value_ value
+     * @param value value
      */
     inline Nullable<T>& operator=(const std::shared_ptr<T>& value)
     {
@@ -94,7 +94,7 @@ public:
 
     /**
      * @brief initializes nullable with given non-null value, performs private copy of value
-     * @param value_ value
+     * @param value value
      */
     inline Nullable<T>& operator=(const T& value)
     {
@@ -104,7 +104,7 @@ public:
 
     /**
      * @brief initializes nullable with given value, takes ovnership of value
-     * @param value_ value
+     * @param value value
      */
     inline Nullable<T>& operator=(T* value)
     {

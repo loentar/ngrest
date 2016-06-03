@@ -28,8 +28,18 @@ class Node;
 
 namespace json {
 
+/**
+ * @brief JSON writer. writes OM to memory pool
+ */
 class JsonWriter {
 public:
+    /**
+     * @brief writes OM to memory pool as JSON
+     * @param node OM node to write from
+     * @param memPool memory pool to write to
+     * @param indent indentation
+     * @throw AssertException
+     */
     static void write(const Node* node, MemPool* memPool, int indent = 0);
 };
 

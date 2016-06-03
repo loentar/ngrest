@@ -32,44 +32,54 @@ class Document;
 class Declaration;
 class Element;
 
-//! xml reader
+/**
+ * @brief xml reader
+ */
 class NGREST_XML_EXPORT XmlReader
 {
 public:
-    //! constructor
-    /*! \param  stream - input stream
-        \param  stripWhitespace - ignore human-readable xml formatting
-      */
+    /**
+     * @brief constructor
+     * @param stream - input stream
+     * @param stripWhitespace ignore xml indentation, trim whitespaces between nodes
+     */
     XmlReader(std::istream& stream, bool stripWhitespace = true);
 
-    //! destructor
+    /**
+     * @brief destructor
+     */
     ~XmlReader();
 
-    //! set xml document encoding
-    /*! if document encoding is set, encoding value from declaration will be overriden
-        else will be used value from declaration or "UTF-8" if encoding attribute is missing
-        \param  encoding - xml document encoding
-      */
+    /**
+     * @brief set xml document encoding
+     *   if document encoding is set, encoding value from declaration will be overriden
+     *   else will be used value from declaration or "UTF-8" if encoding attribute is missing
+     * @param encoding - xml document encoding
+     */
     void setEncoding(const std::string& encoding = "");
 
-    //! set file name
-    /*! \param  fileName - file name
-      */
+    /**
+     * @brief set file name
+     * @param fileName - file name
+     */
     void setFileName(const std::string& fileName);
 
-    //! read xml document
-    /*! \param  document - xml document
-      */
+    /**
+     * @brief read xml document
+     * @param document - xml document
+     */
     void readDocument(Document& document);
 
-    //! read xml declaration
-    /*! \param  declaration - xml declaration
-      */
+    /**
+     * @brief read xml declaration
+     * @param declaration - xml declaration
+     */
     void readDeclaration(Declaration& declaration);
 
-    //! read element
-    /*! \param  element - element
-      */
+    /**
+     * @brief read element
+     * @param element - element
+     */
     void readElement(Element& element);
 
 private:
@@ -78,14 +88,17 @@ private:
 };
 
 
-//! xml file writer
+/**
+ * @brief xml file reader
+ */
 class NGREST_XML_EXPORT XmlFileReader: public XmlReader
 {
 public:
-    //! constructor
-    /*! \param  fileName - file name
-        \param  stripWhitespace - ignore human-readable xml formatting
-      */
+    /**
+     * @brief constructor
+     * @param fileName - file name
+     * @param stripWhitespace - ignore human-readable xml formatting
+     */
     XmlFileReader(const std::string& fileName, bool stripWhitespace = true);
 
 private:

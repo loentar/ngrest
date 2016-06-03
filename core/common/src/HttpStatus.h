@@ -25,6 +25,9 @@
 
 namespace ngrest {
 
+/**
+ * @brief HTTP status code
+ */
 enum HttpStatus
 {
     HTTP_STATUS_UNDEFINED,

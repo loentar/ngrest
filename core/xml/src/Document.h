@@ -28,28 +28,34 @@
 namespace ngrest {
 namespace xml {
 
-//! XML Document
+/**
+ * @brief XML Document
+ */
 class NGREST_XML_EXPORT Document
 {
 public:
-    //! get document declaration
-    /*! \return document declaration
-        */
+    /**
+     * @brief get document declaration
+     * @return document declaration
+     */
     const Declaration& getDeclaration() const;
 
-    //! get document declaration
-    /*! \return document declaration
-        */
+    /**
+     * @brief get document declaration
+     * @return document declaration
+     */
     Declaration& getDeclaration();
 
-    //! get root Element
-    /*! \return root Element
-        */
+    /**
+     * @brief get root Element
+     * @return root Element
+     */
     const Element& getRootElement() const;
 
-    //! get root node
-    /*! \return root node
-        */
+    /**
+     * @brief get root node
+     * @return root node
+     */
     Element& getRootElement();
 
 private:

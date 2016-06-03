@@ -29,17 +29,39 @@ class ServiceDescription;
 class OperationDescription;
 class MessageContext;
 
+/**
+ * @brief Service wrapper. Base class for codegenerated services wrappers
+ */
 class ServiceWrapper
 {
 public:
+    /**
+     * @brief constructor
+     */
     ServiceWrapper();
+
+    /**
+     * @brief destructor
+     */
     virtual ~ServiceWrapper();
 
+    /**
+     * @brief get pointer to service impl
+     * @return pointer to service impl
+     */
     virtual Service* getServiceImpl() = 0;
 
+    /**
+     * @brief invoke service operation
+     * @param operation service operation description
+     * @param context message context
+     */
     virtual void invoke(const OperationDescription* operation, MessageContext* context) = 0;
 
-    // server side service description
+    /**
+     * @brief get service description
+     * @return service description
+     */
     virtual const ServiceDescription* getDescription() const = 0;
 };
 

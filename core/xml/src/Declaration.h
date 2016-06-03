@@ -27,7 +27,9 @@
 namespace ngrest {
 namespace xml {
 
-//! xml-document declaration
+/**
+ * @brief xml-document declaration
+ */
 class NGREST_XML_EXPORT Declaration
 {
 public:
@@ -39,42 +41,52 @@ public:
     };
 
 public:
-    //! constructor
+    /**
+     * @brief constructor
+     */
     Declaration();
 
-    //! destructor
+    /**
+     * @brief destructor
+     */
     ~Declaration();
 
-    //! get version
-    /*! \return version
-      */
+    /**
+     * @brief get version
+     * @return version
+     */
     const std::string& getVersion() const;
 
-    //! set version
-    /*! \param version - version
-      */
+    /**
+     * @brief set version
+     * @param version version
+     */
     void setVersion(const std::string& version);
 
 
-    //! get encoding
-    /*! \return encoding
-      */
+    /**
+     * @brief get encoding
+     * @return encoding
+     */
     const std::string& getEncoding() const;
 
-    //! set encoding
-    /*! \param encoding - encoding
-      */
+    /**
+     * @brief set encoding
+     * @param encoding encoding
+     */
     void setEncoding(const std::string& encoding);
 
 
-    //! get stand alone
-    /*! \return stand alone
-      */
+    /**
+     * @brief get stand alone
+     * @return stand alone
+     */
     Standalone getStandalone() const;
 
-    //! set stand alone
-    /*! \param standalone - standalone
-      */
+    /**
+     * @brief set stand alone
+     * @param standalone standalone
+     */
     void setStandalone(Standalone standalone);
 
 

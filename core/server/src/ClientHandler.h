@@ -34,26 +34,95 @@ class MemPooler;
 struct MessageData;
 struct ClientInfo;
 
+/**
+ * @brief Client handler. Manages clients messages
+ */
 class ClientHandler: public ClientCallback
 {
 public:
+    /**
+     * @brief constructor
+     * @param engine engine to work with
+     * @param transport transport to work with
+     */
     ClientHandler(Engine& engine, Transport& transport);
+
+    /**
+     * @brief destructor
+     */
     ~ClientHandler();
 
+    /**
+     * @brief client connected event
+     * @param fd client socket descriptor
+     * @param addr client address
+     */
     virtual void connected(Socket fd, const sockaddr* addr) override;
+
+    /**
+     * @brief client disconnected event
+     * @param fd client socket descriptor
+     */
     virtual void disconnected(Socket fd) override;
+
+    /**
+     * @brief client error event
+     * @param fd client socket descriptor
+     */
     virtual void error(Socket fd) override;
+
+    /**
+     * @brief data available from client
+     * @param fd client socket descriptor
+     * @return true - read success, false - close connection
+     */
     virtual bool readyRead(Socket fd) override;
+
+    /**
+     * @brief client socket is ready for writing
+     * @param fd client socket descriptor
+     * @return true - write success
+     */
     virtual bool readyWrite(Socket fd) override;
+
 #ifdef USE_GET_WRITE_QUEUE
+    /**
+     * @brief gets list of sockets ready to write
+     *   compatibility function for systems without epoll support
+     * @return sockets ready to write
+     */
     inline virtual const fd_set& getWriteQueue() const override {
         return writeQueue;
     }
 #endif
 
+    /**
+     * @brief parse http header from buffer
+     * @param buffer mutable buffer which stores http header
+     * @param messageData message data to write header to
+     */
     void parseHttpHeader(char* buffer, MessageData* messageData);
+
+    /**
+     * @brief prepare and process received request from client
+     * @param clientFd client socket descriptor
+     * @param messageData client message data
+     */
     void processRequest(Socket clientFd, MessageData* messageData);
+
+    /**
+     * @brief build response and send it to client
+     * @param clientFd client socket descriptor
+     * @param messageData client message data
+     */
     void processResponse(Socket clientFd, MessageData* messageData);
+
+    /**
+     * @brief build error response and send it to client
+     * @param clientFd client socket descriptor
+     * @param messageData client message data
+     * @param error error description
+     */
     void processError(Socket clientFd, MessageData* messageData, const Exception& error);
 
 private:

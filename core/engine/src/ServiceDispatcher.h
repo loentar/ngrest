@@ -28,19 +28,56 @@ namespace ngrest {
 class ServiceWrapper;
 class MessageContext;
 
+/**
+ * @brief service dispatcher
+ * manages the services and dispatches message to services
+ */
 class ServiceDispatcher
 {
 public:
+    /**
+     * @brief constructor
+     */
     ServiceDispatcher();
+
+    /**
+     * @brief destructor
+     */
     ~ServiceDispatcher();
 
+
+    /**
+     * @brief register service
+     * @param wrapper service wrapper
+     */
     void registerService(ServiceWrapper* wrapper);
+
+    /**
+     * @brief unregister service
+     * @param wrapper service wrapper
+     */
     void unregisterService(ServiceWrapper* wrapper);
 
+
+    /**
+     * @brief dispatch message to the service
+     * @param context message
+     */
     void dispatchMessage(MessageContext* context);
 
+
+    /**
+     * @brief get all registered services
+     * @return list of services registered
+     */
     std::vector<ServiceWrapper*> getServices() const;
 
+
+    /**
+     * @brief get service by name
+     * @param name service name
+     * @return pointer to service wrapper or nullptr if no service found
+     */
     ServiceWrapper* getService(const std::string& name) const;
 
 private:

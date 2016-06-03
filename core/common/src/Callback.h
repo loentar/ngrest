@@ -25,20 +25,52 @@ namespace ngrest {
 
 class Exception;
 
+/**
+ * template callback class with one result parameter
+ */
 template <typename R>
 class Callback
 {
 public:
+    /**
+     * @brief destructor
+     */
     virtual ~Callback() {}
+
+    /**
+     * @brief called when call was successful
+     * @param result call result
+     */
     virtual void success(R result) = 0;
+
+    /**
+     * @brief called when call was unsuccessful
+     * @param error exception instance with error description
+     */
     virtual void error(const Exception& error) = 0;
 };
 
+
+/**
+ * template callback class without parameters
+ */
 class VoidCallback
 {
 public:
+    /**
+     * @brief destructor
+     */
     virtual ~VoidCallback() {}
+
+    /**
+     * @brief called when call was successful
+     */
     virtual void success() = 0;
+
+    /**
+     * @brief called when call was unsuccessful
+     * @param error exception instance with error description
+     */
     virtual void error(const Exception& error) = 0;
 };
 

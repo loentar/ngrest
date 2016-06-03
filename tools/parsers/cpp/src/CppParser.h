@@ -26,10 +26,23 @@
 namespace ngrest {
 namespace codegen {
 
+/**
+ * @brief C++ header parser class
+ */
 class CppParser: public CodegenParser
 {
 public:
+    /**
+     * @brief get plugin id
+     * @return plugin id
+     */
     virtual const std::string& getId();
+
+    /**
+     * @brief process project with given settings
+     * @param parseSettings project parse settings
+     * @param project resuling project
+     */
     virtual void process(const ParseSettings& parseSettings, Project& project);
 
 private:

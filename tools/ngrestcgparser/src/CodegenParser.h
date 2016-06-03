@@ -29,9 +29,11 @@
 namespace ngrest {
 namespace codegen {
 
-  //! source code parse settings
-  struct NGREST_CODEGENPARSER_EXPORT ParseSettings
-  {
+/**
+ * @brief source code parse settings
+ */
+struct NGREST_CODEGENPARSER_EXPORT ParseSettings
+{
     std::string    inDir;          //!<  input dir
     std::string    outDir;         //!<  output dir
     StringList     files;          //!<  input files
@@ -39,53 +41,79 @@ namespace codegen {
     bool           noServiceWarn;  //!<  do not dislpay warning if no service found
 
     ParseSettings();
-  };
+};
 
-  //! codegen source code parser plugin
-  class NGREST_CODEGENPARSER_EXPORT CodegenParser
-  {
-  public:
+/**
+ * @brief codegen source code parser plugin
+ */
+class NGREST_CODEGENPARSER_EXPORT CodegenParser
+{
+public:
+    /**
+     * @brief destructor
+     */
     virtual ~CodegenParser();
 
-    //! get parser's id
-    /*! \return parser's id
-      */
+    /**
+     * @brief get parser's id
+     * @return parser's id
+     */
     virtual const std::string& getId() = 0;
 
-    //! process project
-    /*! \param parseSettings - parse settings
-        \param project - resulting project
-      */
+    /**
+     * @brief process project
+     * @param parseSettings - parse settings
+     * @param project - resulting project
+     */
     virtual void process(const ParseSettings& parseSettings, Project& project) = 0;
-  };
+};
 
-  //! parse exception
-  class NGREST_CODEGENPARSER_EXPORT ParseException
-  {
-  public:
+/**
+ * @brief parse exception
+ */
+class NGREST_CODEGENPARSER_EXPORT ParseException
+{
+public:
+    /**
+     * @brief constructor
+     * @param file parsed file where exception occurred
+     * @param line parsed file linewhere exception occurred
+     * @param message exception details
+     * @param sourceFile source file name
+     * @param sourceLine source file line
+     */
     ParseException(const std::string& file, int line, const std::string& message,
-                    const std::string& sourceFile, int sourceLine);
+                   const std::string& sourceFile, int sourceLine);
 
+    /**
+     * @brief output exception to the stream
+     * @param stream stream to output exception
+     * @return stream
+     */
     std::ostream& operator<<(std::ostream& stream) const;
 
+    /**
+     * @brief get exception description
+     * @return exception description
+     */
     std::string& getMessage();
 
-  private:
+private:
     std::string file;
     int line;
     std::string message;
     std::string sourceFile;
     int sourceLine;
-  };
+};
 
-  NGREST_CODEGENPARSER_EXPORT
-  std::ostream& operator<<(std::ostream& stream, const ParseException& parseException);
+NGREST_CODEGENPARSER_EXPORT
+std::ostream& operator<<(std::ostream& stream, const ParseException& parseException);
 
 #define CSP_THROW(CSP_MESSAGE, CSP_FILE, CSP_LINE)\
-  throw ::ngrest::codegen::ParseException(__FILE__, __LINE__, CSP_MESSAGE, CSP_FILE, CSP_LINE)
+    throw ::ngrest::codegen::ParseException(__FILE__, __LINE__, CSP_MESSAGE, CSP_FILE, CSP_LINE)
 
 #define CSP_ASSERT(CSP_EXPRESSION, CSP_MESSAGE, CSP_FILE, CSP_LINE)\
-  if (!(CSP_EXPRESSION)) CSP_THROW(CSP_MESSAGE, CSP_FILE, CSP_LINE)
+    if (!(CSP_EXPRESSION)) CSP_THROW(CSP_MESSAGE, CSP_FILE, CSP_LINE)
 
 }
 }

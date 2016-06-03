@@ -37,19 +37,26 @@
 
 namespace ngrest {
 
-//! HTTP exception
+/**
+ * HTTP exception
+ */
 class NGREST_COMMON_EXPORT HttpException: public Exception
 {
 public:
-    //! exception constructor
-    /*! \param  fileLine source file name and line number
-        \param  function function signature
-        \param  description description
-        \param  status HTTP status code
-      */
+    /**
+     * @brief exception constructor
+     * @param fileLine source file name and line number
+     * @param function function signature
+     * @param description description
+     * @param status HTTP status code
+     */
     HttpException(const char* fileLine, const char* function, const std::string& description,
                   HttpStatus status);
 
+    /**
+     * @brief get http status code
+     * @return http status code
+     */
     inline HttpStatus getHttpStatus() const
     {
         return httpStatus;

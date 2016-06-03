@@ -39,37 +39,50 @@
 
 namespace ngrest {
 
-//! dynamic library
+/**
+ * @brief dynamic library
+ */
 class NGREST_UTILS_EXPORT DynamicLibrary
 {
 public:
-    //! constructor
+    /**
+     * @brief constructor
+     */
     DynamicLibrary();
 
-    //! destructor
+    /**
+     * @brief destructor
+     */
     virtual ~DynamicLibrary();
 
-    //! load dynamic library
-    /*! \param  libName library name
-        \param  raw if true libName contains full path to library
-        */
+    /**
+     * @brief load dynamic library
+     * @param libName library name
+     * @param raw if true libName contains full path to library
+     */
     void load(const std::string& libName, bool raw = false);
 
-    //! get library name
-    /*! \return library name
-    */
+    /**
+     * @brief get library name
+     * @return library name
+     */
     const std::string& name() const;
 
-    //! get pointer to library symbol
-    /*! \param  symbol symbol name
-        \return pointer to symbol
-    */
+    /**
+     * @brief get pointer to library symbol
+     * @param symbol symbol name
+     * @return pointer to symbol
+     */
     void* getSymbol(const std::string& symbol) const;
 
-    //! unload library
+    /**
+     * @brief unload library
+     */
     void unload();
 
-    //! reload library
+    /**
+     * @brief unload and load library again
+     */
     void reload();
 
 private:

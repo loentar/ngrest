@@ -23,6 +23,9 @@
 
 namespace ngrest {
 
+/**
+ * @brief HTTP method enum
+ */
 enum class HttpMethod
 {
     UNKNOWN,

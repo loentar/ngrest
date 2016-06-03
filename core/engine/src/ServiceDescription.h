@@ -26,10 +26,14 @@
 
 namespace ngrest {
 
-//! operation parameter description
+/**
+ * @brief operation parameter description
+ */
 struct ParameterDescription
 {
-    //! type of operation parameter
+    /**
+     * @brief type of operation parameter
+     */
     enum class Type
     {
         Unknown,
@@ -41,35 +45,38 @@ struct ParameterDescription
         Object
     };
 
-    std::string name;  // parameter name
-    Type type;         // type of parameter
-    bool nullable;     // can be null
+    std::string name;  //!< parameter name
+    Type type;         //!< type of parameter
+    bool nullable;     //!< can be null
 };
 
-//! operation description
+/**
+ * @brief operation description
+ */
 struct OperationDescription
 {
-    std::string name;                              // service operation
-    std::string location;                          // by default = name
-                                                   // can be "add?a={a}&b={b}" or "get/{id}" or "put"
-    int method;                                    // method depending on transport
-    std::string methodStr;                         // method depending on transport in string form
-    bool asynchronous;                             // is operation asynchronous
-    std::string description;                       // text description of the operation
-    std::string details;                           // text details of the operation
-    std::vector<ParameterDescription> parameters;  // parameters
-    ParameterDescription::Type result;             // type of result value
-    bool resultNullable;                           // result can be null
+    std::string name;                              //!< service operation
+    std::string location;                          //!< by default = name, can be "add?a={a}&b={b}" or "get/{id}" or "put"
+    int method;                                    //!< method depending on transport
+    std::string methodStr;                         //!< method depending on transport in string form
+    bool asynchronous;                             //!< is operation asynchronous
+    std::string description;                       //!< text description of the operation
+    std::string details;                           //!< text details of the operation
+    std::vector<ParameterDescription> parameters;  //!< parameters
+    ParameterDescription::Type result;             //!< type of result value
+    bool resultNullable;                           //!< result can be null
 };
 
-//! service description
+/**
+ * @brief service description
+ */
 struct ServiceDescription
 {
-    std::string name;                              // service name
-    std::string location;                          // by default = name
-    std::string description;                       // text description of the service
-    std::string details;                           // text details of the service
-    std::vector<OperationDescription> operations;  // service operations
+    std::string name;                              //!< service name
+    std::string location;                          //!< by default = name
+    std::string description;                       //!< text description of the service
+    std::string details;                           //!< text details of the service
+    std::vector<OperationDescription> operations;  //!< service operations
 };
 
 } // namespace ngrest

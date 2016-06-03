@@ -35,18 +35,57 @@ struct sockaddr;
 
 namespace ngrest {
 
+/**
+ * @brief callback class to process events from client
+ */
 class ClientCallback {
 public:
+    /**
+     * @brief virtual destructor
+     */
     virtual ~ClientCallback()
     {
     }
 
+    /**
+     * @brief client connected event
+     * @param fd client socket descriptor
+     * @param addr client address
+     */
     virtual void connected(Socket fd, const sockaddr* addr) = 0;
+
+    /**
+     * @brief client disconnected event
+     * @param fd client socket descriptor
+     */
     virtual void disconnected(Socket fd) = 0;
+
+    /**
+     * @brief client error event
+     * @param fd client socket descriptor
+     */
     virtual void error(Socket fd) = 0;
+
+    /**
+     * @brief data available from client
+     * @param fd client socket descriptor
+     * @return true - read success, false - close connection
+     */
     virtual bool readyRead(Socket fd) = 0;
+
+    /**
+     * @brief client socket is ready for writing
+     * @param fd client socket descriptor
+     * @return true - write success
+     */
     virtual bool readyWrite(Socket fd) = 0;
+
 #ifdef USE_GET_WRITE_QUEUE
+    /**
+     * @brief gets list of sockets ready to write
+     *   compatibility function for systems without epoll support
+     * @return sockets ready to write
+     */
     virtual const fd_set& getWriteQueue() const = 0;
 #endif
 };

@@ -39,18 +39,44 @@ namespace ngrest {
 
 class ClientCallback;
 
+/**
+ * @brief simple socket server class with support of epoll or select
+ */
 class Server
 {
 public:
+    /**
+     * @brief constructor
+     */
     Server();
+
+    /**
+     * @brief destructor
+     */
     ~Server();
 
+    /**
+     * @brief create server with arguments
+     * @param args arguments to pass to server
+     * @return true - server successfully created
+     */
     bool create(const StringMap& args);
 
+    /**
+     * @brief set callback to handle client events
+     * @param callback client callback
+     */
     void setClientCallback(ClientCallback* callback);
 
+    /**
+     * @brief start server with epoll event loop (or with select)
+     * @return server exit status
+     */
     int exec();
 
+    /**
+     * @brief stops the server
+     */
     void quit();
 
 private:

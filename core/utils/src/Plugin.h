@@ -27,10 +27,17 @@
 
 namespace ngrest {
 
+/**
+ * @brief plugin. exposes library through entry point
+ */
 template <typename PluginType>
 class Plugin: public DynamicLibrary
 {
 public:
+    /**
+     * @brief load shared library by given path
+     * @param path path to shared library
+     */
     void load(const std::string& path)
     {
         DynamicLibrary::load(path, true);
@@ -47,6 +54,10 @@ public:
         NGREST_ASSERT(pluginSymbol, "Error while getting plugin object");
     }
 
+    /**
+     * @brief get entry point exposed by library
+     * @return plugin symbol
+     */
     inline PluginType* getPluginSymbol()
     {
         return pluginSymbol;

@@ -26,10 +26,20 @@
 
 namespace ngrest {
 
+/**
+ * @brief abstract parent for all ngrest services
+ */
 class NGREST_COMMON_EXPORT Service
 {
 public:
+    /**
+     * @brief constructor
+     */
     Service();
+
+    /**
+     * @brief destructor
+     */
     virtual ~Service();
 };
 

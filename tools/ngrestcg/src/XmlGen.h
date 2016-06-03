@@ -32,12 +32,14 @@ namespace codegen {
 
 struct Project;
 
-//! process project struct into xml
-/*! \param  rootNode - resulting xml-project node
-      \param  project - project
-      \return resulting xml-project node
-      */
+/**
+ * @brief process project struct into xml
+ * @param rootNode - resulting xml-project node
+ * @param project - project
+ * @return resulting xml-project node
+ */
 xml::Element& operator<<(xml::Element& rootNode, const Project& project);
+
 }
 }
 

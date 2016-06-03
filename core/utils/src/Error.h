@@ -26,24 +26,29 @@
 
 namespace ngrest {
 
-//! get os error
+/**
+ * @brief get os error
+ */
 class NGREST_UTILS_EXPORT Error
 {
 public:
-    //! get error string by error no
-    /*! \param  errorNo - error no
-        \return error string
-      */
+    /**
+     * @brief get error string by error no
+     * @param errorNo - error no
+     * @return error string
+     */
     static std::string getError(long errorNo);
 
-    //! get last error string
-    /*! \return last error string
-      */
+    /**
+     * @brief get last error string
+     * @return last error string
+     */
     static std::string getLastError();
 
-    //! get last library error string
-    /*! \return last library error string
-      */
+    /**
+     * @brief get last library error string
+     * @return last library error string
+     */
     static std::string getLastLibraryError();
 };
 

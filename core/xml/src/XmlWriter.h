@@ -38,24 +38,71 @@ class Cdata;
 class Attribute;
 class Namespace;
 
-//! xml writer
+/**
+ * @brief xml writer
+ */
 class NGREST_XML_EXPORT XmlWriter
 {
 public:
-    //! constructor
-    /*! \param  stream - output stream
-        \param  enableFormatting - produce human-readable xml
-      */
+    /**
+     * @brief constructor
+     * @param stream - output stream
+     * @param enableFormatting - produce human-readable xml
+     */
     XmlWriter(std::ostream& stream, bool enableFormatting = true);
 
+    /**
+     * @brief write document to stream
+     * @param document
+     */
     void writeDocument(const Document& document);
+
+    /**
+     * @brief write declaration to stream
+     * @param declaration
+     */
     void writeDeclaration(const Declaration& declaration);
+
+    /**
+     * @brief write node to stream
+     * @param node
+     */
     void writeNode(const Node& node);
+
+    /**
+     * @brief write element to stream
+     * @param element
+     */
     void writeElement(const Element& element);
+
+    /**
+     * @brief write comment to stream
+     * @param comment
+     */
     void writeComment(const Comment& comment);
+
+    /**
+     * @brief write text to stream
+     * @param text
+     */
     void writeText(const Text& text);
+
+    /**
+     * @brief write CDATA to stream
+     * @param cdata
+     */
     void writeCdata(const Cdata& cdata);
+
+    /**
+     * @brief write attribute to stream
+     * @param attribute
+     */
     void writeAttribute(const Attribute& attribute);
+
+    /**
+     * @brief write namespace to stream
+     * @param ns
+     */
     void writeNamespace(const Namespace& ns);
 
 private:
@@ -70,10 +117,17 @@ private:
 };
 
 
-//! xml file writer
+/**
+ * @brief xml file writer
+ */
 class NGREST_XML_EXPORT XmlFileWriter: public XmlWriter
 {
 public:
+    /**
+     * @brief constructor
+     * @param fileName file name to write xml to
+     * @param enableFormatting true - indent xml with two spaces
+     */
     XmlFileWriter(const std::string& fileName, bool enableFormatting = true);
 
 private:

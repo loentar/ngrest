@@ -32,17 +32,20 @@ class Element;
 
 namespace codegen {
 
-//! Code generator
+/**
+ * @brief Code generator
+ */
 class CodeGen
 {
 public:
-    //! start code generation
-    /*! \param  templateDir - path to templates
-        \param  outDir - output directory
-        \param  rootElement - root element, describing project
-        \param  updateOnly - true: update files if needed, false: always update files
-        \param  env - environment
-        */
+    /**
+     * @brief start code generation
+     * @param templateDir - path to templates
+     * @param outDir - output directory
+     * @param rootElement - root element, describing project
+     * @param updateOnly - true: update files if needed, false: always update files
+     * @param env - environment
+     */
     void start(const std::string& templateDir, const std::string& outDir,
                const xml::Element& rootElement, bool updateOnly, const StringMap& env);
 };

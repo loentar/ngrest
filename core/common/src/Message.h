@@ -34,11 +34,14 @@ class Transport;
 struct Node;
 struct MessageContext;
 
+/**
+ * @brief request/response header
+ */
 struct NGREST_COMMON_EXPORT Header
 {
-    const char* name;
-    const char* value;
-    const Header* next;
+    const char* name;       //!< header name
+    const char* value;      //!< header value
+    const Header* next;     //!< pointer to next header
 
     inline Header(const char* name_ = nullptr, const char* value_ = nullptr, const Header* next_ = nullptr):
         name(name_), value(value_), next(next_)
@@ -47,42 +50,59 @@ struct NGREST_COMMON_EXPORT Header
 };
 
 
+/**
+ * @brief request
+ */
 struct NGREST_COMMON_EXPORT Request
 {
-    const char* path = nullptr;
-    const Header* headers = nullptr;
+    const char* path = nullptr;         //!< path to the REST resource
+    const Header* headers = nullptr;    //!< list of headers client passed
 
-    char* body = nullptr;
-    uint64_t bodySize = 0;
+    char* body = nullptr;               //!< request body
+    uint64_t bodySize = 0;              //!< size of request body
 
-    Node* node = nullptr;
+    Node* node = nullptr;               //!< parsed body
 
-    // name must be in lower case
+    /**
+     * @brief getHeader gets header by name
+     * @param name header name in lower case
+     * @return pointer to header, or nullptr of no header matched
+     */
     const Header* getHeader(const char* name) const;
 };
 
+/**
+ * @brief response
+ */
 struct NGREST_COMMON_EXPORT Response
 {
-    const Header* headers = nullptr;
+    const Header* headers = nullptr;    //!< list of headers to send to client
 
-    Node* node = nullptr;
+    Node* node = nullptr;               //!< response body node
 
-    MemPool* poolBody = nullptr;
+    MemPool* poolBody = nullptr;        //!< response body
 };
 
+/**
+ * @brief message callback
+ */
 class NGREST_COMMON_EXPORT MessageCallback: public VoidCallback
 {
 };
 
 class Engine;
+
+/**
+ * @brief message context
+ */
 struct NGREST_COMMON_EXPORT MessageContext
 {
-    Engine* engine = nullptr;
-    Transport* transport = nullptr;
-    Request* request = nullptr;
-    Response* response = nullptr;
-    MessageCallback* callback = nullptr;
-    MemPool* pool = nullptr;
+    Engine* engine = nullptr;               //!< engine used to process this message
+    Transport* transport = nullptr;         //!< transport used to receive and send this message
+    Request* request = nullptr;             //!< request
+    Response* response = nullptr;           //!< response
+    MessageCallback* callback = nullptr;    //!< callback to send message after processing
+    MemPool* pool = nullptr;                //!< pool to store temporary data upon message processing
 };
 
 } // namespace ngrest

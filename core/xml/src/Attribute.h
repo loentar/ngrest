@@ -27,97 +27,117 @@
 namespace ngrest {
 namespace xml {
 
-//! xml-attribute
+/**
+ * @brief xml-attribute
+ */
 class NGREST_XML_EXPORT Attribute
 {
 public:
-    //! copy constructor
-    /*! \param  attr - source attribute
-        */
+    /**
+     * @brief copy constructor
+     * @param attr source attribute
+     */
     Attribute(const Attribute& attr);
 
-    //! initializing constructor
-    /*! \param  name - attribute name
-        */
+    /**
+     * @brief initializing constructor
+     * @param name attribute name
+     */
     Attribute(const std::string& name);
 
-    //! initializing constructor
-    /*! \param  name - attribute name
-        \param  value - attribute value
-        */
+    /**
+     * @brief initializing constructor
+     * @param name attribute name
+     * @param value attribute value
+     */
     Attribute(const std::string& name, const std::string& value);
 
-    //! initializing constructor
-    /*! \param  name - attribute name
-        \param  value - attribute value
-        \param  prefix - attribute prefix
-        */
+    /**
+     * @brief initializing constructor
+     * @param name attribute name
+     * @param value attribute value
+     * @param prefix attribute prefix
+     */
     Attribute(const std::string& name, const std::string& value, const std::string& prefix);
 
 
-    //! get prefix
-    /*! \return prefix
-      */
+    /**
+     * @brief get prefix
+     * @return prefix
+     */
     const std::string& getPrefix() const;
 
-    //! set prefix
-    /*! \param prefix - prefix
-      */
+    /**
+     * @brief set prefix
+     * @param prefix prefix
+     */
     void setPrefix(const std::string& prefix);
 
-    //! get name
-    /*! \return name
-      */
+    /**
+     * @brief get name
+     * @return name
+     */
     const std::string& getName() const;
 
-    //! set name
-    /*! \param name - name
-      */
+    /**
+     * @brief set name
+     * @param name name
+     */
     void setName(const std::string& name);
 
-    //! get attribute name with prefix
-    /*! \return attribute name with prefix
-      */
+    /**
+     * @brief get attribute name with prefix
+     * @return attribute name with prefix
+     */
     std::string getPrefixName() const;
 
-    //! get value
-    /*! \return value
-      */
+    /**
+     * @brief get value
+     * @return value
+     */
     const std::string& getValue() const;
 
-    //! set value
-    /*! \param value - value
-      */
+    /**
+     * @brief set value
+     * @param value value
+     */
     void setValue(const std::string& value);
 
 
-    //! get next sibling attribute
-    /*! \return next sibling attribute
-      */
+    /**
+     * @brief get next sibling attribute
+     * @return next sibling attribute
+     */
     const Attribute* getNextSibling() const;
 
-    //! get next sibling attribute
-    /*! \return next sibling attribute
-      */
+    /**
+     * @brief get next sibling attribute
+     * @return next sibling attribute
+     */
     Attribute* getNextSibling();
 
 
-    //! copy operator
-    /*! \param  attr - source attribute
-        \return *this
-    */
+    /**
+     * @brief copy operator
+     * @param attr source attribute
+     * @return *this
+     */
     Attribute& operator=(const Attribute& attr);
 
-    //! check whether the attributes are equal
-    /*! \param  attr - other attribute
-        \return true, if attributes are equal
-    */
+    /**
+     * @brief check whether the attributes are equal
+
+     * @param attr other attribute
+     * @return true, if attributes are equal
+     */
     bool operator==(const Attribute& attr) const;
 
-    //! check whether the attributes are not equal
-    /*! \param  attr - other attribute
-        \return true, if attributes are not equal
-    */
+    /**
+     * @brief check whether the attributes are not equal
+
+     * @param attr other attribute
+     * @return true, if attributes are not equal
+     */
     bool operator!=(const Attribute& attr) const;
 
 private:

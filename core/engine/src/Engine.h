@@ -26,13 +26,31 @@ namespace ngrest {
 struct MessageContext;
 class ServiceDispatcher;
 
+/**
+ * @brief Message processing engine.
+ * - parse body of request using supplied transport parser to OM
+ * - dispatch message using service dispatcher
+ * - write response and pass it to the transport
+ */
 class Engine
 {
 public:
+    /**
+     * @brief constructs engine with given dispatcher
+     * @param dispatcher service dispatcher to use
+     */
     Engine(ServiceDispatcher& dispatcher);
 
+    /**
+     * @brief parse, dispatch message and write response
+     * @param context message context
+     */
     void dispatchMessage(MessageContext* context);
 
+    /**
+     * @brief get dispatcher
+     * @return dispatcher
+     */
     ServiceDispatcher& getDispatcher();
 
 private:

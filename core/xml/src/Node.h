@@ -12,11 +12,11 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- */
+     */
 
 /*
  *  This file is part of ngrest: http://github.com/loentar/ngrest
- */
+     */
 
 #ifndef NGREST_XML_NODE_H
 #define NGREST_XML_NODE_H
@@ -30,7 +30,9 @@ namespace xml {
 
 class Element;
 
-//! XML Node
+/**
+ * @brief XML Node
+     */
 class NGREST_XML_EXPORT Node
 {
 public:
@@ -44,100 +46,121 @@ public:
     };
 
 public:
-    //! destructor
+    /**
+     * @brief destructor
+     */
     virtual ~Node();
 
-    //! get node type
-    /*! \return node type
-    */
+    /**
+     * @brief get node type
+     * @return node type
+     */
     Type getType() const;
 
-    //! get node value
-    /*! \return node value
-    */
+    /**
+     * @brief get node value
+     * @return node value
+     */
     virtual const Value& getValue() const;
 
-    //! get node value
-    /*! \return node value
-    */
+    /**
+     * @brief get node value
+     * @return node value
+     */
     virtual const std::string& getTextValue() const;
 
-    //! set node value
-    /*! \param value - new node value
-    */
+    /**
+     * @brief set node value
+    * @param value new node value
+     */
     virtual void setValue(const Value& value);
 
-    //! get parent element
-    /*! \return pointer to parent node or nullptr
-        */
+    /**
+     * @brief get parent element
+     * @return pointer to parent node or nullptr
+     */
     const Element* getParent() const;
 
-    //! get parent element
-    /*! \return pointer to parent node or nullptr
-        */
+    /**
+     * @brief get parent element
+     * @return pointer to parent node or nullptr
+     */
     Element* getParent();
 
 
-    //! clone node
-    /*! \return cloned node
-      */
+    /**
+     * @brief clone node
+     * @return cloned node
+     */
     Node* clone() const;
 
 
-    //! get element of this node (only if node type = Element)
-    /*! \return element
-      */
+    /**
+     * @brief get element of this node (only if node type = Element)
+     * @return element
+     */
     const Element& getElement() const;
 
-    //! get element of this node (only if node type = Element)
-    /*! \return element
-      */
+    /**
+     * @brief get element of this node (only if node type = Element)
+     * @return element
+     */
     Element& getElement();
 
 
-    //! get next sibling node
-    /*! \return next sibling node or nullptr if current node is last
-      */
+    /**
+     * @brief get next sibling node
+     * @return next sibling node or nullptr if current node is last
+     */
     const Node* getNextSibling() const;
 
-    //! get next sibling node
-    /*! \return next sibling node or nullptr if current node is last
-      */
+    /**
+     * @brief get next sibling node
+     * @return next sibling node or nullptr if current node is last
+     */
     Node* getNextSibling();
 
-    //! get previous sibling node
-    /*! \return previous sibling node or nullptr if current node is first
-      */
+    /**
+     * @brief get previous sibling node
+     * @return previous sibling node or nullptr if current node is first
+     */
     const Node* getPreviousSibling() const;
 
-    //! get previous sibling node
-    /*! \return previous sibling node or nullptr if current node is first
-      */
+    /**
+     * @brief get previous sibling node
+     * @return previous sibling node or nullptr if current node is first
+     */
     Node* getPreviousSibling();
 
 
-    //! get next sibling element
-    /*! \return next sibling element or nullptr if current element is last
-      */
+    /**
+     * @brief get next sibling element
+     * @return next sibling element or nullptr if current element is last
+     */
     const Element* getNextSiblingElement() const;
 
-    //! get next sibling element
-    /*! \return next sibling element or nullptr if current element is last
-      */
+    /**
+     * @brief get next sibling element
+     * @return next sibling element or nullptr if current element is last
+     */
     Element* getNextSiblingElement();
 
-    //! get previous sibling element
-    /*! \return previous sibling element or nullptr if current element is first
-      */
+    /**
+     * @brief get previous sibling element
+     * @return previous sibling element or nullptr if current element is first
+     */
     const Element* getPreviousSiblingElement() const;
 
-    //! get previous sibling element
-    /*! \return previous sibling element or nullptr if current element is first
-      */
+    /**
+     * @brief get previous sibling element
+     * @return previous sibling element or nullptr if current element is first
+     */
     Element* getPreviousSiblingElement();
 
 
-    //! detach node from tree
+    /**
+     * @brief detach node from tree
+     */
     Node* Detach();
 
 protected:
@@ -158,53 +181,65 @@ private:
 };
 
 
-//! Comment node
+/**
+ * @brief Comment node
+ */
 class NGREST_XML_EXPORT Comment: public Node
 {
 public:
-    //!  constructor
-    /*! \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param parent parent element
+     */
     Comment(Element* parent = nullptr);
 
-    //!  constructor
-    /*! \param value - node value
-        \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param value node value
+     * @param parent parent element
+     */
     Comment(const std::string& value, Element* parent = nullptr);
 };
 
 
-//! Text node
+/**
+ * @brief Text node
+ */
 class NGREST_XML_EXPORT Text: public Node
 {
 public:
-    //!  constructor
-    /*! \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param parent parent element
+     */
     Text(Element* parent = nullptr);
 
-    //!  constructor
-    /*! \param value - node value
-        \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param value node value
+     * @param parent parent element
+     */
     Text(const std::string& value, Element* parent = nullptr);
 };
 
 
-//! CDATA node
+/**
+ * @brief CDATA node
+ */
 class NGREST_XML_EXPORT Cdata: public Node
 {
 public:
-    //!  constructor
-    /*! \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param parent parent element
+     */
     Cdata(Element* parent = nullptr);
 
-    //!  constructor
-    /*! \param value - node value
-        \param parent - parent element
-      */
+    /**
+     * @brief  constructor
+     * @param value node value
+     * @param parent parent element
+     */
     Cdata(const std::string& value, Element* parent = nullptr);
 };
 

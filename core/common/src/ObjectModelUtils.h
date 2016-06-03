@@ -28,9 +28,20 @@
 
 namespace ngrest {
 
+/**
+ * @brief convenience utils to work with object model
+ */
 class NGREST_COMMON_EXPORT ObjectModelUtils
 {
 public:
+    /**
+     * @brief get object's child by name and type performing type correctness
+     * @param object object where perform the search of the child
+     * @param name child name to find
+     * @param type type of the child node
+     * @return found name
+     * @throws AssertException
+     */
     static inline const NamedNode* getNamedChild(const Object* object, const char* name, NodeType type)
     {
         const NamedNode* namedNode = object->findChildByName(name);
@@ -42,6 +53,12 @@ public:
         return namedNode;
     }
 
+    /**
+     * @brief get value of child. value type should be a number or bool
+     * @param object object where perform the search of the child
+     * @param name child name to find
+     * @param value reference to variable where result is to be placed
+     */
     template <typename Type>
     static inline void getChildValue(const Object* object, const char* name, Type& value)
     {
@@ -52,11 +69,23 @@ public:
                       + std::string(name) + ": failed to convert from string");
     }
 
+    /**
+     * @brief get string value of child.
+     * @param object object where perform the search of the child
+     * @param name child name to find
+     * @param value reference to variable where result is to be placed
+     */
     static inline void getChildValue(const Object* object, const char* name, std::string& value)
     {
         value = getChildValue(object, name);
     }
 
+    /**
+     * @brief get C-string value of child
+     * @param object object where perform the search of the child
+     * @param name child name to find
+     * @return C-string value of child
+     */
     static inline const char* getChildValue(const Object* object, const char* name)
     {
         const NamedNode* namedNode = getNamedChild(object, name, NodeType::Value);
@@ -65,6 +94,12 @@ public:
         return valueStr;
     }
 
+    /**
+     * @brief get node value. asserts node has a NodeType::Value,
+     *   converts to type value supplied (number or bool)
+     * @param node Value node to get data from
+     * @param value reference to variable where result is to be placed
+     */
     template <typename Type>
     static inline void getValue(const Node* node, Type& value)
     {
@@ -77,11 +112,21 @@ public:
                       "Failed to get value: failed to convert from string");
     }
 
+    /**
+     * @brief get string node value
+     * @param node Value node to get data from
+     * @param value reference to variable where result is to be placed
+     */
     static inline void getValue(const Node* node, std::string& value)
     {
         value = getValue(node);
     }
 
+    /**
+     * @brief get C-string node value
+     * @param node Value node to get data from
+     * @return C-string node value
+     */
     static inline const char* getValue(const Node* node)
     {
         NGREST_ASSERT(node, "Failed to get value: value is null");

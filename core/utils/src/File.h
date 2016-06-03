@@ -36,11 +36,15 @@ namespace ngrest {
 
 typedef std::list<std::string> StringList; //!< list of strings
 
-//! file finder
+/**
+ * @brief file finder
+ */
 class NGREST_UTILS_EXPORT File
 {
 public:
-    //! file attributes
+    /**
+     * @brief file attributes
+     */
     enum Attribute
     {
         AttributeNone = 0,          //!< not a file nor directory
@@ -54,74 +58,87 @@ public:
     };
 
 public:
-    //! constructor
-    /*! \param  path - path to the file or directory
-      */
+    /**
+     * @brief constructor
+     * @param path - path to the file or directory
+     */
     File(const std::string& path);
 
-    //! find files/directories by name
-    /*! \param  list - resulting list of files/directories
-        \param  mask - file mask (shell pattern)
-        \param  attrs - match by attributes
-        */
+    /**
+     * @brief find files/directories by name
+     * @param list - resulting list of files/directories
+     * @param mask - file mask (shell pattern)
+     * @param attrs - match by attributes
+     */
     void list(StringList& list, const std::string& mask = "*", int attrs = AttributeAny);
 
-    //! get file/directory attributes
-    /*! if file does not exists returns AttributeNone
-        \return attributes
-      */
+    /**
+     * @brief get file/directory attributes
+     * if file does not exists returns AttributeNone
+     * @return attributes
+     */
     int getAttributes();
 
-    //! test whether the file or directory exists
-    /*! \return true if the file or directory exists
-      */
+    /**
+     * @brief test whether the file or directory exists
+     * @return true if the file or directory exists
+     */
     bool isExists();
 
-    //! tests whether path is a directory
-    /*! \return true if path is a directory
-      */
+    /**
+     * @brief tests whether path is a directory
+     * @return true if path is a directory
+     */
     bool isDirectory();
 
-    //! tests whether path is a regular file
-    /*! \return true if path is a regular file
-      */
+    /**
+     * @brief tests whether path is a regular file
+     * @return true if path is a regular file
+     */
     bool isRegularFile();
 
-    //! tests whether path is not a regular file (symlink, pipe, socket, etc...)
-    /*! \return true if path is not a regular file
-      */
+    /**
+     * @brief tests whether path is not a regular file (symlink, pipe, socket, etc...)
+     * @return true if path is not a regular file
+     */
     bool isSystemFile();
 
-    //! tests whether path is any file
-    /*! \return true if path is any file
-      */
+    /**
+     * @brief tests whether path is any file
+     * @return true if path is any file
+     */
     bool isFile();
 
-    //! get file's last modification time
-    /*! \return unix time
-      */
+    /**
+     * @brief get file's last modification time
+     * @return unix time
+     */
     int64_t getTime();
 
-    //! create the directory
-    /*! \return true if the directory was created
-      */
+    /**
+     * @brief create the directory
+     * @return true if the directory was created
+     */
     bool mkdir();
 
-    //! create the directory, including parent directories
-    /*! \return true if the directory was created
-      */
+    /**
+     * @brief create the directory, including parent directories
+     * @return true if the directory was created
+     */
     bool mkdirs();
 
-    //! is file name = "." or ".."
-    /*! \param  name - filename
-        \return true if file name = "." or ".."
-        */
+    /**
+     * @brief is file name = "." or ".."
+     * @param name - filename
+     * @return true if file name = "." or ".."
+     */
     static bool isDots(const char* name);
 
-    //! is file name = "." or ".."
-    /*! \param  name - filename
-        \return true if file name = "." or ".."
-        */
+    /**
+     * @brief is file name = "." or ".."
+     * @param name - filename
+     * @return true if file name = "." or ".."
+     */
     static bool isDots(const std::string& name);
 
 private:

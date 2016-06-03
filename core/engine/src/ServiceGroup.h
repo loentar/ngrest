@@ -29,7 +29,7 @@ namespace ngrest {
 class ServiceWrapper;
 
 /**
- * @brief Group of services to deploy from plugin
+ * @brief Group of services to deploy from shared library
  */
 class ServiceGroup
 {

@@ -27,22 +27,25 @@
 
 namespace ngrest {
 
+/**
+ * @brief HTTP request
+ */
 struct NGREST_COMMON_EXPORT HttpRequest: public Request
 {
-    HttpMethod method = HttpMethod::UNKNOWN;
-    const char* methodStr = nullptr;
+    HttpMethod method = HttpMethod::UNKNOWN;   //!< parsed HTTP method
+    const char* methodStr = nullptr;           //!< HTTP method as given by client
 
-    const char* clientHost = nullptr;
-    const char* clientPort = nullptr;
+    const char* clientHost = nullptr;          //!< client host address
+    const char* clientPort = nullptr;          //!< client port
 };
 
 
+/**
+ * @brief HTTP response
+ */
 struct NGREST_COMMON_EXPORT HttpResponse: public Response
 {
-    int statusCode = HTTP_STATUS_UNDEFINED;
-
-//    // name must be in lower case
-//    const Header* getHeader(const char* name) const;
+    int statusCode = HTTP_STATUS_UNDEFINED;     //! http status code of response
 };
 
 }

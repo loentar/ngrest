@@ -71,22 +71,22 @@ namespace ngrest {
     LogEntryScope logEntryScope(NGREST_FILE_LINE, __FUNCTION__, NGREST_LOG_LEVEL);
 
 
-//! Logger class
-/*! example:
+/** Logger class
+    example:
         LogDebug() << "Some value = " << value;
 
       there is an log macro list:
-      - LogAlert()    - log alert message
-      - LogCrit()     - log critical message
-      - LogError()    - log error message
-      - LogWarning()  - log warning message
-      - LogNotice()   - log notice message
-      - LogInfo()     - log info message
-      - LogDebug()    - log high level debug message
-      - LogVerbose()  - log verbose message
-      - LogTrace()    - log trace message
-      - LogLabel()    - log standard debug message
-      - LogEntry()    - log enter/exit scope message
+      LogAlert()    log alert message
+      LogCrit()     log critical message
+      LogError()    log error message
+      LogWarning()  log warning message
+      LogNotice()   log notice message
+      LogInfo()     log info message
+      LogDebug()    log high level debug message
+      LogVerbose()  log verbose message
+      LogTrace()    log trace message
+      LogLabel()    log standard debug message
+      LogEntry()    log enter/exit scope message
   */
 class NGREST_UTILS_EXPORT Log
 {
@@ -121,39 +121,43 @@ public:
     };
 
 public:
-    //! get log instance
-    /*! \return log instance
-      */
+    /**
+     * @brief get log instance
+     * @return log instance
+     */
     static Log& inst();
 
-    //! set log stream to output messages
-    /*! \param  outStream - log stream (nullptr - do not output)
-    */
+    /**
+     * @brief set log stream to output messages
+     * @param outStream log stream (nullptr do not output)
+     */
     void setLogStream(std::ostream* outStream);
 
-    //! set log level
-    /*! log messages with level equal or higher that set
-        example: disable debug and info outputting.
-                 output only warnings and more important messages
-          SetLogLevel(::Log::LogLevelWarning)
-
-        \param  logLevel - log level
-    */
+    /**
+     * @brief set log level
+     * log messages with level equal or higher that set
+     *  example: disable debug and info outputting.
+     *           output only warnings and more important messages
+     *    SetLogLevel(::Log::LogLevelWarning)
+     * @param logLevel log level
+     */
     void setLogLevel(LogLevel logLevel);
 
-    //! set log verbosity
-    /*! example: log text only
-        setLogVerbosity(Log::LogVerbosityText)
-        \param  logVerbosity - log verbosity
-    */
+    /**
+     * @brief set log verbosity
+     * example: log text only
+     *   setLogVerbosity(Log::LogVerbosityText)
+     * @param logVerbosity log verbosity
+     */
     void setLogVerbosity(int logVerbosity);
 
-    //! log message
-    /*! \param  logLevel - message log level
-        \param  fileLine - source file name and line
-        \param  function - function
-        \return log stream
-    */
+    /**
+     * @brief log message
+     * @param logLevel message log level
+     * @param fileLine source file name and line
+     * @param function function
+     * @return log stream
+     */
     LogStream write(LogLevel logLevel, const char* fileLine, const char* function);
 
 private:
@@ -172,24 +176,30 @@ private:
 };
 
 
-//! log entry
+/**
+ * @brief log entry
+ */
 class NGREST_UTILS_EXPORT LogEntryScope
 {
 public:
-    //! log entry message
-    /*! \param  fileLine - source file name and line number
-        \param  function - function
-        \param  level - level
-      */
+    /**
+     * @brief log entry message
+     * @param fileLine source file name and line number
+     * @param function function
+     * @param level level
+     */
     LogEntryScope(const char* fileLine, const char* function,
                   Log::LogLevel level = defaultLevel);
 
-    //! destructor
+    /**
+     * @brief destructor
+     */
     ~LogEntryScope();
 
-    //! set default log level for log entry
-    /*! \param level - default log level
-    */
+    /**
+     * @brief set default log level for log entry
+     * @param level default log level
+     */
     static void setDefaultLogLevel(Log::LogLevel level = Log::LogLevelDebug);
 
 private:

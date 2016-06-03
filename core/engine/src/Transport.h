@@ -28,11 +28,15 @@ class Request;
 class Response;
 class Node;
 
-//! abstract transport to translate request to OM and OM to response
+/**
+ * @brief abstract transport to translate request to OM and OM to response
+ */
 class Transport
 {
 public:
-    //! transport type
+    /**
+     * @brief transport type
+     */
     enum class Type
     {
         Unknown,
@@ -41,7 +45,15 @@ public:
     };
 
 public:
+    /**
+     * @brief constructor
+     * @param type transport type
+     */
     Transport(Type type);
+
+    /**
+     * @brief destructor
+     */
     virtual ~Transport();
 
     /**

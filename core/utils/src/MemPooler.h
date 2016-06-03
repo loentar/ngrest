@@ -34,13 +34,33 @@ struct Pools
     std::vector<MemPool*> unused;
 };
 
+/**
+ * @brief memory pool manager. intended to manage, store and re-use memory pools
+ */
 class NGREST_UTILS_EXPORT MemPooler
 {
 public:
+    /**
+     * @brief constructor
+     */
     MemPooler();
+
+    /**
+     * @brief destructor
+     */
     ~MemPooler();
 
+    /**
+     * @brief obtain memory pool with preferred chunk size
+     * @param chunkSize default chunk size of memory pool
+     * @return memory pool
+     */
     MemPool* obtain(uint64_t chunkSize = NGREST_MEMPOOL_CHUNK_SIZE);
+
+    /**
+     * @brief recycle memory pool for later reuse
+     * @param pool pool to recycle
+     */
     void recycle(MemPool* pool);
 
 private:

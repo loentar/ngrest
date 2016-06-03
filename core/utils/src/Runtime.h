@@ -26,12 +26,34 @@
 
 namespace ngrest {
 
+/**
+ * @brief ngrest runtime. stores misc shared information
+ */
 class NGREST_UTILS_EXPORT Runtime
 {
 public:
+    /**
+     * @brief get path to appliation root
+     * @return parent directory of the application executable
+     */
     static const std::string& getApplicationRootPath();
+
+    /**
+     * @brief get path to appliation directory
+     * @return directory of the application executable
+     */
     static const std::string& getApplicationDirPath();
+
+    /**
+     * @brief get path to appliation executable
+     * @return full path to application executable
+     */
     static const std::string& getApplicationFilePath();
+
+    /**
+     * @brief get path to share directory
+     * @return path to share directory
+     */
     static const std::string& getSharePath();
 };
 
