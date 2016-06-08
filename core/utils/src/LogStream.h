@@ -76,7 +76,7 @@ public:
 
 private:
     friend LogStream& logEolOff(LogStream& logStream);
-    friend LogStream& LogEolOn(LogStream& logStream);
+    friend LogStream& logEolOn(LogStream& logStream);
 
 private:
     std::ostream* stream;
@@ -92,7 +92,7 @@ inline LogStream& logEolOff(LogStream& logStream)
 }
 
 //! enable carriage return
-inline LogStream& LogEolOn(LogStream& logStream)
+inline LogStream& logEolOn(LogStream& logStream)
 {
     logStream.writeEol = true;
     return logStream;
