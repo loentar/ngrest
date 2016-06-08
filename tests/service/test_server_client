@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# must be started in ngrest-build/deploy/tests
+
+timeout 10s ../bin/ngrestserver &
+trap "kill $?" EXIT
+
+./test_client

@@ -3,8 +3,8 @@
 cd $(dirname $0)
 
 echo "updating files list..."
-find * -type f \
-        \( -regex '\(\(.*\/\)?CMakeLists.txt\|.*\/codegen.config\|.*\.\(h\|hpp\|c\|cpp\|json\|js\|html\|css\|conf\|load\|md\)\)' -o \
+find * .*.yml -type f \
+        \( -regex '\(\(.*\/\)?CMakeLists.txt\|.*\/codegen.config\|.*\.\(h\|hpp\|c\|cpp\|json\|js\|html\|css\|conf\|load\|md\|yml\)\)' -o \
            -regex '.*/codegen/templates/.*' -o -regex '.*/[^\.]*' \) \
        -a \! -regex '\(.*/\)?\(\..*\|.*~\|tmp\)/.*' \
        -o -regex 'scripts/.*' | sort >ngrest.files

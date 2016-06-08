@@ -30,3 +30,11 @@ set_target_properties(ngresttestservice PROPERTIES
 )
 
 target_link_libraries(ngresttestservice ngrestutils ngrestcommon ngrestjson ngrestengine)
+
+add_custom_command(TARGET ngresttestservice POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy
+                   ${CMAKE_CURRENT_SOURCE_DIR}/test_client ${TESTS_OUTPUT_DIRECTORY})
+
+add_custom_command(TARGET ngresttestservice POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy
+                   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_client ${TESTS_OUTPUT_DIRECTORY})

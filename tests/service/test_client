@@ -125,6 +125,7 @@ then
 else
   echo -e "\nTests passed: $passed"
   echo -e "\e[31;1mTests failed: $failed \e[0m"
+  exit 1
 fi
 
 echo
