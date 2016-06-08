@@ -382,12 +382,10 @@ public:
     void ignoreFunction()
     {
         char ch = '\0';
-        char prevCh;
         int recursion = 0;
 
         while (file.good() && !file.eof()) {
             skipWs();
-            prevCh = ch;
             file >> ch;
 
             if (ch == ';' && recursion == 0) {
@@ -410,7 +408,7 @@ public:
             } else if (ch == '"' || ch == '\'') { // skip {} in strings
                 char quote = ch;
                 while (file.good() && !file.eof()) {
-                    prevCh = ch;
+                    char prevCh = ch;
                     file >> ch;
                     if (ch == quote && prevCh != '\\')
                         break;
@@ -423,7 +421,6 @@ public:
     std::string::size_type parseTemplate(const std::string& templ, DataType& dataType,
                                          const Struct* parent)
     {
-        const std::string::size_type templateSize = templ.size();
         std::string::size_type result = 0;
         std::string token;
         for (std::string::size_type begin = 0, end = 0;

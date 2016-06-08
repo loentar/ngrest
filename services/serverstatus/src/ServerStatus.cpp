@@ -415,8 +415,6 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     form = "<hr/><h2>Test operation</h2><p>";
     form += "<form action='#'>";
     form += "<table><tbody>";
-    std::string::size_type begin = 0;
-    std::string::size_type end = 0;
 
     for (const ParameterDescription& param : opDescr->parameters) {
         const std::string& parameter = param.name;
@@ -439,8 +437,6 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
                       + paramTypeToString(param.type) + "'></input></td>";
         }
         form += "</tr>";
-
-        end = begin + 1;
     }
     form += "</tbody></table>";
     form += "</p>";

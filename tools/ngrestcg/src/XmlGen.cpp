@@ -104,7 +104,7 @@ bool dataTypeToString(std::string& out, const DataType& dataType, bool asUsed = 
          it != dataType.params.end(); ++it) {
         if (!first)
             out += ", ";
-        bIsTemplate = dataTypeToString(out, *it, asUsed);
+        dataTypeToString(out, *it, asUsed);
         if (first) {
             if (out.substr(beginTemplatePos, 2) == "::")
                 space = true;

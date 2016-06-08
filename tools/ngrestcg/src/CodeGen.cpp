@@ -793,7 +793,6 @@ public:
                 const std::string& leftCmp = left.substr(posStartLeft, posEndLeft - posStartLeft);
 
                 posStartRight = 0;
-                posEndRight = 0;
                 do {
                     posEndRight = right.find("||", posStartRight);
                     const std::string& rightCmp = right.substr(posStartRight, posEndRight - posStartRight);
@@ -914,11 +913,8 @@ public:
                 continue;
             } else if (line.substr(0, 11) == "##endswitch") {
                 --recursion;
-                if (recursion == 0) {
-                    if (equal)
-                        processed = true;
+                if (recursion == 0)
                     break;
-                }
             }
 
             if (equal && !processed)

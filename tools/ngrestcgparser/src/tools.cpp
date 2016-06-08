@@ -31,8 +31,8 @@ std::string::size_type strIntersect(const std::string& string1, const std::strin
     if (!string1.empty() && !string2.empty()) {
         std::string::size_type posA = string1.size() - 1;
         std::string::size_type posB = string2.size() - 1;
-        std::string::size_type posA1 = posA;
-        std::string::size_type posB1 = posB;
+        std::string::size_type posA1;
+        std::string::size_type posB1;
         const char* str1 = string1.c_str();
         const char* str2 = string2.c_str();
 
