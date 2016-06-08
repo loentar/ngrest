@@ -3,6 +3,14 @@
 # must be started in ngrest-build/deploy/tests
 
 timeout 10s ../bin/ngrestserver &
-trap "kill $? || true" EXIT
+SERVER_TO_PID=$!
+
+sleep 1
 
 ./test_client
+RES=$?
+
+kill $SERVER_TO_PID || true
+sleep 1
+
+exit $RES
