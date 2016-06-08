@@ -3,6 +3,6 @@
 # must be started in ngrest-build/deploy/tests
 
 timeout 10s ../bin/ngrestserver &
-trap "kill $?" EXIT
+trap "kill $? || true" EXIT
 
 ./test_client

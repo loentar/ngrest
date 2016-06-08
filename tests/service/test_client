@@ -122,10 +122,9 @@ done
 if [ $failed -eq 0 ]
 then
   echo -e "\nAll $passed tests passed"
+  exit 0
 else
   echo -e "\nTests passed: $passed"
   echo -e "\e[31;1mTests failed: $failed \e[0m"
   exit 1
 fi
-
-echo
