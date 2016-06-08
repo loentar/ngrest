@@ -1,5 +1,7 @@
 # ngrest
 
+[![Build Status](https://travis-ci.org/loentar/ngrest.png?branch=master)](https://travis-ci.org/loentar/ngrest)
+
 ngrest is a simple C++ REST framework. It has small footprint, [extremely fast](https://docs.google.com/spreadsheets/d/1M8qtkO6dBa6Q2UPTeDApaohBF1_zTleF5XajcYipSG0/edit) and very easy in use.
 
 ngrest is written on C++11 and uses CMake for build.
