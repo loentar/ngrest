@@ -1,7 +1,7 @@
+dist: trusty
 language: cpp
 env:
-  - WITH_EXAMPLES=1
-  - WITH_TESTS=1
+  - WITH_EXAMPLES=1 WITH_TESTS=1
 compiler:
   - gcc
 before_script:
