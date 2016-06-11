@@ -123,9 +123,31 @@ public:
     }
 
     /**
+     * @brief tests if other's Nullable value equals to this Nullable stored value
+     * @param other other Nullable to test
+     * @return true if other Nullable value equals to stored value
+     */
+    inline bool operator==(const Nullable<T>& other) const
+    {
+        return ((value != nullptr) && (other.value != nullptr))
+                ? (*value == *other.value)
+                : ((value == nullptr) && (other.value == nullptr));
+    }
+
+    /**
+     * @brief tests if other's Nullable value not equals to this Nullable stored value
+     * @param other other Nullable to test
+     * @return true if other Nullable value not equals to stored value
+     */
+    inline bool operator!=(const Nullable<T>& other) const
+    {
+        return !operator==(other);
+    }
+
+    /**
      * @brief tests if given value equals to stored value
      * @param value value to test
-     * @return true if if given value equals to stored value
+     * @return true if given value equals to stored value
      */
     inline bool operator==(const T& value) const
     {
@@ -138,7 +160,7 @@ public:
     /**
      * @brief tests if given value not equals to stored value
      * @param value value to test
-     * @return true if if given value not equals to stored value
+     * @return true if given value not equals to stored value
      */
     inline bool operator!=(const T& value) const
     {
@@ -148,7 +170,7 @@ public:
     /**
      * @brief tests if given value equals to stored value
      * @param value value to test
-     * @return true if if given value equals to stored value
+     * @return true if given value equals to stored value
      */
     inline bool operator==(const T* value) const
     {
@@ -160,7 +182,7 @@ public:
     /**
      * @brief tests if given value not equals to stored value
      * @param value value to test
-     * @return true if if given value not equals to stored value
+     * @return true if given value not equals to stored value
      */
     inline bool operator!=(const T* value) const
     {
