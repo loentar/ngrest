@@ -86,26 +86,28 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
     if (!chunksCount)
         return nullptr;
 
+    uint64_t oldFirstChunkSize = chunks->size;
     uint64_t newSize = getSize();
     uint64_t newBufferSize = newSize + (terminate ? 1 : 0);  // +1 - string terminator
     if (newBufferSize > chunks->bufferSize) {
-
         char* newBuffer = reinterpret_cast<char*>(realloc(chunks->buffer, newBufferSize));
         if (newBuffer == nullptr)
             throw std::bad_alloc();
-        char* pos = newBuffer + chunks->size;
-
-        Chunk* curr = chunks + 1;
-        for (int i = 1; i < chunksCount; ++i, pos += curr->size, ++curr) {
-            memcpy(pos, curr->buffer, curr->size);
-            ::free(curr->buffer);
-        }
-        chunksCount = 1;
-        currChunk = chunks;
         chunks->buffer = newBuffer;
         chunks->size = newSize;
         chunks->bufferSize = newBufferSize;
     }
+
+    char* pos = chunks->buffer + oldFirstChunkSize;
+
+    Chunk* curr = chunks + 1;
+    for (int i = 1; i < chunksCount; ++i, pos += curr->size, ++curr) {
+        memcpy(pos, curr->buffer, curr->size);
+        ::free(curr->buffer);
+    }
+    chunksCount = 1;
+    currChunk = chunks;
+
     if (terminate)
         chunks->buffer[newSize] = '\0'; // terminate with \0 for C strings
 
