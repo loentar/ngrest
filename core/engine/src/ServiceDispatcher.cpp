@@ -352,6 +352,7 @@ void ServiceDispatcher::unregisterService(ServiceWrapper* wrapper)
 
 void ServiceDispatcher::dispatchMessage(MessageContext* context)
 {
+    NGREST_ASSERT_NULL(context->request->path);
     const std::string& path = context->request->path;
 
     LogDebug() << "Dispatching message " << path;

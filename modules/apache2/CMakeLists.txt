@@ -1,0 +1,33 @@
+project (ngrest_apache2_mod CXX)
+
+execute_process(COMMAND ${APXS_PATH} -q CFLAGS EXTRA_INCLUDES
+    OUTPUT_VARIABLE APXS_CFLAGS
+)
+execute_process(COMMAND ${APXS_PATH} -q LDFLAGS
+    OUTPUT_VARIABLE APXS_LDFLAGS
+)
+
+STRING(REGEX REPLACE "\n" "" APXS_CFLAGS ${APXS_CFLAGS})
+STRING(REGEX REPLACE ";;" " " APXS_CFLAGS ${APXS_CFLAGS})
+STRING(REGEX REPLACE "\n" "" APXS_LDFLAGS ${APXS_LDFLAGS})
+
+set(CMAKE_C_FLAGS "${APXS_CFLAGS} ${CMAKE_C_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${APXS_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+
+# remove -Wl,--no-undefined to allow ap_* sumbols be undefined
+STRING(REGEX REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+
+set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+FILE(GLOB NGREST_APACHE2_MOD_SOURCES ${PROJECT_SOURCE_DIR}/*.c ${PROJECT_SOURCE_DIR}/*.cpp)
+
+add_library(ngrest_apache2_mod SHARED ${NGREST_APACHE2_MOD_SOURCES})
+
+set_target_properties(ngrest_apache2_mod PROPERTIES PREFIX "")
+set_target_properties(ngrest_apache2_mod PROPERTIES OUTPUT_NAME "mod_ngrest")
+set_target_properties(ngrest_apache2_mod PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules"
+)
+
+target_link_libraries(ngrest_apache2_mod ngrestcgparser apr-1 ngrestutils ngrestcommon ngrestjson ngrestengine)

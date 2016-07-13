@@ -287,7 +287,6 @@ Here is a list of packages to extend ngrest functinality:
 
 ## TODO
 
- - Apache2 module
  - nginx module
  - support complex types in services tester
  - support of sessions/cookies

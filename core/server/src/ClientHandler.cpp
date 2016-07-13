@@ -386,19 +386,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
     HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
     NGREST_ASSERT_NULL(httpRequest);
 
-    if (!strcmp(method, "POST")) {
-        httpRequest->method = HttpMethod::POST;
-    } else if (!strcmp(method, "GET")) {
-        httpRequest->method = HttpMethod::GET;
-    } else if (!strcmp(method, "PUT")) {
-        httpRequest->method = HttpMethod::PUT;
-    } else if (!strcmp(method, "DELETE")) {
-        httpRequest->method = HttpMethod::DELETE;
-    } else {
-        httpRequest->method = HttpMethod::UNKNOWN;
-    }
-    httpRequest->methodStr = method;
-
+    httpRequest->setMethod(method);
 
     // parse request url
 

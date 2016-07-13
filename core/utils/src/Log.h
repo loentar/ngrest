@@ -128,10 +128,16 @@ public:
     static Log& inst();
 
     /**
-     * @brief set log stream to output messages
-     * @param outStream log stream (nullptr do not output)
+     * @brief set log stream for DEBUG-INFO messages
+     * @param outStream log stream (nullptr - do not out write to log)
      */
     void setLogStream(std::ostream* outStream);
+
+    /**
+     * @brief set log stream for WARNING-ALERT messages
+     * @param outStream log stream (nullptr - do not write to log)
+     */
+    void setLogStreamErr(std::ostream* errStream);
 
     /**
      * @brief set log level

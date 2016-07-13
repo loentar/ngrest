@@ -108,6 +108,13 @@ void Deployment::undeploy(const std::string& servicePath)
     impl->serviceLibs.erase(existing);
 }
 
+void Deployment::undeployAll()
+{
+    for (auto& serviceLib : impl->serviceLibs) {
+        undeployStatic(serviceLib.second.getPluginSymbol());
+    }
+}
+
 void Deployment::deployStatic(ServiceGroup* serviceGroup)
 {
     LogDebug() << "Deploying service group name: " << serviceGroup->getName();
@@ -154,4 +161,5 @@ void Deployment::undeployStatic(ServiceGroup* serviceGroup)
         } NGREST_CATCH_ALL;
     }
 }
+
 } // namespace ngrest

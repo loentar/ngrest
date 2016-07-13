@@ -4,6 +4,7 @@ core/common/CMakeLists.txt
 core/common/src/Callback.h
 core/common/src/HttpException.cpp
 core/common/src/HttpException.h
+core/common/src/HttpMessage.cpp
 core/common/src/HttpMessage.h
 core/common/src/HttpMethod.h
 core/common/src/HttpStatus.cpp
@@ -110,6 +111,13 @@ examples/crud/src/Crud.h
 examples/echo/CMakeLists.txt
 examples/echo/src/Echo.cpp
 examples/echo/src/Echo.h
+modules/apache2/CMakeLists.txt
+modules/apache2/conf/ngrest.conf
+modules/apache2/conf/ngrest.load
+modules/apache2/src/mod_ngrest.c
+modules/apache2/src/ngrest_server.cpp
+modules/apache2/src/ngrest_server.h
+modules/CMakeLists.txt
 README.md
 scripts/inst
 scripts/ngrest

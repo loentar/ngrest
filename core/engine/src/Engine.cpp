@@ -38,7 +38,7 @@ public:
         context->callback = this;
     }
 
-    void success()
+    void success() override
     {
         // only write response in case of it was not written
         if (!context->response->poolBody->getSize())
@@ -47,7 +47,7 @@ public:
         context->callback->success();
     }
 
-    void error(const Exception& error)
+    void error(const Exception& error) override
     {
         context->callback = origCallback;
         context->callback->error(error);

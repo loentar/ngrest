@@ -6,7 +6,7 @@ else
     exit 1
 fi
 
-baseurl=http://localhost:9098/ngrest/test/
+baseurl=${1:-http://localhost:9098/ngrest/test/}
 
 # [method ]path[ request body]|expected response
 tests=(

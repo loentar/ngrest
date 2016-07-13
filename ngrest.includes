@@ -3,3 +3,5 @@
 ../../../ngrest-build/deploy/include
 ../../../../ngrest-build/deploy/include
 ../../../../../ngrest-build/deploy/include
+/usr/include/apache2
+/usr/include/apr-1.0

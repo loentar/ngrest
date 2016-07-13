@@ -147,6 +147,11 @@ void Log::setLogStream(std::ostream* outStream)
     stream = outStream;
 }
 
+void Log::setLogStreamErr(std::ostream* errStream)
+{
+    streamErr = errStream;
+}
+
 LogStream Log::write(LogLevel logLevel, const char* fileLine, const char* function)
 {
     std::ostream* out = (logLevel <= LogLevelWarning) ? streamErr : stream;

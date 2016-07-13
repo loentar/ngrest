@@ -37,6 +37,8 @@ struct NGREST_COMMON_EXPORT HttpRequest: public Request
 
     const char* clientHost = nullptr;          //!< client host address
     const char* clientPort = nullptr;          //!< client port
+
+    void setMethod(const char* method);
 };
 
 

@@ -64,6 +64,11 @@ public:
     void undeploy(const std::string& servicePath);
 
     /**
+     * @brief undeploy all the services
+     */
+    void undeployAll();
+
+    /**
      * @brief deploy services from service group
      *   used to deploy compiled-in services
      * @param serviceGroup service group to deploy
