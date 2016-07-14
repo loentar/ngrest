@@ -26,8 +26,8 @@ add_library(ngrest_apache2_mod SHARED ${NGREST_APACHE2_MOD_SOURCES})
 set_target_properties(ngrest_apache2_mod PROPERTIES PREFIX "")
 set_target_properties(ngrest_apache2_mod PROPERTIES OUTPUT_NAME "mod_ngrest")
 set_target_properties(ngrest_apache2_mod PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules"
-    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules"
+    RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules/apache2"
+    LIBRARY_OUTPUT_DIRECTORY "${PROJECT_SHARE_DIR}/modules/apache2"
 )
 
 target_link_libraries(ngrest_apache2_mod ngrestcgparser apr-1 ngrestutils ngrestcommon ngrestjson ngrestengine)
