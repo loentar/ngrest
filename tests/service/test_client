@@ -107,10 +107,13 @@ do
   if [ $ret -ne 0 ]
   then
     echo -e "\e[31;1mFAILED IN INVOKE\e[0m\n"
+    echo -e "\e[31;1mFAILED URL: $url\e[0m\n"
+    ((++failed))
   else
     if [ "$res" != "$expect" ]
     then
       echo -e "\e[31;1mFAILED\n---- EXPECTED: ----\n$expect\n---- RECEIVED: ----\n$res\n----\n\e[0m\n"
+      echo -e "\e[31;1mFAILED URL: $url\e[0m\n"
       ((++failed))
     else
       echo "OK"

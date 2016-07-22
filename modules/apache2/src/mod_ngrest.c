@@ -26,13 +26,13 @@
 #include <http_protocol.h>
 #include <http_log.h>
 
-#include "ngrest_server.h"
+#include "../../share/ngrest_server.h"
 
 
 static const char* ngrestServicesPath = NULL;
 static int initialized = 0;
 
-#ifdef NGREST_APACHE2_MOD_DEBUG
+#ifdef NGREST_MOD_DEBUG
 FILE* logFile = NULL;
 #define LOGLABEL fprintf(logFile, "p%d t%d; %s[%d]: %s\n", \
     getpid(), (int)pthread_self(), __FILE__, __LINE__, __FUNCTION__); fflush(logFile);
@@ -52,12 +52,12 @@ FILE* logFile = NULL;
 
 #define INT_STR_LEN 16
 
-const char* mod_ngrest_iterate_request_headers(void* req, void* data, iterate_request_headers_callback callback)
+static void mod_ngrest_iterate_request_headers(void* req, void* data, iterate_request_headers_callback callback)
 {
     apr_table_do(callback, data, ((request_rec*)req)->headers_in, NULL);
 }
 
-int64_t mod_ngrest_read_client_callback(void* req, char* buffer, int64_t size)
+static int64_t mod_ngrest_read_client_callback(void* req, char* buffer, int64_t size)
 {
     int64_t res = ap_get_client_block(req, buffer, size);
     LOG2("REMAINING: %ld / %ld", ((request_rec*)req)->remaining, ((request_rec*)req)->read_length);
@@ -66,20 +66,30 @@ int64_t mod_ngrest_read_client_callback(void* req, char* buffer, int64_t size)
     return res;
 }
 
-void mod_ngrest_set_response_header(void* req, const char* header, const char* value)
+static void mod_ngrest_set_response_header(void* req, const char* header, const char* value)
 {
     apr_table_set(((request_rec*)req)->headers_out, header, value);
 }
 
-void mod_ngrest_set_content_type(void* req, const char* contentType)
+static void mod_ngrest_set_content_type(void* req, const char* contentType)
 {
     ((request_rec*)req)->content_type = contentType;
 }
 
-int64_t mod_ngrest_write_client_callback(void* req, const void* buffer, int64_t size)
+static void mod_ngrest_set_content_length(void* req, int64_t contentLength)
+{
+    // apache2 ignores setting of Content-Length header
+}
+
+static int64_t mod_ngrest_write_client_callback(void* req, const void* buffer, int64_t size)
 {
     LOG1("response size: %ld", size);
     return ap_rwrite(buffer, size, req);
+}
+
+static void mod_ngrest_finalize_request(void* req, int status)
+{
+    ((request_rec*)req)->status = status;
 }
 
 static struct ngrest_mod_callbacks mod_ngrest_server_callbacks = {
@@ -87,7 +97,9 @@ static struct ngrest_mod_callbacks mod_ngrest_server_callbacks = {
     mod_ngrest_read_client_callback,
     mod_ngrest_set_response_header,
     mod_ngrest_set_content_type,
-    mod_ngrest_write_client_callback
+    mod_ngrest_set_content_length,
+    mod_ngrest_write_client_callback,
+    mod_ngrest_finalize_request
 };
 
 /* content handler */
@@ -137,7 +149,7 @@ static int mod_ngrest_handler(request_rec* req)
             req->remaining
         };
 
-        req->status = ngrest_server_dispatch(&request, mod_ngrest_server_callbacks);
+        ngrest_server_dispatch(&request, mod_ngrest_server_callbacks);
         LOGLABEL;
     }
 
@@ -158,7 +170,7 @@ static apr_status_t mod_ngrest_shutdown(void* data)
 
 static void ngrest_register_hooks(apr_pool_t* pool)
 {
-#ifdef NGREST_APACHE2_MOD_DEBUG
+#ifdef NGREST_MOD_DEBUG
     char logPath[PATH_MAX];
     snprintf(logPath, PATH_MAX, "/tmp/ngrest_debug_%d.log", getpid());
     logFile = fopen(logPath, "a");

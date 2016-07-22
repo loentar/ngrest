@@ -115,9 +115,11 @@ modules/apache2/CMakeLists.txt
 modules/apache2/conf/ngrest.conf
 modules/apache2/conf/ngrest.load
 modules/apache2/src/mod_ngrest.c
-modules/apache2/src/ngrest_server.cpp
-modules/apache2/src/ngrest_server.h
 modules/CMakeLists.txt
+modules/nginx/CMakeLists.txt
+modules/nginx/src/mod_ngrest_nginx.c
+modules/share/ngrest_server.cpp
+modules/share/ngrest_server.h
 README.md
 scripts/inst
 scripts/ngrest

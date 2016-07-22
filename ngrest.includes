@@ -5,3 +5,9 @@
 ../../../../../ngrest-build/deploy/include
 /usr/include/apache2
 /usr/include/apr-1.0
+/usr/local/src/nginx/src/core
+/usr/local/src/nginx/src/http
+/usr/local/src/nginx/src/objs
+/usr/local/src/nginx/src/event
+/usr/local/src/nginx/src/os/unix
+../../share/

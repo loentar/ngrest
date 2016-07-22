@@ -14,12 +14,10 @@ STRING(REGEX REPLACE "\n" "" APXS_LDFLAGS ${APXS_LDFLAGS})
 set(CMAKE_C_FLAGS "${APXS_CFLAGS} ${CMAKE_C_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${APXS_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 
-# remove -Wl,--no-undefined to allow ap_* sumbols be undefined
+# remove -Wl,--no-undefined to allow ap_* symbols be imported from httpd binary
 STRING(REGEX REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
-set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
-FILE(GLOB NGREST_APACHE2_MOD_SOURCES ${PROJECT_SOURCE_DIR}/*.c ${PROJECT_SOURCE_DIR}/*.cpp)
+FILE(GLOB NGREST_APACHE2_MOD_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/../share/*.cpp)
 
 add_library(ngrest_apache2_mod SHARED ${NGREST_APACHE2_MOD_SOURCES})
 

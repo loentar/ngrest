@@ -38,7 +38,6 @@
 
 #include "ngrest_server.h"
 
-
 static ngrest::ServiceDispatcher dispatcher;
 static ngrest::Deployment deployment(dispatcher);
 static ngrest::HttpTransport transport;
@@ -108,7 +107,7 @@ int ngrest_server_startup(const char* servicesPath)
         return 1;
 
     try {
-#ifdef NGREST_APACHE2_MOD_DEBUG
+#ifdef NGREST_MOD_DEBUG
         char logPath[PATH_MAX];
         snprintf(logPath, PATH_MAX, "/tmp/ngrest_%d.log", getpid());
         logstream.open(logPath, std::ios_base::out | std::ios_base::app);
@@ -157,15 +156,11 @@ int ngrest_server_shutdown()
 void ngrest_server_write_response(ngrest_server_request* request, ngrest_mod_callbacks callbacks, ngrest::MemPool* poolResponse)
 {
     uint64_t bodySize = poolResponse->getSize();
-    constexpr int buffSize = 32;
-    char buff[buffSize];
-    NGREST_ASSERT(ngrest::toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
-    callbacks.set_response_header(request->req, "Content-Length", buff);
+    callbacks.set_content_length(request->req, bodySize);
 
     int chunkCount = poolResponse->getChunkCount();
-    const ngrest::MemPool::Chunk* chunks = poolResponse->getChunks();
-    for (int i = 0; i < chunkCount; ++i) {
-        const ngrest::MemPool::Chunk* chunk = chunks + i;
+    const ngrest::MemPool::Chunk* chunk = poolResponse->getChunks();
+    for (int i = 0; i < chunkCount; ++i, ++chunk) {
         uint64_t written = 0;
         while (written < chunk->size) {
             int64_t res = callbacks.write_block(request->req, chunk->buffer + written, chunk->size - written);
@@ -206,8 +201,8 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
             &context
         };
 
-        callbacks.iterate_request_headers(request->req, &itCtx, [](void* data, const char* name, const char* value) {
-            HeaderIterateContext* itCtx = reinterpret_cast<HeaderIterateContext*>(data);
+        callbacks.iterate_request_headers(request->req, &itCtx, [](void* context, const char* name, const char* value) {
+            HeaderIterateContext* itCtx = reinterpret_cast<HeaderIterateContext*>(context);
             ngrest::Header* header = itCtx->context->pool->alloc<ngrest::Header>();
 
             char* headerName = itCtx->context->pool->putCString(name, true);
@@ -278,7 +273,9 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
 
         ngrest_server_write_response(request, callbacks, httpResponse->poolBody);
 
-        return httpResponse->statusCode;
+        callbacks.finalize_response(request->req, httpResponse->statusCode);
+
+        return 0;
     } catch (const std::exception& e) {
         const char* error = e.what();
         ngrest::LogWarning() << error;
@@ -290,3 +287,4 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
 
     return 500;
 }
+
