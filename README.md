@@ -4,6 +4,8 @@
 
 ngrest is a simple C++ REST framework. It has small footprint, [extremely fast](https://docs.google.com/spreadsheets/d/1M8qtkO6dBa6Q2UPTeDApaohBF1_zTleF5XajcYipSG0/edit) and very easy in use.
 
+ngrest allow you to deploy C++ RESTful webservices under [Apache2](https://github.com/loentar/ngrest/wiki/Deploy-ngrest-under-Apache2-Web-Server), [Nginx](https://github.com/loentar/ngrest/wiki/Deploy-ngrest-under-Nginx) or under simple ngrest http server.
+
 ngrest is written on C++11 and uses CMake for build.
 
 ## Quick tour
@@ -287,7 +289,6 @@ Here is a list of packages to extend ngrest functinality:
 
 ## TODO
 
- - nginx module
  - support complex types in services tester
  - support of sessions/cookies
  - WADL support?
