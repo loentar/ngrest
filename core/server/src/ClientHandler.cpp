@@ -153,13 +153,13 @@ ClientHandler::~ClientHandler()
     delete pooler;
 }
 
-void ClientHandler::connected(Socket fd, const sockaddr* addr)
+void ClientHandler::connected(Socket fd, const sockaddr_storage* addr)
 {
     ClientInfo*& client = clients[fd];
     if (client == nullptr) {
         client = new ClientInfo();
 
-        int res = getnameinfo(addr, sizeof(*addr),
+        int res = getnameinfo(reinterpret_cast<const sockaddr*>(addr), sizeof(*addr),
                               client->host, sizeof(client->host),
                               client->port, sizeof(client->port),
                               NI_NUMERICHOST | NI_NUMERICSERV);
@@ -167,6 +167,7 @@ void ClientHandler::connected(Socket fd, const sockaddr* addr)
             LogDebug() << "Accepted connection on client " << fd
                        << " (host=" << client->host << ", port=" << client->port << ")";
         } else {
+            LogWarning() << "Failed to get client info: " << gai_strerror(res);
             client->host[0] = '\0';
             client->port[0] = '\0';
         }

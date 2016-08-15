@@ -106,11 +106,17 @@ Server::~Server()
 bool Server::create(const StringMap& args)
 {
     std::string port = "9098";
+    std::string ip;
+
     auto it = args.find("p");
     if (it != args.end())
         port = it->second;
 
-    fdServer = createServerSocket(port);
+    it = args.find("l");
+    if (it != args.end())
+        ip = it->second;
+
+    fdServer = createServerSocket(ip, port);
     if (fdServer == NGREST_SOCKET_ERROR)
         return false;
 
@@ -156,8 +162,17 @@ int Server::exec()
         return EXIT_FAILURE;
     }
 
+    std::string host;
+    if (ip.empty()) {
+        host = "localhost";
+    } else if (ip.find(':') != std::string::npos) { // IPv6
+        host = "[" + ip + "]";
+    } else { // IPv4
+        host = ip;
+    }
+
     LogInfo() << "Simple ngrest server started on port " << port << ".";
-    LogInfo() << "Deployed services: http://localhost:" << port << "/ngrest/services";
+    LogInfo() << "Deployed services: http://" << host << ":" << port << "/ngrest/services";
 
 #ifndef HAS_EPOLL
     fd_set readFds;
@@ -257,19 +272,20 @@ void Server::quit()
     isStopping = true;
 }
 
-Socket Server::createServerSocket(const std::string& port)
+Socket Server::createServerSocket(const std::string& ip, const std::string& port)
 {
     struct addrinfo hints;
     struct addrinfo* addr;
     struct addrinfo* curr;
     Socket sock = -1;
+    std::string lastError;
 
     memset(&hints, 0, sizeof(struct addrinfo));
     hints.ai_family = AF_UNSPEC;     /* Return IPv4 and IPv6 choices */
     hints.ai_socktype = SOCK_STREAM; /* We want a TCP socket */
     hints.ai_flags = AI_PASSIVE;     /* All interfaces */
 
-    int res = getaddrinfo(nullptr, port.c_str(), &hints, &addr);
+    int res = getaddrinfo(ip.empty() ? nullptr : ip.c_str(), port.c_str(), &hints, &addr);
     if (res != 0) {
         LogError() << "getaddrinfo: " << gai_strerror(res);
         return -1;
@@ -289,16 +305,19 @@ Socket Server::createServerSocket(const std::string& port)
             break;
         }
 
+        lastError = strerror(errno);
         close(sock);
     }
 
     freeaddrinfo(addr);
 
     if (curr == nullptr) {
-        LogError() << "Could not bind to port " << port;
+        LogError() << "Could not bind to " << (ip.empty() ? " [all interfaces]" : ip.c_str()) << " : " << port
+                   << ": " << lastError;
         return -1;
     }
 
+    this->ip = ip;
     this->port = port;
 
     return sock;
@@ -335,9 +354,9 @@ bool Server::setupNonblock(Socket fd)
 bool Server::handleIncomingConnection()
 {
     while (!isStopping) {
-        struct sockaddr inAddr;
+        sockaddr_storage inAddr;
         socklen_t inLen = sizeof(inAddr);
-        Socket fdIn = accept(fdServer, &inAddr, &inLen);
+        Socket fdIn = accept(fdServer, reinterpret_cast<sockaddr*>(&inAddr), &inLen);
         if (fdIn == NGREST_SOCKET_ERROR) {
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
                 // We have processed all incoming connections.

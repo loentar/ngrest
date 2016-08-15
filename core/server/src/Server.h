@@ -80,7 +80,7 @@ public:
     void quit();
 
 private:
-    Socket createServerSocket(const std::string& port);
+    Socket createServerSocket(const std::string& ip, const std::string& port);
     bool setupNonblock(Socket fd);
     bool handleIncomingConnection();
     void handleRequest(Socket fd);
@@ -96,6 +96,7 @@ private:
     fd_set activeFds;
 #endif
     ClientCallback* callback = nullptr;
+    std::string ip;
     std::string port;
 };
 

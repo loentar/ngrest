@@ -42,6 +42,7 @@ int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
               << "  -s        set extra path to locate services" << std::endl
               << "  -p        port number to use (default: 9098)" << std::endl
+              << "  -l        listen to specific ip (default: all)" << std::endl
               << "  -h        display this help" << std::endl << std::endl;
     return 1;
 }

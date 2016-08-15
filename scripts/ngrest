@@ -111,7 +111,9 @@ Must start in project's dir, i.e. current directory must contain '.ngrest' subdi
 
 There a set of environment variables to control the build process and the server:
 
-  NGREST_SERVER_PORT       Sets port where server should listen for incoming connections.
+  NGREST_SERVER_PORT       Sets port which server should listen for incoming connections (default: 9098).
+
+  NGREST_SERVER_IP         Sets IPv4 or IPv6 address which server should listen for incoming connections (default - all available).
 
   NGREST_LOG_LEVEL         Sets log level. Supported values are:
                               ALERT CRIT ERROR WARNING NOTICE INFO DEBUG VERBOSE TRACE
@@ -523,7 +525,7 @@ start_server() {
   CODE=0
   rm -f core*
   ulimit -c unlimited 2>/dev/null || true
-  ngrestserver -p $PORT -s $PWD/services || CODE=$?
+  ngrestserver -l "$IP" -p $PORT -s $PWD/services || CODE=$?
   if [ $CODE -eq 139 ]
   then
     CORE=$(find core* -type f -name 'core*' 2>/dev/null || true)
@@ -621,6 +623,9 @@ run() {
   fi
 
   PORT=${NGREST_SERVER_PORT:-9098}
+  IP=${NGREST_SERVER_IP:-localhost}
+  IPQ=$IP
+  [[ ! "$IPQ" =~ ":" ]] || IPQ="[$IPQ]"
 
   build
 
@@ -629,7 +634,7 @@ run() {
   do
     echo -n "  "
     color "34;4;1"
-    echo "http://localhost:$PORT/ngrest/service/$SERVICE"
+    echo "http://$IPQ:$PORT/ngrest/service/$SERVICE"
     color "0"
   done < $PROJECT_DIR/.ngrest/services
 

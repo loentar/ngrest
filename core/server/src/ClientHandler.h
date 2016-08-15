@@ -57,7 +57,7 @@ public:
      * @param fd client socket descriptor
      * @param addr client address
      */
-    virtual void connected(Socket fd, const sockaddr* addr) override;
+    virtual void connected(Socket fd, const sockaddr_storage* addr) override;
 
     /**
      * @brief client disconnected event
