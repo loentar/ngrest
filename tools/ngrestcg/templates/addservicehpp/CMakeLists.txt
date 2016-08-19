@@ -16,7 +16,7 @@ add_custom_command(OUTPUT ${$($service.!toupper)_CODEGEN_SOURCES}
     DEPENDS ${$($service.!toupper)_HEADERS_PATHS}
 )
 
-file(GLOB $($service.!toupper)_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
+file(GLOB $($service.!toupper)_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp ${PROJECT_SOURCE_DIR}/*.hpp)
 
 list(APPEND $($service.!toupper)_SOURCES ${$($service.!toupper)_CODEGEN_SOURCES})
 
