@@ -71,7 +71,7 @@ public:
      * @param request incoming request
      * @return OM translated from request
      */
-    virtual Node* parseRequest(MemPool* pool, const Request* request) = 0;
+    virtual Node* parseRequest(MemPool* pool, Request* request) = 0;
 
     /**
      * @brief translate OM response to transport response

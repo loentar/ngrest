@@ -24,6 +24,7 @@
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/MemPool.h>
 #include <ngrest/utils/Exception.h>
+#include <ngrest/utils/static.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/json/JsonReader.h>
@@ -33,14 +34,34 @@
 
 namespace ngrest {
 
+#define CONTENT_TYPE_APPLICATION_JSON "application/json"
+#define CONTENT_TYPE_APPLICATION_JSON_LEN static_strlen(CONTENT_TYPE_APPLICATION_JSON)
+
+
+inline const char* strchrnul(const char* str, const char ch)
+{
+    NGREST_ASSERT_NULL(str);
+    while (*str && (*str != ch))
+        ++str;
+    return str;
+}
+
+inline void trim(const char*& begin, const char*& end)
+{
+    while (begin < end && *begin == ' ')
+        ++begin;
+    while (begin < end && *(end - 1) == ' ')
+        --end;
+}
+
 HttpTransport::HttpTransport():
     Transport(Type::Http)
 {
 }
 
-Node* HttpTransport::parseRequest(MemPool* pool, const Request* request)
+Node* HttpTransport::parseRequest(MemPool* pool, Request* request)
 {
-    const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(request);
     LogDebug() << "HTTP Request: " << httpRequest->methodStr << " " << httpRequest->path;
 #ifdef DEBUG
     static const bool dontTruncate = !!getenv("NGREST_DONT_TRUNCATE_REQUEST");
@@ -55,10 +76,22 @@ Node* HttpTransport::parseRequest(MemPool* pool, const Request* request)
     const Header* contentType = httpRequest->getHeader("content-type");
     NGREST_ASSERT(contentType, "Content-Type header is missing!");
 
-    if (!strcmp(contentType->value, "application/json")) {
-        // JSON request
-        return json::JsonReader::read(httpRequest->body, pool);
+    const char* begin = contentType->value;
+    const char* end = strchrnul(begin, ';'); // application/json;charset=utf-8
+    trim(begin, end);
+
+    if ((end - begin) == CONTENT_TYPE_APPLICATION_JSON_LEN
+            && !strncmp(begin, CONTENT_TYPE_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON_LEN)) {
+        httpRequest->contentType = ContentType::ApplicationJson;
     } else {
+        httpRequest->contentType = ContentType::Unknown;
+    }
+
+    switch (httpRequest->contentType) {
+    case ContentType::ApplicationJson: // JSON request
+        return json::JsonReader::read(httpRequest->body, pool);
+
+    default:
         NGREST_THROW_ASSERT(std::string("Can't handle content type: ") + contentType->value);
     }
 }
@@ -66,18 +99,24 @@ Node* HttpTransport::parseRequest(MemPool* pool, const Request* request)
 void HttpTransport::writeResponse(MemPool* pool, const Request* request, Response* response)
 {
     const HttpRequest* httpRequest = static_cast<const HttpRequest*>(request);
-    const Header* contentType = httpRequest->getHeader("content-type");
 
-    // response with JSON if no "content-type" header set
-    if (!contentType || !strcmp(contentType->value, "application/json")) {
+    // respond with JSON if no "content-type" header set
+    switch (httpRequest->contentType) {
+    case ContentType::NotSet:
+    case ContentType::ApplicationJson: {
         HttpResponse* httpResponse = static_cast<HttpResponse*>(response);
         Header* headerContentType = pool->alloc<Header>("Content-Type", "application/json");
         httpResponse->headers = headerContentType;
 
         if (httpResponse->node)
             json::JsonWriter::write(httpResponse->node, httpResponse->poolBody);
-    } else {
-        NGREST_THROW_ASSERT(std::string("Can't handle content type: ") + contentType->value);
+
+        break;
+    }
+
+    default: {
+        NGREST_THROW_ASSERT("Can't write response: unsupported content type");
+    }
     }
 }
 

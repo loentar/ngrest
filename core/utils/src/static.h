@@ -32,7 +32,7 @@ constexpr int static_max(T a, T b)
 template <int size>
 constexpr int static_strlen(const char(&)[size])
 {
-    return size;
+    return size - 1;
 }
 
 template <int size>

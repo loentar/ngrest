@@ -44,7 +44,7 @@
 void help()
 {
     std::cerr << "Code generator for ngrest\n"
-                 "ngrestcg [source files][-t<template>][-p<plugin_name>][-i<inputdir>][-i<outputdir>][-c<chagedir>]"
+                 "ngrestcg [source files][-t<template>][-p<plugin_name>][-i<inputdir>][-o<outputdir>][-c<chagedir>]"
                  "[-u][-e][-n<prj_name>][-x][-v]\n"
                  "  -t<template>    - Generate source with template name. Example: -tserviceimpl\n"
                  "  -p<plugin_name> - Use parser <plugin_name> to read source file(s). (default is cpp). Example: -pwsdl\n"

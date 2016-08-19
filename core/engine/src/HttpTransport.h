@@ -42,7 +42,7 @@ public:
      * @param request in/out request
      * @return parsed OM
      */
-    virtual Node* parseRequest(MemPool* pool, const Request* request) override;
+    virtual Node* parseRequest(MemPool* pool, Request* request) override;
 
     /**
      * @brief write response OM to the response body
