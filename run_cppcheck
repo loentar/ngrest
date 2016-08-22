@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# /home/user/devel/ngrest/core/engine/src/Deployment.cpp:21:2: warning: #warning is a GCC extension
+
+cppcheck -q --enable=all -i tools/ngrestcg/templates . 2>&1 |\
+    sed "/The function .* is never used/d;/scope of .* can be reduced/d;/constructor with 1 argument that is not explicit./d;s;^\[\(.*\)\];$PWD/\1:0;g;s;^\([^ \t]\+[ \t]\)*(\([a-z]\+\));\1\2:;g" >&2

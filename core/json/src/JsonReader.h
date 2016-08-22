@@ -24,7 +24,7 @@
 namespace ngrest {
 
 class MemPool;
-class Node;
+struct Node;
 
 namespace json {
 

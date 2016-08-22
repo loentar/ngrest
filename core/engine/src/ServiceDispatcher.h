@@ -26,7 +26,7 @@
 namespace ngrest {
 
 class ServiceWrapper;
-class MessageContext;
+struct MessageContext;
 
 /**
  * @brief service dispatcher
@@ -79,6 +79,10 @@ public:
      * @return pointer to service wrapper or nullptr if no service found
      */
     ServiceWrapper* getService(const std::string& name) const;
+
+private:
+    ServiceDispatcher(const ServiceDispatcher&);
+    ServiceDispatcher& operator=(const ServiceDispatcher&);
 
 private:
     struct Impl;

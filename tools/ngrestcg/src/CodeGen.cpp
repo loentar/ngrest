@@ -491,8 +491,8 @@ public:
             } else {
                 result.erase();
             }
-        } else if (function.substr(0, 8) == "fixid") {
-            function.erase(0, 8);
+        } else if (function.substr(0, 5) == "fixid") {
+            function.erase(0, 5);
             fixId(result);
         } else if (function.substr(0, 3) == "inc") {
             int tmp = 0;
@@ -1010,7 +1010,7 @@ public:
             in.ignore();
             in.peek(); // for EOF
 
-            if (line.substr(0, 8) == "##while" || line.substr(0, 8) == "##until") {
+            if (line.substr(0, 7) == "##while" || line.substr(0, 7) == "##until") {
                 ++recursion;
             } else if (line.substr(0, 6) == "##done") {
                 --recursion;

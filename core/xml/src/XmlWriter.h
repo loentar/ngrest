@@ -109,6 +109,8 @@ private:
     std::string escapeString(std::string str);
     void writeIndent();
     void writeNewLine();
+    XmlWriter(const XmlWriter&);
+    XmlWriter& operator=(const XmlWriter&);
 
 private:
     std::ostream& stream;

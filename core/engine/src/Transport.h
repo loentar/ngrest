@@ -24,9 +24,9 @@
 namespace ngrest {
 
 class MemPool;
-class Request;
-class Response;
-class Node;
+struct Request;
+struct Response;
+struct Node;
 
 /**
  * @brief abstract transport to translate request to OM and OM to response

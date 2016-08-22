@@ -82,6 +82,10 @@ public:
     void undeployStatic(ServiceGroup* serviceGroup);
 
 private:
+    Deployment(const Deployment&);
+    Deployment& operator=(const Deployment&);
+
+private:
     class Impl;
     Impl* impl;
 };

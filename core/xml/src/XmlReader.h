@@ -83,6 +83,10 @@ public:
     void readElement(Element& element);
 
 private:
+    XmlReader(const XmlReader&);
+    XmlReader& operator=(const XmlReader&);
+
+private:
     class XmlReaderImpl;
     XmlReaderImpl* impl;
 };

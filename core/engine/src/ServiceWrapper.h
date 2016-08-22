@@ -23,11 +23,11 @@
 
 namespace ngrest {
 
-class Node;
 class Service;
-class ServiceDescription;
-class OperationDescription;
-class MessageContext;
+struct Node;
+struct ServiceDescription;
+struct OperationDescription;
+struct MessageContext;
 
 /**
  * @brief Service wrapper. Base class for codegenerated services wrappers
