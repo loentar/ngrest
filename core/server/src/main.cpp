@@ -34,7 +34,7 @@
 #include "Server.h"
 #include "ClientHandler.h"
 
-#ifdef WIN32
+#if defined WIN32 || defined __APPLE__
 typedef void(__cdecl *sighandler_t)(int);
 #endif
 

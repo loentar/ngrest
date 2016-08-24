@@ -23,6 +23,9 @@ list(APPEND FAVICON_SOURCES ${FAVICON_CODEGEN_SOURCES})
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(favicon MODULE ${FAVICON_SOURCES})
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(favicon PROPERTIES SUFFIX ".dylib")
+endif()
 
 set_target_properties(favicon PROPERTIES PREFIX "")
 set_target_properties(favicon PROPERTIES

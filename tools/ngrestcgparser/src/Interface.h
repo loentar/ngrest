@@ -139,7 +139,7 @@ struct NGREST_CODEGENPARSER_EXPORT Struct: public BaseType
     std::string parentNs;            //!<  parent struct namespace (actual)
     std::list<Field> fields;         //!<  struct fields
     std::list<Struct> structs;       //!<  sub struct list
-    std::list<class Enum> enums;     //!<  sub enum list
+    std::list<struct Enum> enums;    //!<  sub enum list
 
     Struct();
     Struct& operator=(const Struct& other);

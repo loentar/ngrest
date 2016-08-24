@@ -88,8 +88,8 @@ private:
 private:
     bool isStopping = false;
     Socket fdServer = 0;
-    int fdEpoll = 0;
 #ifdef HAS_EPOLL
+    int fdEpoll = 0;
     epoll_event* event = nullptr;
     epoll_event* events = nullptr;
 #else

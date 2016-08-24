@@ -20,7 +20,9 @@
 
 #include <unistd.h>
 #ifndef WIN32
+#ifndef __APPLE__
 #include <error.h>
+#endif
 #include <sys/socket.h>
 #include <netdb.h>
 #else

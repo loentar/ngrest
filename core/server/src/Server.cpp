@@ -233,10 +233,12 @@ int Server::exec()
         int processedFds = 0;
         // Service all the sockets with input pending.
         for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
-#ifndef WIN32
-            Socket fd = readFds[i];
-#else
+#ifdef WIN32
             Socket fd = readFds.fd_array[i];
+#elif defined __APPLE__
+            Socket fd = i;
+#else
+            Socket fd = readFds[i];
 #endif
             if (FD_ISSET(fd, &readFds)) {
                 if (fd == fdServer) {
@@ -250,10 +252,12 @@ int Server::exec()
             if (processedFds == readyFds)
                 break;
 
-#ifndef WIN32
-            fd = writeFds[i];
-#else
+#ifdef WIN32
             fd = writeFds.fd_array[i];
+#elif defined __APPLE__
+            fd = i;
+#else
+            fd = writeFds[i];
 #endif
             if (FD_ISSET(fd, &writeFds)) {
                 callback->readyWrite(fd);

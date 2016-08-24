@@ -15,7 +15,7 @@ $(project.startCppNs)
 ServiceGroupImpl::ServiceGroupImpl():
     name("$(project.ns.!dot)")
 {
-    services = {{
+    services = {
 ##var isComma 0
 ##foreach $(project.interfaces)
 ##foreach $(interface.services)
@@ -28,7 +28,7 @@ ServiceGroupImpl::ServiceGroupImpl():
 ##endfor
 ##endfor
 
-    }};
+    };
 }
 
 ServiceGroupImpl::~ServiceGroupImpl()

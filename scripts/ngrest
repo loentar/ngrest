@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
@@ -10,6 +10,10 @@ case $(uname -s) in
     ;;
   Linux)
     OS=Linux
+    ;;
+  Darwin)
+    OS=Darwin
+    export DISABLE_WATCHER=1
     ;;
   *)
     echo "This OS is not yet supported" >&2
@@ -64,7 +68,7 @@ else
 fi
 
 
-if [ $OS = MINGW ]
+if [ $OS = MINGW -o $OS = Darwin ]
 then
   mktemp() {
     n=/tmp/$(date +%Y%m%d%H%M%S)

@@ -1,7 +1,6 @@
 project (ngrest_nginx_mod CXX)
 
-#set(CMAKE_C_FLAGS "${APXS_CFLAGS} ${CMAKE_C_FLAGS}")
-#set(CMAKE_SHARED_LINKER_FLAGS "${APXS_LDFLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+set (CMAKE_MACOSX_RPATH 1)
 
 # remove -Wl,--no-undefined to allow ngx_* symbols be imported from nginx binary
 STRING(REGEX REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
@@ -13,6 +13,9 @@ case $(uname -s) in
     ;;
   Linux)
     OS=Linux
+    ;;
+  Darwin)
+    OS=Darwin
     ;;
   *)
     echo "This OS is not yet supported" >&2
@@ -40,7 +43,7 @@ then
     pkg=
 
     # detect package manager
-    for p in apt-get yum
+    for p in apt-get yum port
     do
       if $p -v >/dev/null 2>&1
       then
@@ -55,10 +58,12 @@ then
       exit 1
     fi
 
+    [ $pkg == port ] && YES= || YES=-y
+
     echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
     echo "To continue please enter your password, or press Ctrl+C to install it manually."
-    sudo $pkg install -y $TO_INSTALL </dev/null
-    sudo $pkg install -y $TO_INSTALL_OPT </dev/null || true
+    sudo $pkg install $YES $TO_INSTALL </dev/null
+    [ $OS == Darwin ] || sudo $pkg install $YES $TO_INSTALL_OPT </dev/null || true
   fi
 fi
 

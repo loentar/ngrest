@@ -28,9 +28,9 @@ namespace ngrest {
 TestServiceGroup::TestServiceGroup():
     name("test")
 {
-    services = {{
+    services = {
         new ::ngrest::TestDeploymentWrapper()
-    }};
+    };
 }
 
 TestServiceGroup::~TestServiceGroup()

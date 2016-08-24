@@ -332,8 +332,15 @@ bool fixId(std::string& id, bool ignoreBool /*= false*/)
 }
 
 const std::string& stringMapValue(const StringMap& map, const std::string& name,
-                                  const std::string& defaultValue /*= ""*/)
+                                  const std::string& defaultValue)
 {
+    StringMap::const_iterator itValue = map.find(name);
+    return (itValue != map.end()) ? itValue->second : defaultValue;
+}
+
+const std::string& stringMapValue(const StringMap& map, const std::string& name)
+{
+    const static std::string defaultValue;
     StringMap::const_iterator itValue = map.find(name);
     return (itValue != map.end()) ? itValue->second : defaultValue;
 }

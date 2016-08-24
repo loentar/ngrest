@@ -23,6 +23,9 @@ list(APPEND SERVERSTATUS_SOURCES ${SERVERSTATUS_CODEGEN_SOURCES})
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(serverstatus MODULE ${SERVERSTATUS_SOURCES})
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(serverstatus PROPERTIES SUFFIX ".dylib")
+endif()
 
 set_target_properties(serverstatus PROPERTIES PREFIX "")
 set_target_properties(serverstatus PROPERTIES

@@ -106,7 +106,13 @@ bool fixId(std::string& name, bool bIgnoreBool = false);
  */
 NGREST_CODEGENPARSER_EXPORT
 const std::string& stringMapValue(const StringMap& map, const std::string& name,
-                                  const std::string& defaultValue = "");
+                                  const std::string& defaultValue);
+
+/**
+ * @brief get value from map if it exists, or default value else
+ */
+NGREST_CODEGENPARSER_EXPORT
+const std::string& stringMapValue(const StringMap& map, const std::string& name);
 
 
 

@@ -320,7 +320,7 @@ std::string& Value::asString()
 
 bool Value::operator==(const Value& value) const
 {
-    return value == value.value;
+    return this->value == value.value;
 }
 
 

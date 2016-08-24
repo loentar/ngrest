@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 project (ngrestengine CXX)
 
+set (CMAKE_MACOSX_RPATH 1)
+
 set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 FILE(GLOB NGRESTENGINE_SOURCES ${PROJECT_SOURCE_DIR}/*.cpp)
