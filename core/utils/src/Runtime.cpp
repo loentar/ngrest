@@ -88,6 +88,7 @@ const std::string& Runtime::getApplicationFilePath()
 #ifdef __APPLE__
     uint32_t pathSize = PATH_MAX;
     _NSGetExecutablePath(path, &pathSize);
+    pathSize = strlen(path);
 #else
     int pathSize = readlink("/proc/self/exe", path, PATH_MAX);
 #endif
