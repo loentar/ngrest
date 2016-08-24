@@ -132,7 +132,7 @@ This will create a REST service on root path `/notes`. Also this will add four r
 
 ## Install
 
-Currently only Linux and Windows supported, but there are plans to extend support for other popular operating systems.
+Supported OS are: Linux, Windows and Mac OS X. If you need support for another OS, please [create new issue](https://github.com/loentar/ngrest/issues/new).
 
 Under Linux installation process is simple. To install ngrest, just open terminal and copy-paste:
 
@@ -144,6 +144,7 @@ wget -qO- http://bit.ly/ngrest | bash
 
 [Installation guide with screenshots for Windows](https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots-Windows)
 
+[Installation guide with screenshots for Mac OS X](https://github.com/loentar/ngrest/wiki/Installation-guide-with-screenshots-OSX)
 
 **Notes:**
 
