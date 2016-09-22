@@ -119,8 +119,7 @@ echo "Build OK"
 if [ $OS = MINGW ]
 then
   mkdir -p "$APPDATA/ngrest/bin/"
-  cp -f "$SRC_DIR/scripts/ngrest" "$APPDATA/ngrest/bin/"
-  echo -e "@bash \"\$APPDATA/ngrest/bin/ngrest\"" > "$APPDATA/ngrest/bin/ngrest.cmd"
+  cp -f "$SRC_DIR/scripts/ngrest" "$SRC_DIR/scripts/ngrest.cmd" "$APPDATA/ngrest/bin/"
 else
   # install to ~/bin if user already created it
   if [[ $PATH =~ ~/bin ]]

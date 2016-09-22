@@ -5,7 +5,7 @@ set -eu
 # detect OS
 OS=
 case $(uname -s) in
-  MINGW*)
+  MINGW*|MSYS*)
     OS=MINGW
     ;;
   Linux)
@@ -22,7 +22,8 @@ esac
 
 if [ $OS = MINGW ]
 then
-  export NGREST_ROOT=$APPDATA
+  export NGREST_ROOT=$(cd "$APPDATA\\ngrest"; pwd)
+  export PATH=/c/MinGW/bin:$PATH
 else
   export NGREST_ROOT=~/.ngrest
 fi
@@ -35,8 +36,8 @@ export NGREST_EXT_LIBS=
 export NGREST_EXT_INCLUDES=
 nl="
 "
-
-declare -A extensions
+# extensions are supported only under bash version >= 4
+declare -A extensions 2>/dev/null && ENABLE_EXTENSIONS=1 || ENABLE_EXTENSIONS=0
 
 if [ -e .ngrest/packages ]
 then
@@ -320,22 +321,25 @@ help() {
 
   *)
     extensions_help=
-    if [ -n "${1:-}" ]
+    if [ $ENABLE_EXTENSIONS -eq 1 ]
     then
-      desc="${extensions[$1]:-}"
-      if [ -n "$desc" ]
+      if [ -n "${1:-}" ]
       then
-        echo "${desc#*$nl}" >&2
-        return
+        desc="${extensions[$1]:-}"
+        if [ -n "$desc" ]
+        then
+          echo "${desc#*$nl}" >&2
+          return
+        fi
       fi
-    fi
 
-    for key in ${!extensions[@]}
-    do
-      desc="${extensions[$key]}"
-      while [ ${#key} -lt 14 ]; do key+=" "; done
-      extensions_help+="  $key ${desc%%$nl*}$nl"
-    done
+      for key in ${!extensions[@]}
+      do
+        desc="${extensions[$key]}"
+        while [ ${#key} -lt 14 ]; do key+=" "; done
+        extensions_help+="  $key ${desc%%$nl*}$nl"
+      done
+    fi
 
 
     cat >&2 << EOF
@@ -796,6 +800,12 @@ check_install_package() {
 }
 
 packages_list() {
+  if [ $ENABLE_EXTENSIONS -ne 1 ]
+  then
+    echo "Packages support is disabled" >&2
+    exit 2
+  fi
+
   check_get_name
 
   if [ -z "$added_packages" ]
@@ -811,6 +821,12 @@ packages_list() {
 }
 
 packages_add() {
+  if [ $ENABLE_EXTENSIONS -ne 1 ]
+  then
+    echo "Packages support is disabled" >&2
+    exit 2
+  fi
+
   package=${1:-}
   if [ -z "$package" ]
   then
@@ -841,6 +857,12 @@ packages_add() {
 }
 
 packages_remove() {
+  if [ $ENABLE_EXTENSIONS -ne 1 ]
+  then
+    echo "Packages support is disabled" >&2
+    exit 2
+  fi
+
   package=${1:-}
   if [ -z "$package" ]
   then
@@ -1100,10 +1122,13 @@ case $COMMAND in
   *)
     if [ -n "$COMMAND" ]
     then
-      if [ -n "${extensions[$COMMAND]:-}" ]
+      if [ $ENABLE_EXTENSIONS -eq 1 ]
       then
-        $COMMAND $@
-        exit
+        if [ -n "${extensions[$COMMAND]:-}" ]
+        then
+          $COMMAND $@
+          exit
+        fi
       fi
       echo "No such command: $COMMAND"
     fi
