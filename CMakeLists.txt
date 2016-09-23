@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 project (ngrest)
 
-set(NGREST_VERSION "0.2")
+set(NGREST_VERSION "0.2.0")
 
 include(CheckCXXCompilerFlag)
 include(CheckLibraryExists)
