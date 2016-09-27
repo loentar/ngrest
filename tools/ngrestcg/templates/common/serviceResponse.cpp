@@ -1,8 +1,14 @@
 ##ifneq($($thisElementValue),void)
 /// ######### serialize response ###########
+
+##ifneq($(operation.options.*inlineResult),1||true)
         ::ngrest::Object* responseNode = context->pool->alloc< ::ngrest::Object>();
         ::ngrest::NamedNode* resultNode = context->pool->alloc< ::ngrest::NamedNode>("$(operation.options.*resultElement||"result")");
         responseNode->firstChild = resultNode;
+##var resultNodeNode resultNode->node
+##else
+##var resultNodeNode context->response->node
+##endif
 
 ##switch $(.type)
 \
@@ -12,7 +18,7 @@
         NGREST_ASSERT(::ngrest::toCString(result, resultBuff, NGREST_NUM_TO_STR_BUFF_SIZE), "Failed to serialize result for $(service.name)/$(operation.name)");
         const char* resultCStr = context->pool->putCString(resultBuff, true);
 ##endif
-        resultNode->node = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::\
+        $($resultNodeNode) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::\
 ##ifeq($(.name.!match/bool/),true)
 Boolean\
 ##else
@@ -26,12 +32,12 @@ result ? "true" : "false"\
 ##endif
 );
 ##case string
-        resultNode->node = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, result.c_str());
+        $($resultNodeNode) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, result.c_str());
 ##case enum
-        resultNode->node = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.ns)$(.name.!replace/::/Serializer::/)Serializer::toCString(result));
+        $($resultNodeNode) = context->pool->alloc< ::ngrest::Value>(::ngrest::ValueType::String, $(.ns)$(.name.!replace/::/Serializer::/)Serializer::toCString(result));
 ##case struct||typedef
-        resultNode->node = context->pool->alloc< ::ngrest::Object>();
-        $(.ns)$(.name.!replace/::/Serializer::/)Serializer::serialize(context, result, resultNode->node);
+        $($resultNodeNode) = context->pool->alloc< ::ngrest::Object>();
+        $(.ns)$(.name.!replace/::/Serializer::/)Serializer::serialize(context, result, $($resultNodeNode));
 ##case template
 \
 // count = $(.templateParams.$count)
@@ -40,7 +46,7 @@ result ? "true" : "false"\
 ### /// list
 ##case vector||list
         ::ngrest::Array* resultArray = context->pool->alloc< ::ngrest::Array>();
-        resultNode->node = resultArray;
+        $($resultNodeNode) = resultArray;
         ::ngrest::LinkedNode* lastResultArrayItem = nullptr;
         for (const auto& it : result) {
             ::ngrest::LinkedNode* resultArrayItem = context->pool->alloc< ::ngrest::LinkedNode>();
@@ -66,7 +72,7 @@ result ? "true" : "false"\
 ### /// map
 ##case map||unordered_map
         ::ngrest::Object* resultObj = context->pool->alloc< ::ngrest::Object>();
-        resultNode->node = resultObj;
+        $($resultNodeNode) = resultObj;
         ::ngrest::NamedNode* lastResultObjItem = nullptr;
         for (const auto& it : result) {
 ### // key
@@ -117,7 +123,7 @@ result ? "true" : "false"\
 ##pushvars
 ##var var (*result)
 ##var name result
-##var node resultNode->node
+##var node $($resultNodeNode)
 ##indent +2
 ##include <common/serialization.cpp>
 ##indent -2
@@ -133,8 +139,10 @@ result ? "true" : "false"\
 ##default
 ##error Serialization of type is not supported: $($thisElementValue): $(.type) :: $(service.name)/$(operation.name)
 ##endswitch
+##ifneq($(operation.options.*inlineResult),1||true)
 
         context->response->node = responseNode;
+##endif
 /// ######### serialize response end ###########
 
 ##endif

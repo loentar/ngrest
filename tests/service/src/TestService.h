@@ -138,6 +138,51 @@ public:
 
     TestPtr ptrTest(const TestPtr& arg);
     ngrest::Nullable<TestPtr> ptrTestNull(const ngrest::Nullable<TestPtr>& arg);
+
+
+
+    // inline result element
+
+    // *inlineResult: true
+    bool getInline() const;
+    // *inlineResult: true
+    std::string echoSyncInline(const std::string& value);
+    // *inlineResult: true
+    int addInline(int a, int b);
+    // *inlineResult: true
+    void notifyInline();
+
+    // *method: PUT
+    // *location: theTestInline
+    // *inlineResult: true
+    Test testInline(const Test& arg);
+
+    // serialized as array
+    // *inlineResult: true
+    std::list<std::string> templListStrInline(const std::list<std::string>& arg);
+    // *inlineResult: true
+    std::vector<int> templVectorInline(const std::vector<int>& arg);
+    // *inlineResult: true
+    StringList templListOfTypedefListInline(const StringList& arg);
+
+
+    // *inlineResult: true
+    std::list<std::list<int>> templListListInline(const std::list<std::list<int>>& arg);
+
+    // *inlineResult: true
+    std::map<int, std::string> templMapIntInline(const std::map<int, std::string>& arg);
+
+    // *inlineResult: true
+    StringMap testTypedefInline(const StringMap& arg);
+    // *inlineResult: true
+    ValType testEnumInline(ValType arg);
+    // *inlineResult: true
+    Test::TestEnum testNestedEnumInline(Test::TestEnum arg);
+    // *inlineResult: true
+    Test::Nested testNestedStructInline(Test::Nested arg);
+
+    // *inlineResult: true
+    ngrest::Nullable<int> ptrIntInline(ngrest::Nullable<int> arg);
 };
 
 } // namespace ngrest

@@ -221,5 +221,82 @@ ngrest::Nullable<TestPtr> TestService::ptrTestNull(const ngrest::Nullable<TestPt
     return arg;
 }
 
+
+// inline result
+
+bool TestService::getInline() const
+{
+    return true;
+}
+
+std::string TestService::echoSyncInline(const std::string &value)
+{
+    return "You said " + value;
+}
+
+int TestService::addInline(int a, int b)
+{
+    return a + b;
+}
+
+void TestService::notifyInline()
+{
+}
+
+Test TestService::testInline(const Test &arg)
+{
+    return arg;
+}
+
+std::list<std::string> TestService::templListStrInline(const std::list<std::string> &arg)
+{
+    return arg;
+}
+
+std::vector<int> TestService::templVectorInline(const std::vector<int> &arg)
+{
+    return arg;
+}
+
+StringList TestService::templListOfTypedefListInline(const StringList &arg)
+{
+    return arg;
+}
+
+std::list<std::list<int> > TestService::templListListInline(const std::list<std::list<int> > &arg)
+{
+    return arg;
+}
+
+std::map<int, std::string> TestService::templMapIntInline(const std::map<int, std::string> &arg)
+{
+    return arg;
+}
+
+StringMap TestService::testTypedefInline(const StringMap &arg)
+{
+    return arg;
+}
+
+ValType TestService::testEnumInline(ValType arg)
+{
+    return arg;
+}
+
+Test::TestEnum TestService::testNestedEnumInline(Test::TestEnum arg)
+{
+    return arg;
+}
+
+Test::Nested TestService::testNestedStructInline(Test::Nested arg)
+{
+    return arg;
+}
+
+ngrest::Nullable<int> TestService::ptrIntInline(ngrest::Nullable<int> arg)
+{
+    return arg;
+}
+
 } // namespace ngrest
 
