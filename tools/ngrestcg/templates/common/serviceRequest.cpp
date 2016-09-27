@@ -29,8 +29,12 @@
 ##endif
 ##case enum
         $(param.name) = $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::fromCString(::ngrest::ObjectModelUtils::getChildValue(request, "$(param.name)"));
-##case struct||typedef
+##case struct
         const ::ngrest::NamedNode* $(param.name)Obj = ::ngrest::ObjectModelUtils::getNamedChild(request, "$(param.name)", ::ngrest::NodeType::Object);
+        $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::deserialize($(param.name)Obj->node, $(param.name));
+### we dont know typedef type here, so take any
+##case typedef
+        const ::ngrest::NamedNode* $(param.name)Obj = ::ngrest::ObjectModelUtils::getNamedChild(request, "$(param.name)");
         $(param.dataType.ns)$(param.dataType.name.!replace/::/Serializer::/)Serializer::deserialize($(param.name)Obj->node, $(param.name));
 ##case template
 \

@@ -11,7 +11,7 @@ Undefined\
 Number\
 ##endif
 ##endif
-##case struct||typedef
+##case struct
 Object\
 ##case template
 ##ifeq($(.name),list||vector)
@@ -19,6 +19,8 @@ Array\
 ##else
 Object\
 ##endif
+##case typedef
+Any\
 ##default
 Unknown\
 ##endswitch

@@ -35,7 +35,7 @@ class NGREST_COMMON_EXPORT ObjectModelUtils
 {
 public:
     /**
-     * @brief get object's child by name and type performing type correctness
+     * @brief get object's child by name and type checking child type correctness
      * @param object object where perform the search of the child
      * @param name child name to find
      * @param type type of the child node
@@ -46,10 +46,24 @@ public:
     {
         const NamedNode* namedNode = object->findChildByName(name);
         NGREST_ASSERT(namedNode, "Failed to get child " + std::string(name) + " is missing");
-        NGREST_ASSERT(namedNode->node,
-                      "Failed to read element " + std::string(name) + " node is null");
+        NGREST_ASSERT(namedNode->node, "Failed to read element " + std::string(name) + " node is null");
         NGREST_ASSERT(namedNode->node->type == type,
                       "Failed to read element " + std::string(name) + ": node type does not match");
+        return namedNode;
+    }
+
+    /**
+     * @brief get object's child by name and type
+     * @param object object where perform the search of the child
+     * @param name child name to find
+     * @return found name
+     * @throws AssertException
+     */
+    static inline const NamedNode* getNamedChild(const Object* object, const char* name)
+    {
+        const NamedNode* namedNode = object->findChildByName(name);
+        NGREST_ASSERT(namedNode, "Failed to get child " + std::string(name) + " is missing");
+        NGREST_ASSERT(namedNode->node, "Failed to read element " + std::string(name) + " node is null");
         return namedNode;
     }
 

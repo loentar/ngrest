@@ -42,7 +42,8 @@ struct ParameterDescription
         Number,
         Boolean,
         Array,
-        Object
+        Object,
+        Any
     };
 
     std::string name;  //!< parameter name

@@ -331,7 +331,13 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
     var result = $('#result')[0];
 
     function parseField(input, inputValue) {
-      if (input.className === 'object') {
+      if (input.className === 'any') {
+        try {
+          return JSON.parse(inputValue);
+        } catch (e) {
+          return inputValue;
+        }
+      } else if (input.className === 'object') {
         try {
           var value = JSON.parse(inputValue);
           if (!typeof value === 'object' || (value instanceof Array)) {
@@ -432,6 +438,9 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
         } else if (param.type == ParameterDescription::Type::Array) {
             form += "<td><textarea cols='50' rows='3' id='" + parameter + "' name='" + parameter + "' placeholder='"
                     + paramTypeToString(param.type) + "' class='array'></textarea></td>";
+        } else if (param.type == ParameterDescription::Type::Any) {
+            form += "<td><textarea cols='50' rows='3' id='" + parameter + "' name='" + parameter + "' placeholder='"
+                    + paramTypeToString(param.type) + "' class='any'></textarea></td>";
         } else {
             form += "<td><input type='text' id='" + parameter + "' name='" + parameter + "' placeholder='"
                       + paramTypeToString(param.type) + "'></input></td>";

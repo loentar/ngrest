@@ -25,7 +25,7 @@ tests=(
    # one element
   'templListOfStruct?arg=%5B%7B%22a%22%3A1%2C%22b%22%3A%22test%22%2C%22testEnum%22%3A%22Some%22%2C%22n%22%3A%7B%22b%22%3Atrue%7D%2C%22ls%22%3A%5B%22asd%22%2C%22qwe%22%2C%223%22%5D%7D%5D|{"result":[{"a":1,"b":"test","testEnum":"Some","n":{"b":true},"ls":["asd","qwe","3"]}]}'
   'templListOfTypedef?arg=%5B%7B%22a%22%3A1%2C%22b%22%3A%22test%22%2C%22testEnum%22%3A%22Some%22%2C%22n%22%3A%7B%22b%22%3Atrue%7D%2C%22ls%22%3A%5B%22asd%22%2C%22qwe%22%2C%223%22%5D%7D%5D|{"result":[{"a":1,"b":"test","testEnum":"Some","n":{"b":true},"ls":["asd","qwe","3"]}]}'
-#  'templListOfTypedefList?arg=%5B%22a%22%2C%221%22%2C%22b%22%2C%22test%22%5D|["a","1","b","test"]'
+  'templListOfTypedefList?arg=%5B%22a%22%2C%221%22%2C%22b%22%2C%22test%22%5D|{"result":["a","1","b","test"]}'
 
 
   'templListList?arg=%5B%5B1,3,5%5D%5D|{"result":[[1,3,5]]}'
@@ -85,7 +85,7 @@ tests=(
 
   'templListStrInline?arg=%5B%22a%22%2C%221%22%2C%22test%22%5D|["a","1","test"]'
   'templVectorInline?arg=%5B1,2,100%5D|[1,2,100]'
-#  'templListOfTypedefListInline?arg=%5B%7B%22a%22%3A1%2C%22b%22%3A%22test%22%2C%22testEnum%22%3A%22Some%22%2C%22n%22%3A%7B%22b%22%3Atrue%7D%2C%22ls%22%3A%5B%22asd%22%2C%22qwe%22%2C%223%22%5D%7D%5D|[{"a":1,"b":"test","testEnum":"Some","n":{"b":true},"ls":["asd","qwe","3"]}]'
+  'templListOfTypedefListInline?arg=%5B%22a%22%2C%221%22%2C%22b%22%2C%22test%22%5D|["a","1","b","test"]'
 
   'templListListInline?arg=%5B%5B1,3,5%5D%5D|[[1,3,5]]'
 
