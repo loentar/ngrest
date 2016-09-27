@@ -1,7 +1,7 @@
 ##ifneq($($thisElementValue),void)
 /// ######### serialize response ###########
 
-##ifneq($(operation.options.*inlineResult),1||true)
+##ifneq($(operation.options.*inlineResult||interface.options.*defaultInlineResult),1||true)
         ::ngrest::Object* responseNode = context->pool->alloc< ::ngrest::Object>();
         ::ngrest::NamedNode* resultNode = context->pool->alloc< ::ngrest::NamedNode>("$(operation.options.*resultElement||"result")");
         responseNode->firstChild = resultNode;
@@ -139,7 +139,7 @@ result ? "true" : "false"\
 ##default
 ##error Serialization of type is not supported: $($thisElementValue): $(.type) :: $(service.name)/$(operation.name)
 ##endswitch
-##ifneq($(operation.options.*inlineResult),1||true)
+##ifneq($(operation.options.*inlineResult||interface.options.*defaultInlineResult),1||true)
 
         context->response->node = responseNode;
 ##endif
