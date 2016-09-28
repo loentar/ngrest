@@ -183,6 +183,7 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
         context.request = context.pool->alloc<ngrest::HttpRequest>();
         context.response = context.pool->alloc<ngrest::HttpResponse>();
         context.response->poolBody = pooler.obtain(65536); // 64 KB chunks for output buffer
+        PoolRecycler recyclerBody(context.response->poolBody);
 
         ngrest::HttpRequest* httpRequest = static_cast<ngrest::HttpRequest*>(context.request);
         ngrest::HttpResponse* httpResponse = static_cast<ngrest::HttpResponse*>(context.response);
