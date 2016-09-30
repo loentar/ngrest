@@ -33,6 +33,10 @@
 
 #include "TestServiceGroup.h"
 
+#if defined WIN32 || defined __APPLE__
+typedef void(__cdecl *sighandler_t)(int);
+#endif
+
 int help() {
     std::cerr << "ngrest_server [-h][-p <PORT>]" << std::endl
               << "  -p        port number to use (default: 9098)" << std::endl
