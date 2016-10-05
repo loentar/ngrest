@@ -1199,7 +1199,7 @@ public:
                 }
 
                 Include include;
-                include.interfaceName = this->interface.name;
+                include.interfaceName = interface.name;
                 include.ns = interface.ns;
                 include.fileName = interface.fileName;
                 include.filePath = interface.filePath;

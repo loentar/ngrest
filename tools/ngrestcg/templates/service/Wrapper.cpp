@@ -8,8 +8,8 @@
 #include <ngrest/utils/Exception.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/common/ObjectModelUtils.h>
-##ifneq($(interface.services.$count),0)
 #include <ngrest/common/Message.h>
+##ifneq($(interface.services.$count),0)
 #include <ngrest/common/HttpMethod.h>
 #include <ngrest/common/Service.h>
 #include <ngrest/engine/ServiceDescription.h>

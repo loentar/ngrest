@@ -19,6 +19,12 @@
 #include "$(interface.filePath)$(interface.fileName)"
 \
 \
+##ifeq($(interface.services.$count),0)
+namespace ngrest {
+struct MessageContext;
+}
+##endif
+\
 ##ifneq($(interface.services.$count),0)
 
 ##foreach $(interface.services)
