@@ -225,9 +225,10 @@ public:
             }
         } else {
             file.unget();
+            return false;
         }
 
-        return !comment.empty();
+        return true;
     }
 
     bool checkIgnoreMetacomment(const std::string& text)
