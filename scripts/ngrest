@@ -486,9 +486,11 @@ EOF
 }
 
 build() {
-  PROJECT_DIR=$PWD
-  mkdir -p .ngrest/local/build
-  cd .ngrest/local/build
+  check_get_name
+  BUILD_DIR=$PROJECT_DIR/.ngrest/local/build
+
+  mkdir -p "$BUILD_DIR"
+  cd "$BUILD_DIR"
 
   [ -e .ngrest_version ] && BUILT_WITH_VERSION=$(<.ngrest_version) || BUILT_WITH_VERSION=
   CURRENT_VERSION=$(git -C "$NGREST_HOME_SRC" rev-parse HEAD)
@@ -523,6 +525,8 @@ build() {
 
   [ "$BUILT_WITH_VERSION" = "$CURRENT_VERSION" ] || echo "$CURRENT_VERSION" > .ngrest_version
   echo "build finished."
+
+  cd "$PROJECT_DIR"
 }
 
 color() {
@@ -533,7 +537,7 @@ start_server() {
   CODE=0
   rm -f core*
   ulimit -c unlimited 2>/dev/null || true
-  ngrestserver -l "$IP" -p $PORT -s $PWD/services || CODE=$?
+  ngrestserver -l "$IP" -p $PORT -s "$BUILD_DIR/services" || CODE=$?
   if [ $CODE -eq 139 ]
   then
     CORE=$(find core* -type f -name 'core*' 2>/dev/null || true)
@@ -616,6 +620,7 @@ EOF
     exit 1
   fi
   NAME=$(<.ngrest/name)
+  PROJECT_DIR=$PWD
 }
 
 run() {
