@@ -215,7 +215,8 @@ static void mod_ngrest_finalize_request(void* req, int status)
     LOGLABEL;
     ngx_int_t res = ngx_http_output_filter(r, &ctx->outChain);
     LOG1("RC: %ld", res);
-    ngx_http_output_filter(r, NULL);
+    if (r->headers_in.content_length_n > 0)
+        ngx_http_finalize_request(req, res);
 }
 
 static struct ngrest_mod_callbacks mod_ngrest_server_callbacks = {
