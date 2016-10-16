@@ -269,6 +269,17 @@ List packages used by current project. Packages are printed with version numbers
 EOF
 }
 
+help_upgrade_package() {
+  cat >&2 << EOF
+Usage: ngrest upgrade-package [<package_name> [<package_version>]] | [--all]
+
+Upgrade selected package to specific version.
+If <package_version> is omitted package will be upgraded to the last available version.
+if argument --all is passed, all packages will be upgraded to the last available version.
+
+EOF
+}
+
 help() {
   case "${1:-}" in
   create)
@@ -297,6 +308,10 @@ help() {
 
   packages)
     help_packages
+    ;;
+
+  upgrade-package)
+    help_upgrade_package
     ;;
 
   bundle-server)
@@ -336,7 +351,7 @@ help() {
       for key in ${!extensions[@]}
       do
         desc="${extensions[$key]}"
-        while [ ${#key} -lt 14 ]; do key+=" "; done
+        while [ ${#key} -lt 16 ]; do key+=" "; done
         extensions_help+="  $key ${desc%%$nl*}$nl"
       done
     fi
@@ -346,20 +361,21 @@ help() {
 Usage: ngrest [help] [<command>] [<arguments>]
 
 Commands:
-  create         Create a new project.
-  run            (default) Build and run current project in local deployment mode.
-  build          Build current project.
-  clean          Clean build and program cache.
-  add            Add a new package into current project.
-  remove         Remove a package from current project.
-  packages       List packages used by current project.
-  upgrade        Upgrade ngrest to the latest available version.
-  bundle-server  Create ngrest server bundle to install it to another machine.
-  deploy-server  Deploy local version of ngrest server to remote host.
-  bundle         Create bundle of the current project to install it to another host.
-  deploy         Deploy local version of the current project to remote host.
+  create           Create a new project.
+  run              (default) Build and run current project in local deployment mode.
+  build            Build current project.
+  clean            Clean build and program cache.
+  add              Add a new package into current project.
+  remove           Remove a package from current project.
+  packages         List packages used by current project.
+  upgrade          Upgrade ngrest to the latest available version.
+  upgrade-package  Upgrade packages to the latest available version.
+  bundle-server    Create ngrest server bundle to install it to another machine.
+  deploy-server    Deploy local version of ngrest server to remote host.
+  bundle           Create bundle of the current project to install it to another host.
+  deploy           Deploy local version of the current project to remote host.
 $extensions_help\
-  help           Display help for the command.
+  help             Display help for the command.
 
 EOF
     ;;
@@ -774,14 +790,15 @@ check_install_package() {
     fi
   done
 
-  # not installed or dir does not exist
+  PROJECT_PWD=$PWD
+
+  # package is not installed or dir does not exist
   if [ $pkg_installed -eq 0 -o ! -e "$NGREST_PACKAGES_DIR/$1-build/.build_ok" ]
   then
     # clone extension's repo and build
     color "1"
     echo "Package $1 is not installed locally. Installing..."
     color "0"
-    PROJECT_PWD=$PWD
     mkdir -p "$NGREST_PACKAGES_DIR"
     cd "$NGREST_PACKAGES_DIR"
     if [ ! -e "$1" ]
@@ -801,7 +818,17 @@ check_install_package() {
     [ ! -e "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject" ] || . "$NGREST_PACKAGES_DIR/$1/scripts/ngrest-inject"
 
     echo "$1" >> "$NGREST_PACKAGES_DIR/packages"
+  elif [ "${2:-}" = upgrade ]
+  then
+    mkdir -p "$NGREST_PACKAGES_DIR"
+    cd "$NGREST_PACKAGES_DIR"
+    rm -rf "$1-build"
+    mkdir -p "$1-build"
+    cd "$1-build"
+    build_package "$1" ../${1##*/}
   fi
+
+  cd "$PROJECT_PWD"
 }
 
 packages_list() {
@@ -897,6 +924,64 @@ packages_remove() {
   sed -i~ "/^${package//\//\\/}\$/d" .ngrest/packages
 
   echo "Package $package has been removed."
+}
+
+packages_upgrade_one() {
+  cd "$NGREST_PACKAGES_DIR/$1"
+
+  LAST_VERSION=$(git rev-parse HEAD)
+  [ -n "${2:-}" ] || git checkout master >/dev/null
+  RES=$(LANG=C git pull >/dev/null)
+  [ -z "${2:-}" ] || RES=$(git checkout $2 >/dev/null)
+  CURRENT_VERSION=$(git rev-parse HEAD)
+
+  cd - >/dev/null
+  if [ "$CURRENT_VERSION" = "$LAST_VERSION" -a -e "$NGREST_PACKAGES_DIR/$1-build/.build_ok" ]
+  then
+    echo "$1: No upgrades found"
+  else
+    check_install_package "$package" upgrade
+
+    [ ! -e "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" ] || \
+      bash "$NGREST_PACKAGES_DIR/$package/scripts/ngrest-trigger" upgrade "$LAST_VERSION" "$CURRENT_VERSION" "$@"
+
+    echo "$1 upgraded to $CURRENT_VERSION"
+  fi
+}
+
+packages_upgrade() {
+  echo "Checking for packages to upgrade..."
+
+  if [ $ENABLE_EXTENSIONS -ne 1 ]
+  then
+    echo "Packages support is disabled" >&2
+    exit 2
+  fi
+
+  check_get_name
+
+  if [ -z "$added_packages" ]
+  then
+    echo "No packages added" >&2
+    exit 0
+  fi
+
+  if [ -z "${1:-}" ]
+  then
+    echo "Argument ommited" >&2
+    help_upgrade_package
+    exit 1
+  fi
+
+  if [ "x$1" == "x--all" ]
+  then
+    for pkg in ${added_packages[@]}
+    do
+      packages_upgrade_one $pkg
+    done
+  else
+    packages_upgrade_one "$@"
+  fi
 }
 
 
@@ -1086,6 +1171,10 @@ case $COMMAND in
 
   packages)
     packages_list
+    ;;
+
+  upgrade-package)
+    packages_upgrade $@
     ;;
 
   build)
