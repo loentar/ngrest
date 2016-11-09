@@ -43,7 +43,7 @@ then
     pkg=
 
     # detect package manager
-    for p in apt-get yum port
+    for p in apt-get yum port brew
     do
       if $p -v >/dev/null 2>&1
       then
@@ -58,7 +58,7 @@ then
       exit 1
     fi
 
-    [ $pkg == port ] && YES= || YES=-y
+    ( [ $pkg == port ] || [ $pkg == brew ] ) && YES= || YES=-y
 
     echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
     echo "To continue please enter your password, or press Ctrl+C to install it manually."
