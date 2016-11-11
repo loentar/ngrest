@@ -18,33 +18,20 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#ifndef NGREST_SERVERSTATUS_H
-#define NGREST_SERVERSTATUS_H
-
-#include <string>
-#include <ngrest/common/Service.h>
-#include <ngrest/common/Message.h>
+#ifndef NGREST_UTILS_ENUMCLASSHASH_H
+#define NGREST_UTILS_ENUMCLASSHASH_H
 
 namespace ngrest {
 
-//! Displays deployed services
-// *location: ngrest
-class ServerStatus: public Service
+struct EnumClassHash
 {
-public:
-    // *location: filters
-    void getFilters(MessageContext& context);
-
-    // *location: services
-    void getServices(MessageContext& context);
-
-    // *location: service/{name}
-    void getService(const std::string& name, MessageContext& context);
-
-    // *location: operation/{serviceName}/{operationName}
-    void getOperation(const std::string& serviceName, const std::string& operationName, MessageContext& context);
+    template <typename T>
+    int operator()(T t) const
+    {
+        return static_cast<int>(t);
+    }
 };
 
-}
+} // namespace ngrest
 
-#endif
+#endif // NGREST_UTILS_ENUMCLASSHASH_H

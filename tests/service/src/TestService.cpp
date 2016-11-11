@@ -298,5 +298,15 @@ ngrest::Nullable<int> TestService::ptrIntInline(ngrest::Nullable<int> arg)
     return arg;
 }
 
+std::string TestService::echo(const std::string& value)
+{
+    return value;
+}
+
+std::string TestService::echoPost(const std::string& value)
+{
+    return value;
+}
+
 } // namespace ngrest
 

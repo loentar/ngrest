@@ -26,6 +26,7 @@
 
 
 static const char* ngrestServicesPath = NULL;
+static const char* ngrestFiltersPath = NULL;
 static int initialized = 0;
 
 typedef struct {
@@ -242,8 +243,9 @@ static void mod_ngrest_handler(ngx_http_request_t* req)
         }
 
         LOG1("Using ngrest services path: %s", ngrestServicesPath);
+        LOG1("Using ngrest filters path: %s", ngrestFiltersPath);
 
-        if (ngrest_server_startup(ngrestServicesPath)) {
+        if (ngrest_server_startup(ngrestServicesPath, ngrestFiltersPath)) {
             LOG("failed to start ngrest");
             ngx_log_debug0(NGX_LOG_DEBUG_HTTP, req->connection->log, 0, "failed to start ngrest");
             return;
@@ -318,7 +320,7 @@ static ngx_int_t mod_ngrest_request_handler(ngx_http_request_t* req)
 
 static char* mod_ngrest_set_conf(ngx_conf_t* conf, ngx_command_t* cmd, void* unused)
 {
-    if (conf->args->nelts != 2)  // "ngrest", "/path/to/services"
+    if (conf->args->nelts != 2 && conf->args->nelts != 3)  // "ngrest", "/path/to/services", ["/path/to/filters"]
         return NGX_CONF_ERROR;
 
 #ifdef NGREST_MOD_DEBUG
@@ -333,11 +335,16 @@ static char* mod_ngrest_set_conf(ngx_conf_t* conf, ngx_command_t* cmd, void* unu
     ngrestServicesPath = mod_ngrest_to_cstring(&(((ngx_str_t*) conf->args->elts)[1]), conf->pool);
     LOG1("Using ngrest services path: %s", ngrestServicesPath);
 
+    if (conf->args->nelts == 3) {
+        ngrestFiltersPath = mod_ngrest_to_cstring(&(((ngx_str_t*) conf->args->elts)[2]), conf->pool);
+        LOG1("Using ngrest filters path: %s", ngrestFiltersPath);
+    }
+
     return NGX_CONF_OK;
 }
 
 static ngx_command_t mod_ngrest_commands[] = {
-    {ngx_string("ngrest"), NGX_HTTP_LOC_CONF | NGX_CONF_TAKE1, mod_ngrest_set_conf, 0, 0, NULL},
+    {ngx_string("ngrest"), NGX_HTTP_LOC_CONF | NGX_CONF_TAKE12, mod_ngrest_set_conf, 0, 0, NULL},
     ngx_null_command
 };
 

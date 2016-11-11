@@ -27,6 +27,8 @@
 #include <ngrest/utils/File.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
+#include <ngrest/engine/FilterDispatcher.h>
+#include <ngrest/engine/FilterDeployment.h>
 #include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
 
@@ -62,11 +64,15 @@ int main(int argc, char* argv[])
     }
 
     static ngrest::Server server;
-    ngrest::ServiceDispatcher dispatcher;
-    ngrest::Deployment deployment(dispatcher);
+    ngrest::ServiceDispatcher serviceDispatcher;
+    ngrest::Deployment deployment(serviceDispatcher);
+    ngrest::FilterDispatcher filterDispatcher;
+    ngrest::FilterDeployment filterDeployment(filterDispatcher);
     ngrest::HttpTransport transport;
-    ngrest::Engine engine(dispatcher);
+    ngrest::Engine engine(serviceDispatcher);
     ngrest::ClientHandler clientHandler(engine, transport);
+
+    engine.setFilterDispatcher(&filterDispatcher);
 
     server.setClientCallback(&clientHandler);
 
@@ -80,6 +86,10 @@ int main(int argc, char* argv[])
 
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
+
+    const std::string& filtersPath = ngrest::Runtime::getSharePath()
+        + NGREST_PATH_SEPARATOR "filters" NGREST_PATH_SEPARATOR;
+    filterDeployment.deployAll(filtersPath);
 
     const std::string& servicesPath = ngrest::Runtime::getSharePath()
         + NGREST_PATH_SEPARATOR "services" NGREST_PATH_SEPARATOR;

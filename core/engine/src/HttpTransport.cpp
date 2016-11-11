@@ -105,8 +105,7 @@ void HttpTransport::writeResponse(MemPool* pool, const Request* request, Respons
     case ContentType::NotSet:
     case ContentType::ApplicationJson: {
         HttpResponse* httpResponse = static_cast<HttpResponse*>(response);
-        Header* headerContentType = pool->alloc<Header>("Content-Type", "application/json");
-        httpResponse->headers = headerContentType;
+        response->headers = pool->alloc<Header>("Content-Type", "application/json", response->headers);
 
         if (httpResponse->node)
             json::JsonWriter::write(httpResponse->node, httpResponse->poolBody);

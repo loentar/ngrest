@@ -45,6 +45,7 @@
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>
 #include <ngrest/engine/Engine.h>
+#include <ngrest/engine/Phase.h>
 
 #include "strutils.h"
 #include "ClientHandler.h"
@@ -166,7 +167,7 @@ void ClientHandler::connected(Socket fd, const sockaddr_storage* addr)
                               client->port, sizeof(client->port),
                               NI_NUMERICHOST | NI_NUMERICSERV);
         if (res == 0) {
-            LogDebug() << "Accepted connection on client " << fd
+            LogDebug() << "Accepted connection on client #" << fd
                        << " (host=" << client->host << ", port=" << client->port << ")";
         } else {
             LogWarning() << "Failed to get client info: " << gai_strerror(res);
@@ -187,6 +188,7 @@ void ClientHandler::disconnected(Socket fd)
         clientInfo->deleteLater = true;
     }
     clients.erase(fd);
+    LogDebug() << "client #" << fd << " disconnected";
 }
 
 void ClientHandler::error(Socket fd)
@@ -281,6 +283,13 @@ bool ClientHandler::readyRead(Socket fd)
                 // parse HTTP header
                 parseHttpHeader(chunk->buffer, messageData);
 
+                try {
+                    engine.runPhase(Phase::Header, &messageData->context);
+                } catch (const Exception& ex) {
+                    processError(fd, messageData, ex);
+                    return false; // close connection to client
+                }
+
                 const Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
                 if (headerEncoding && !strcmp(headerEncoding->value, "chunked")) {
                     // FIXME: add support for chunked encoding
@@ -339,7 +348,12 @@ bool ClientHandler::readyRead(Socket fd)
         if (messageData->httpBodyRemaining == 0) {
             httpRequest->clientHost = clientData->host;
             httpRequest->clientPort = clientData->port;
-            processRequest(fd, messageData);
+            try {
+                processRequest(fd, messageData);
+            } catch (const Exception& ex) {
+                processError(fd, messageData, ex);
+                return false; // close connection to client
+            }
             break;
         }
     }
@@ -438,6 +452,7 @@ void ClientHandler::processRequest(Socket clientFd, MessageData* messageData)
         MemPool::Chunk* chunk = messageData->poolBody->flatten();
         httpRequest->bodySize = chunk->size;
         httpRequest->body = chunk->buffer;
+        httpRequest->poolBody = messageData->poolBody;
     } else {
         // handle body from poolStr with offset
         NGREST_ASSERT_NULL(messageData->poolStr->getChunkCount() == 1); // should never happen

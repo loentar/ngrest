@@ -23,8 +23,10 @@
 
 namespace ngrest {
 
+enum class Phase;
 struct MessageContext;
 class ServiceDispatcher;
+class FilterDispatcher;
 
 /**
  * @brief Message processing engine.
@@ -37,9 +39,22 @@ class Engine
 public:
     /**
      * @brief constructs engine with given dispatcher
-     * @param dispatcher service dispatcher to use
+     * @param serviceDispatcher service dispatcher to use
      */
-    Engine(ServiceDispatcher& dispatcher);
+    Engine(ServiceDispatcher& serviceDispatcher);
+
+    /**
+     * @brief set filter dispatcher for engine
+     * @param filterDispatcher filter dispatcher to use
+     */
+    void setFilterDispatcher(FilterDispatcher* filterDispatcher);
+
+    /**
+     * @brief run phase for the message
+     * @param phase message phase
+     * @param context message context
+     */
+    void runPhase(Phase phase, MessageContext* context);
 
     /**
      * @brief parse, dispatch message and write response
@@ -48,13 +63,20 @@ public:
     void dispatchMessage(MessageContext* context);
 
     /**
-     * @brief get dispatcher
-     * @return dispatcher
+     * @brief get service dispatcher
+     * @return service dispatcher
      */
-    ServiceDispatcher& getDispatcher();
+    ServiceDispatcher& getServiceDispatcher();
+
+    /**
+     * @brief get filter dispatcher
+     * @return filter dispatcher
+     */
+    FilterDispatcher* getFilterDispatcher();
 
 private:
-    ServiceDispatcher& dispatcher;
+    ServiceDispatcher& serviceDispatcher;
+    FilterDispatcher* filterDispatcher = nullptr;
 };
 
 } // namespace ngrest

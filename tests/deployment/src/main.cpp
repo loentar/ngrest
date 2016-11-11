@@ -25,12 +25,15 @@
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
+#include <ngrest/engine/FilterDispatcher.h>
+#include <ngrest/engine/FilterDeployment.h>
 #include <ngrest/engine/HttpTransport.h>
 
 #include "servercommon.h"
 #include "Server.h"
 #include "ClientHandler.h"
 
+#include "TestFilterGroup.h"
 #include "TestServiceGroup.h"
 
 #if defined WIN32 || defined __APPLE__
@@ -60,9 +63,13 @@ int main(int argc, char* argv[])
     static ngrest::Server server;
     ngrest::ServiceDispatcher dispatcher;
     ngrest::Deployment deployment(dispatcher);
+    ngrest::FilterDispatcher filterDispatcher;
+    ngrest::FilterDeployment filterDeployment(filterDispatcher);
     ngrest::HttpTransport transport;
     ngrest::Engine engine(dispatcher);
     ngrest::ClientHandler clientHandler(engine, transport);
+
+    engine.setFilterDispatcher(&filterDispatcher);
 
     server.setClientCallback(&clientHandler);
 
@@ -87,8 +94,11 @@ int main(int argc, char* argv[])
       curl -i -X GET -H "Content-Type:application/json" 'http://localhost:9098/td/async/Hello_world'
     */
 
-    ngrest::TestServiceGroup group;
-    deployment.deployStatic(&group);
+    ngrest::TestFilterGroup filterGroup;
+    filterDeployment.deployStatic(&filterGroup);
+
+    ngrest::TestServiceGroup serviceGroup;
+    deployment.deployStatic(&serviceGroup);
 
     return server.exec();
 }

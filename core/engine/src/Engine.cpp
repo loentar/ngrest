@@ -22,6 +22,7 @@
 #include <ngrest/utils/Log.h>
 #include <ngrest/common/Message.h>
 
+#include "FilterDispatcher.h"
 #include "ServiceDispatcher.h"
 #include "Transport.h"
 #include "Engine.h"
@@ -40,9 +41,11 @@ public:
 
     void success() override
     {
+        context->engine->runPhase(Phase::PostDispatch, context);
         // only write response in case of it was not written
         if (!context->response->poolBody->getSize())
             context->transport->writeResponse(context->pool, context->request, context->response);
+        context->engine->runPhase(Phase::PreSend, context);
         context->callback = origCallback;
         context->callback->success();
     }
@@ -58,9 +61,20 @@ public:
 };
 
 
-Engine::Engine(ServiceDispatcher& dispatcher_):
-    dispatcher(dispatcher_)
+Engine::Engine(ServiceDispatcher& serviceDispatcher_):
+    serviceDispatcher(serviceDispatcher_)
 {
+}
+
+void Engine::setFilterDispatcher(FilterDispatcher* filterDispatcher)
+{
+    this->filterDispatcher = filterDispatcher;
+}
+
+void Engine::runPhase(Phase phase, MessageContext* context)
+{
+    if (filterDispatcher)
+        filterDispatcher->processFilters(phase, context);
 }
 
 void Engine::dispatchMessage(MessageContext* context)
@@ -69,6 +83,8 @@ void Engine::dispatchMessage(MessageContext* context)
     NGREST_ASSERT_NULL(context->request);
     NGREST_ASSERT_NULL(context->response);
     NGREST_ASSERT_NULL(context->callback);
+
+    runPhase(Phase::PreDispatch, context);
 
     try {
         // this will replace context callback and restore it after dispatching the message
@@ -79,16 +95,21 @@ void Engine::dispatchMessage(MessageContext* context)
             NGREST_ASSERT(context->request->node, "Failed to read request"); // should never throw
         }
 
-        dispatcher.dispatchMessage(context);
+        serviceDispatcher.dispatchMessage(context);
     } catch (const Exception& err) {
         LogWarning() << err.getFileLine() << " " << err.getFunction() << " : " << err.what();
         context->callback->error(err);
     }
 }
 
-ServiceDispatcher& Engine::getDispatcher()
+ServiceDispatcher& Engine::getServiceDispatcher()
 {
-    return dispatcher;
+    return serviceDispatcher;
+}
+
+FilterDispatcher* Engine::getFilterDispatcher()
+{
+    return filterDispatcher;
 }
 
 } // namespace ngrest

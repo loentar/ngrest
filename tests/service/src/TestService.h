@@ -183,6 +183,15 @@ public:
 
     // *inlineResult: true
     ngrest::Nullable<int> ptrIntInline(ngrest::Nullable<int> arg);
+
+
+    // to test filters
+    std::string echo(const std::string& value);
+
+    // *method: POST
+    // *location: echo
+    std::string echoPost(const std::string& value);
+
 };
 
 } // namespace ngrest

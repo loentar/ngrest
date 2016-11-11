@@ -34,6 +34,8 @@
 
 #include "ServiceDescription.h"
 #include "ServiceWrapper.h"
+#include "Phase.h"
+#include "Engine.h"
 #include "Transport.h"
 #include "ServiceDispatcher.h"
 
@@ -373,6 +375,10 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
         const Resource& resource = it->second;
         if (resource.operation->method == method) {
             // found it!
+            if (context->engine)
+                context->engine->runPhase(Phase::PreInvoke, context);
+            LogDebug() << "Invoking service operation " << service->wrapper->getDescription()->name
+                       << "/" << resource.operation->name;
             service->wrapper->invoke(resource.operation, context);
             return;
         }
@@ -483,6 +489,9 @@ void ServiceDispatcher::dispatchMessage(MessageContext* context)
                << "\n---------------------\n";
     context->response->poolBody->reset();
 #endif
+
+    if (context->engine)
+        context->engine->runPhase(Phase::PreInvoke, context);
 
     LogDebug() << "Invoking service operation " << service->wrapper->getDescription()->name
                << "/" << resource->operation->name;

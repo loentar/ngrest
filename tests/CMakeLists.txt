@@ -9,5 +9,6 @@ if (HAS_JSON_C)
     add_subdirectory(json-benchmark)
 endif()
 add_subdirectory(deployment)
+add_subdirectory(filters)
 add_subdirectory(service)
 

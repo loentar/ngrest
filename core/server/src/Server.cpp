@@ -40,6 +40,7 @@
 
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/Error.h>
+#include <ngrest/utils/Exception.h>
 
 #include "ClientCallback.h"
 #include "Server.h"
@@ -412,10 +413,12 @@ void Server::handleRequest(Socket fd)
     // if res = 0, the query is ok, trust bytesAvail
     // else if there are some bytes to read or the query is failed - we will try to read
     if (res || bytesAvail) {
-        if (callback->readyRead(fd))
-            return;
-    } else {
-        LogDebug() << "client #" << fd << " closed connection";
+        try {
+            if (callback->readyRead(fd))
+                return;
+        } NGREST_CATCH_ALL {
+            // close client connection
+        }
     }
 
 #ifndef HAS_EPOLL

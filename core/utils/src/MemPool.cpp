@@ -94,7 +94,6 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
         if (newBuffer == nullptr)
             throw std::bad_alloc();
         chunks->buffer = newBuffer;
-        chunks->size = newSize;
         chunks->bufferSize = newBufferSize;
     }
 
@@ -107,6 +106,7 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
     }
     chunksCount = 1;
     currChunk = chunks;
+    chunks->size = newSize;
 
     if (terminate)
         chunks->buffer[newSize] = '\0'; // terminate with \0 for C strings
@@ -117,7 +117,8 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
 void MemPool::reserve(uint64_t size)
 {
     if (!chunksCount) {
-        newChunk(size);
+        // allocate at least default chunk size to prevent future reallocations for small data
+        newChunk(size > chunkSize ? size : chunkSize);
         return;
     }
 

@@ -29,6 +29,9 @@
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/ServiceWrapper.h>
 #include <ngrest/engine/ServiceDescription.h>
+#include <ngrest/engine/Phase.h>
+#include <ngrest/engine/Filter.h>
+#include <ngrest/engine/FilterDispatcher.h>
 
 #include "ServerStatus.h"
 
@@ -184,6 +187,60 @@ const char* paramTypeToString(ParameterDescription::Type type)
     }
 }
 
+void ServerStatus::getFilters(MessageContext& context)
+{
+    NGREST_ASSERT_HTTP(context.transport->getType() == Transport::Type::Http,
+                       HTTP_STATUS_501_NOT_IMPLEMENTED,
+                       "This service only supports HTTP transport");
+
+    HttpResponse* response = static_cast<HttpResponse*>(context.response);
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
+    response->headers = headerContentType;
+
+    MemPool* pool = context.response->poolBody;
+
+    pool->putCString("<html><head>"
+                    "<title>Deployed filters - ngrest</title>"
+                    "<style>");
+    pool->putCString(css);
+    pool->putCString("</style></head><body>"
+                     "<h1>ngrest</h1>&nbsp;<a href='/ngrest/services'>services</a>"
+                     "&nbsp;&nbsp;<a href='/ngrest/filters'>filters</a>"
+                    "<h2>Deployed filters:</h2>");
+    FilterDispatcher* filterDispatcher = context.engine->getFilterDispatcher();
+    if (filterDispatcher) {
+        for (int i = 0; i < static_cast<int>(Phase::Count); ++i) {
+            Phase phase = static_cast<Phase>(i);
+            const std::list<Filter*>& filters = filterDispatcher->getFilters(phase);
+            pool->putCString("<p><li><h3>Phase ");
+            pool->putCString(PhaseInfo::phaseToString(phase));
+            pool->putCString(":</h3></li><ul>");
+            if (!filters.empty()) {
+                for (const Filter* filter : filters) {
+                    pool->putCString("<li>");
+                    pool->putCString(filter->getName().c_str());
+                    const auto& dependencies = filter->getDependencies();
+                    if (!dependencies.empty()) {
+                        pool->putCString(" -&gt; ");
+                        for (const std::string& dep : dependencies) {
+                            pool->putCString(dep.c_str());
+                            pool->putCString(" ");
+                        }
+                    }
+                    pool->putCString("</li>");
+                }
+            } else {
+                pool->putCString("<span class=\"nocontent\">No filters registered within this phase</span>");
+            }
+            pool->putCString("</ul>");
+        }
+    } else {
+        pool->putCString("<span class=\"nocontent\">Filter dispatcher is inactive</span>");
+    }
+
+    pool->putCString("</body></html>");
+}
+
 void ServerStatus::getServices(MessageContext& context)
 {
     NGREST_ASSERT_HTTP(context.transport->getType() == Transport::Type::Http,
@@ -201,9 +258,10 @@ void ServerStatus::getServices(MessageContext& context)
                     "<style>");
     pool->putCString(css);
     pool->putCString("</style></head><body>"
-                    "<h1><a href='/ngrest/services'>ngrest</a><h1>"
-                    "<h2>Deployed services:</h2>");
-    const std::vector<ServiceWrapper*>& services = context.engine->getDispatcher().getServices();
+                     "<h1>ngrest</h1>&nbsp;<a href='/ngrest/services'>services</a>"
+                     "&nbsp;&nbsp;<a href='/ngrest/filters'>filters</a>"
+                     "<h2>Deployed services:</h2>");
+    const std::vector<ServiceWrapper*>& services = context.engine->getServiceDispatcher().getServices();
     for (const ServiceWrapper* service : services) {
         const ServiceDescription* serviceDescr = service->getDescription();
         pool->putCString("<p><h3>");
@@ -227,7 +285,7 @@ void ServerStatus::getService(const std::string& name, MessageContext& context)
                        "This service only supports HTTP transport");
 
     HttpResponse* response = static_cast<HttpResponse*>(context.response);
-    const ServiceWrapper* service = context.engine->getDispatcher().getService(name);
+    const ServiceWrapper* service = context.engine->getServiceDispatcher().getService(name);
     NGREST_ASSERT_HTTP(service, HTTP_STATUS_404_NOT_FOUND, "Service not found: " + name);
 
     Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
@@ -273,7 +331,7 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
                        "This service only supports HTTP transport");
 
     HttpResponse* response = static_cast<HttpResponse*>(context.response);
-    const ServiceWrapper* service = context.engine->getDispatcher().getService(serviceName);
+    const ServiceWrapper* service = context.engine->getServiceDispatcher().getService(serviceName);
     NGREST_ASSERT_HTTP(service, HTTP_STATUS_404_NOT_FOUND, "Service not found: " + serviceName);
 
     const ServiceDescription* serviceDescr = service->getDescription();

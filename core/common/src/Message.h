@@ -41,9 +41,9 @@ struct NGREST_COMMON_EXPORT Header
 {
     const char* name;       //!< header name
     const char* value;      //!< header value
-    const Header* next;     //!< pointer to next header
+    Header* next;           //!< pointer to next header
 
-    inline Header(const char* name_ = nullptr, const char* value_ = nullptr, const Header* next_ = nullptr):
+    inline Header(const char* name_ = nullptr, const char* value_ = nullptr, Header* next_ = nullptr):
         name(name_), value(value_), next(next_)
     {
     }
@@ -56,10 +56,11 @@ struct NGREST_COMMON_EXPORT Header
 struct NGREST_COMMON_EXPORT Request
 {
     const char* path = nullptr;         //!< path to the REST resource
-    const Header* headers = nullptr;    //!< list of headers client passed
+    Header* headers = nullptr;          //!< list of headers passed from client
 
     char* body = nullptr;               //!< request body
     uint64_t bodySize = 0;              //!< size of request body
+    MemPool* poolBody = nullptr;        //!< pool where request body is stored or nullptr when no separate pool used
 
     Node* node = nullptr;               //!< parsed body
 
@@ -69,6 +70,13 @@ struct NGREST_COMMON_EXPORT Request
      * @return pointer to header, or nullptr of no header matched
      */
     const Header* getHeader(const char* name) const;
+
+    /**
+     * @brief getHeader gets header by name
+     * @param name header name in lower case
+     * @return pointer to header, or nullptr of no header matched
+     */
+    Header* getHeader(const char* name);
 };
 
 /**
@@ -76,7 +84,7 @@ struct NGREST_COMMON_EXPORT Request
  */
 struct NGREST_COMMON_EXPORT Response
 {
-    const Header* headers = nullptr;    //!< list of headers to send to client
+    Header* headers = nullptr;          //!< list of headers to send to client
 
     Node* node = nullptr;               //!< response body node
 

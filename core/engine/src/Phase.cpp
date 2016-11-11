@@ -18,33 +18,26 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#ifndef NGREST_SERVERSTATUS_H
-#define NGREST_SERVERSTATUS_H
-
-#include <string>
-#include <ngrest/common/Service.h>
-#include <ngrest/common/Message.h>
+#include "Phase.h"
 
 namespace ngrest {
 
-//! Displays deployed services
-// *location: ngrest
-class ServerStatus: public Service
+const char* PhaseInfo::phaseToString(Phase phase)
 {
-public:
-    // *location: filters
-    void getFilters(MessageContext& context);
-
-    // *location: services
-    void getServices(MessageContext& context);
-
-    // *location: service/{name}
-    void getService(const std::string& name, MessageContext& context);
-
-    // *location: operation/{serviceName}/{operationName}
-    void getOperation(const std::string& serviceName, const std::string& operationName, MessageContext& context);
-};
-
+    switch (phase) {
+    case Phase::Header:
+        return "header";
+    case Phase::PreDispatch:
+        return "predispatch";
+    case Phase::PreInvoke:
+        return "preinvoke";
+    case Phase::PostDispatch:
+        return "postdispatch";
+    case Phase::PreSend:
+        return "presend";
+    default:
+        return "unknown";
+    }
 }
 
-#endif
+}

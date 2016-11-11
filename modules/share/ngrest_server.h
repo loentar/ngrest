@@ -52,7 +52,7 @@ struct ngrest_mod_callbacks
     void (*finalize_response)(void* req, int statusCode);
 };
 
-int ngrest_server_startup(const char* servicesPath);
+int ngrest_server_startup(const char* servicesPath, const char* filtersPath);
 int ngrest_server_shutdown();
 int ngrest_server_dispatch(struct ngrest_server_request* request, struct ngrest_mod_callbacks callbacks);
 

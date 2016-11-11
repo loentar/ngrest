@@ -100,6 +100,27 @@ tests=(
   'ptrIntInline?arg=null|' # null response = empty response
   'ptrIntInline?arg=0|0'
   'ptrIntInline?arg=12|12'
+
+  # filters
+  # test throw
+  '?x-test-header-throw:1 echo?value=test|Throw found in headers'
+  '?x-test-header-throw2:1 echo?value=test|Throw2 found in headers'
+  '?x-test-predispatch-throw:1 echo?value=test|Throw found in headers'
+  '?x-test-preinvoke-throw:1 echo?value=test|Throw found in headers'
+  '?x-test-postdispatch-throw:1 echo?value=test|Throw found in headers'
+  '?x-test-presend-throw:1 echo?value=test|Throw found in headers'
+
+#  # test filtering
+  '?x-test-header:1 echo?value=00|{"result":"_ZERO__ZERO_"}'
+  '?x-test-predispatch:1 echo?value=aa1aa|{"result":"aa_ONE_aa"}'
+  '?x-test-predispatch:1 POST echo {"value":"aa1aa"}|{"result":"aa_ONE_aa"}'
+  '?x-test-preinvoke:1 echo?value=aa2aa|{"result":"aa33aa"}'
+  '?x-test-preinvoke:1 POST echo {"value":"aa2aa"}|{"result":"aa33aa"}'
+  '?x-test-postdispatch:1 echo?value=a3a|{"result":"a44a"}'
+  '?x-test-presend:1 echo?value=a4a|{"result":"a*a"}'
+
+  # chain filters: 0 -> _ZERO_, 1 -> _ONE_, 2 -> 33, 3 -> 44, 4-> *
+  '?x-test-header:1 ?x-test-predispatch:1 ?x-test-preinvoke:1 ?x-test-preinvoke:1 ?x-test-postdispatch:1 ?x-test-presend:1 echo?value=012345|{"result":"_ZERO__ONE_*4444445"}'
 )
 
 passed=0
@@ -109,6 +130,17 @@ do
   req="${t%%|*}"
   expect="${t##*|}"
   reqBody=
+  headers=
+  if [[ "$req" =~ " " ]]
+  then
+    while [ "${req::1}" == "?" ]
+    do
+      header=${req%% *}
+      headers+=" -H ${header:1}"
+      req="${req#* }"
+    done
+  fi
+
   if [[ "$req" =~ " " ]]
   then
     method="${req%% *}"
@@ -125,9 +157,9 @@ do
   echo -n "testing $method $req "
   if [ -n "$reqBody" ]
   then
-    res=$(curl -s -S -X $method -d @- -H "Content-Type:application/json" "$url" <<< "$reqBody")
+    res=$(curl -s -S -X $method -d @- $headers -H "Content-Type:application/json" "$url" <<< "$reqBody")
   else
-    res=$(curl -s -S -X $method "$url")
+    res=$(curl -s -S -X $method $headers "$url")
   fi
 
   ret=$?

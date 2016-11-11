@@ -32,4 +32,12 @@ const Header* Request::getHeader(const char* name) const
     return nullptr;
 }
 
+Header* Request::getHeader(const char* name)
+{
+    for (Header* header = headers; header; header = header->next)
+        if (!strcmp(name, header->name))
+            return header;
+    return nullptr;
+}
+
 }

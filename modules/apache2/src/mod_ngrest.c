@@ -29,6 +29,7 @@
 
 
 static const char* ngrestServicesPath = NULL;
+static const char* ngrestFiltersPath = NULL;
 static int initialized = 0;
 
 #ifdef NGREST_MOD_DEBUG
@@ -116,7 +117,7 @@ static int mod_ngrest_handler(request_rec* req)
                 return 500;
             }
 
-            int res = ngrest_server_startup(ngrestServicesPath);
+            int res = ngrest_server_startup(ngrestServicesPath, ngrestFiltersPath);
             LOG2("server startup: #%d: %s", res, !res ? "OK" : "FAILED");
             if (res) {
                 ap_log_error(APLOG_MARK, APLOG_INFO, 0, req->server, "ngrest: server startup failed with code %d", res);
@@ -189,10 +190,19 @@ static const char* ngrest_set_ngrest_services_path(cmd_parms* cmdParams, void* c
     return NULL;
 }
 
+static const char* ngrest_set_ngrest_filters_path(cmd_parms* cmdParams, void* config, const char* path)
+{
+    LOG1("Using ngrest filters path: [%s]", path);
+    ngrestFiltersPath = path;
+
+    return NULL;
+}
+
 
 static const command_rec ngrest_config_commands[] =
 {
     AP_INIT_RAW_ARGS("ServicesPath", ngrest_set_ngrest_services_path, NULL, RSRC_CONF, "Set ngrest services path"),
+    AP_INIT_RAW_ARGS("FiltersPath", ngrest_set_ngrest_filters_path, NULL, RSRC_CONF, "Set ngrest filters path"),
     {NULL}
 };
 

@@ -30,20 +30,27 @@
 #include <ngrest/utils/MemPool.h>
 #include <ngrest/utils/MemPooler.h>
 #include <ngrest/utils/tocstring.h>
+#include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Engine.h>
+#include <ngrest/engine/FilterDispatcher.h>
+#include <ngrest/engine/FilterDeployment.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
 #include <ngrest/common/HttpMessage.h>
+#include <ngrest/common/HttpException.h>
 
 #include "ngrest_server.h"
 
 static ngrest::ServiceDispatcher dispatcher;
 static ngrest::Deployment deployment(dispatcher);
+static ngrest::FilterDispatcher filterDispatcher;
+static ngrest::FilterDeployment filterDeployment(filterDispatcher);
 static ngrest::HttpTransport transport;
 static ngrest::Engine engine(dispatcher);
 static ngrest::MemPooler pooler;
 static std::string deployedServicesPath;
+static std::string deployedFiltersPath;
 static std::ofstream logstream;
 
 struct HeaderIterateContext
@@ -101,7 +108,7 @@ inline void toLowerCase(char* str)
         *str = tolower(*str);
 }
 
-int ngrest_server_startup(const char* servicesPath)
+int ngrest_server_startup(const char* servicesPath, const char* filtersPath)
 {
     if (!servicesPath || !servicesPath[0])
         return 1;
@@ -116,16 +123,27 @@ int ngrest_server_startup(const char* servicesPath)
         ngrest::Log::inst().setLogLevel(ngrest::Log::LogLevelVerbose);
 #endif
 
+        if (!deployedFiltersPath.empty())
+            filterDeployment.undeployAll();
+
         if (!deployedServicesPath.empty())
             deployment.undeployAll();
 
         std::string path = servicesPath;
         if (path.back() != '/')
             path.append("/");
+        deployedServicesPath = path;
 
         deployment.deployAll(path);
+        if (filtersPath) {
+            engine.setFilterDispatcher(&filterDispatcher);
+            path = filtersPath;
+            if (path.back() != '/')
+                path.append("/");
+            filterDeployment.deployAll(path);
+            deployedFiltersPath = path;
+        }
 
-        deployedServicesPath = path;
     } catch (const std::exception& e) {
         ngrest::LogWarning() << e.what();
         return 2;
@@ -176,7 +194,7 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
         ngrest::MessageContext context;
 
         context.pool = pooler.obtain();
-        PoolRecycler recycler(context.pool);
+        PoolRecycler recyclerContext(context.pool);
 
         context.engine = &engine;
         context.transport = &transport;
@@ -220,46 +238,63 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
             return 1;
         });
 
+        // TODO: place this before actual body reading
+        engine.runPhase(ngrest::Phase::Header, &context);
+
         if (request->hasBody) {
             ngrest::MemPool* poolRequest = pooler.obtain(65536);
-            PoolRecycler recycler(poolRequest);
-            if (request->bodySize > 0)
-                poolRequest->reserve(request->bodySize + 1); // '\0'
+            PoolRecycler recyclerRequest(poolRequest);
 
-            const int64_t chunkSize = poolRequest->getChunkSize();
-            int64_t bufferSize = chunkSize;
-            int64_t read = 0;
-            int64_t total = 0;
-            char* buffer = poolRequest->grow(chunkSize);
-            for (;;) {
-                read = callbacks.read_block(request->req, buffer, bufferSize);
-                if (read < 0) {
-                    callbacks.write_block(request->req, "Failed to read block!", 21);
-                    return 500;
+            if (request->bodySize > 0) {
+                // body size is known
+                int64_t bufferSize = request->bodySize;
+                poolRequest->reserve(bufferSize + 1); // '\0'
+
+                char* buffer = poolRequest->grow(bufferSize);
+                while (bufferSize) {
+                    int64_t read = callbacks.read_block(request->req, buffer, bufferSize);
+                    NGREST_ASSERT(read <= bufferSize, "read > buffer size");
+                    if (read < 0) {
+                        callbacks.write_block(request->req, "Failed to read block!", 21);
+                        return 500;
+                    }
+
+                    bufferSize -= read;
+                    buffer += read;
+                }
+            } else {
+                // body size is unknown
+                const int64_t chunkSize = poolRequest->getChunkSize();
+                int64_t bufferSize = chunkSize;
+                char* buffer = poolRequest->grow(chunkSize);
+                for (;;) {
+                    int64_t read = callbacks.read_block(request->req, buffer, bufferSize);
+                    NGREST_ASSERT(read <= bufferSize, "read > buffer size");
+                    if (read < 0) {
+                        callbacks.write_block(request->req, "Failed to read block!", 21);
+                        return 500;
+                    }
+
+                    if (!read) // eof
+                        break;
+
+                    bufferSize -= read;
+                    buffer += read;
+                    if (bufferSize == 0) {
+                        buffer = poolRequest->grow(chunkSize);
+                        bufferSize = chunkSize;
+                    }
                 }
 
-                if (!request->bodySize && !read) // eof while body size unknown. stopping read
-                    break;
-
-                buffer += read;
-                bufferSize -= read;
-                if (bufferSize == 0) {
-                    buffer = poolRequest->grow(chunkSize);
-                    bufferSize = chunkSize;
-                }
-                total += read;
-
-                if (request->bodySize && total >= request->bodySize)
-                    break;  // according to request->bodySize the whole request is read
+                poolRequest->shrinkLastChunk(bufferSize);
             }
-
-            poolRequest->shrinkLastChunk(bufferSize);
 
             ngrest::MemPool::Chunk* body = poolRequest->flatten();
             context.request->body = body->buffer;
             context.request->bodySize = body->size;
+            context.request->poolBody = poolRequest;
 
-            engine.dispatchMessage(&context); // poolRequest will be recycled ouside this scope
+            engine.dispatchMessage(&context); // poolRequest will be recycled ouside of this scope
         } else {
             engine.dispatchMessage(&context);
         }
@@ -277,15 +312,22 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
         callbacks.finalize_response(request->req, httpResponse->statusCode);
 
         return 0;
+    } catch (const ngrest::HttpException& e) {
+        const char* error = e.what();
+        ngrest::LogWarning() << error;
+        callbacks.write_block(request->req, error, strlen(error));
+        callbacks.finalize_response(request->req, e.getHttpStatus());
+        return e.getHttpStatus();
     } catch (const std::exception& e) {
         const char* error = e.what();
         ngrest::LogWarning() << error;
         callbacks.write_block(request->req, error, strlen(error));
+        callbacks.finalize_response(request->req, 500);
     } catch (...) {
         ngrest::LogWarning() << "Unknown exception raised";
         callbacks.write_block(request->req, "Internal server error", 22);
+        callbacks.finalize_response(request->req, 500);
     }
 
     return 500;
 }
-

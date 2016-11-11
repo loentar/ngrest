@@ -18,33 +18,25 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#ifndef NGREST_SERVERSTATUS_H
-#define NGREST_SERVERSTATUS_H
+#ifndef NGREST_TESTFILTERGROUP_H
+#define NGREST_TESTFILTERGROUP_H
 
-#include <string>
-#include <ngrest/common/Service.h>
-#include <ngrest/common/Message.h>
+#include <ngrest/engine/FilterGroup.h>
 
 namespace ngrest {
 
-//! Displays deployed services
-// *location: ngrest
-class ServerStatus: public Service
+class TestFilterGroup: public FilterGroup
 {
 public:
-    // *location: filters
-    void getFilters(MessageContext& context);
+    TestFilterGroup();
+    ~TestFilterGroup();
+    const std::string& getName() const override;
+    const FiltersMap& getFilters() const override;
 
-    // *location: services
-    void getServices(MessageContext& context);
-
-    // *location: service/{name}
-    void getService(const std::string& name, MessageContext& context);
-
-    // *location: operation/{serviceName}/{operationName}
-    void getOperation(const std::string& serviceName, const std::string& operationName, MessageContext& context);
+private:
+    FiltersMap filters;
 };
 
 }
 
-#endif
+#endif // NGREST_TESTFILTERGROUP_H
