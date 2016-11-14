@@ -39,7 +39,7 @@ nl="
 # extensions are supported only under bash version >= 4
 declare -A extensions 2>/dev/null && ENABLE_EXTENSIONS=1 || ENABLE_EXTENSIONS=0
 
-if [ -e .ngrest/packages ]
+if [ -f .ngrest/packages ]
 then
   added_packages=($(<.ngrest/packages))
   if [ -z "${added_packages:-}" ]
