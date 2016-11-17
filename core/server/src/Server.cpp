@@ -154,6 +154,9 @@ bool Server::create(const StringMap& args)
 void Server::setClientCallback(ClientCallback* callback)
 {
     this->callback = callback;
+
+    if (callback)
+        callback->setCloseConnectionCallback(this);
 }
 
 int Server::exec()
@@ -177,8 +180,9 @@ int Server::exec()
 
 #ifndef HAS_EPOLL
     fd_set readFds;
-    fd_set writeFds;
     timeval timeout;
+
+    FD_ZERO(&writeFds);
 #endif
 
     // The event loop
@@ -221,13 +225,13 @@ int Server::exec()
         timeout.tv_usec = 0;
         readFds = activeFds;
         FD_SET(fdServer, &readFds); // add server socket
-        writeFds = callback->getWriteQueue();
         int readyFds = select(FD_SETSIZE, &readFds, &writeFds, NULL, &timeout);
         if (readyFds == 0)
             continue;
 
         if (readyFds < 0) {
-            LogError() << "select" << Error::getLastError();
+            if (errno != EINTR)
+                LogError() << "select: " << Error::getLastError();
             return EXIT_FAILURE;
         }
 
@@ -236,10 +240,8 @@ int Server::exec()
         for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
 #ifdef WIN32
             Socket fd = readFds.fd_array[i];
-#elif defined __APPLE__
-            Socket fd = i;
 #else
-            Socket fd = readFds[i];
+            Socket fd = i;
 #endif
             if (FD_ISSET(fd, &readFds)) {
                 if (fd == fdServer) {
@@ -255,13 +257,29 @@ int Server::exec()
 
 #ifdef WIN32
             fd = writeFds.fd_array[i];
-#elif defined __APPLE__
-            fd = i;
-#else
-            fd = writeFds[i];
 #endif
             if (FD_ISSET(fd, &writeFds)) {
-                callback->readyWrite(fd);
+                WriteStatus status = callback->readyWrite(fd);
+                switch (status) {
+                case WriteStatus::Again:
+#ifndef HAS_EPOLL
+                    FD_SET(fd, &writeFds);
+#endif
+                    break;
+
+                case WriteStatus::Done:
+#ifndef HAS_EPOLL
+                    FD_CLR(fd, &writeFds);
+#endif
+                    break;
+
+                case WriteStatus::Close:
+                    closeConnection(fd);
+                    break;
+
+                default:
+                    break;
+                }
                 ++processedFds;
             }
         }
@@ -275,6 +293,17 @@ int Server::exec()
 void Server::quit()
 {
     isStopping = true;
+}
+
+void Server::closeConnection(Socket fd)
+{
+#ifndef HAS_EPOLL
+    FD_CLR(fd, &activeFds);
+    FD_CLR(fd, &writeFds);
+#endif
+
+    close(fd);
+    callback->disconnected(fd);
 }
 
 Socket Server::createServerSocket(const std::string& ip, const std::string& port)
@@ -421,12 +450,7 @@ void Server::handleRequest(Socket fd)
         }
     }
 
-#ifndef HAS_EPOLL
-    FD_CLR(fd, &activeFds);
-#endif
-
-    close(fd); // disconnect client in case of errors
-    callback->disconnected(fd);
+    closeConnection(fd);
 }
 
 }

@@ -35,8 +35,6 @@ check_library_exists(dl dlopen "" HAS_DL)
 check_include_file_cxx(sys/epoll.h HAS_EPOLL)
 if (HAS_EPOLL)
     add_definitions(-DHAS_EPOLL)
-else()
-    add_definitions(-DUSE_GET_WRITE_QUEUE)
 endif()
 
 if (MINGW)

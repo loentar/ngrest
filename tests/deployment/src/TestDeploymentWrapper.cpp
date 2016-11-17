@@ -107,7 +107,7 @@ void TestDeploymentWrapper::invoke(const OperationDescription* operation, Messag
                 // no need to "delete this" - it's in mempool
             }
 
-            virtual void error(const Exception& error)
+            virtual void error(const Exception& error) override
             {
                 context->callback->error(error);
                 // no need to "delete this" - it's in mempool

@@ -23,6 +23,9 @@ list(APPEND NGRESTTESTSERVICE_SOURCES ${NGRESTTESTSERVICE_CODEGEN_SOURCES})
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(ngresttestservice MODULE ${NGRESTTESTSERVICE_SOURCES})
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(ngresttestservice PROPERTIES SUFFIX ".dylib")
+endif()
 
 set_target_properties(ngresttestservice PROPERTIES PREFIX "")
 set_target_properties(ngresttestservice PROPERTIES

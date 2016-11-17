@@ -23,6 +23,9 @@ list(APPEND CRUDSERVICE_SOURCES ${CRUDSERVICE_CODEGEN_SOURCES})
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(crudservice MODULE ${CRUDSERVICE_SOURCES})
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(crudservice PROPERTIES SUFFIX ".dylib")
+endif()
 
 set_target_properties(crudservice PROPERTIES PREFIX "")
 set_target_properties(crudservice PROPERTIES

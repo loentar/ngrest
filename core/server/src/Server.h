@@ -21,7 +21,7 @@
 #ifndef NGREST_SERVER_H
 #define NGREST_SERVER_H
 
-#ifdef USE_GET_WRITE_QUEUE
+#ifndef HAS_EPOLL
 #ifndef WIN32
 #include <sys/select.h>
 #else
@@ -30,6 +30,7 @@
 #endif
 
 #include "servercommon.h"
+#include "ClientHandler.h"
 
 #ifdef HAS_EPOLL
 struct epoll_event;
@@ -37,12 +38,10 @@ struct epoll_event;
 
 namespace ngrest {
 
-class ClientCallback;
-
 /**
  * @brief simple socket server class with support of epoll or select
  */
-class Server
+class Server: public CloseConnectionCallback
 {
 public:
     /**
@@ -79,6 +78,12 @@ public:
      */
     void quit();
 
+    /**
+     * @brief close connection to client
+     * @param fd client socket descriptor
+     */
+    virtual void closeConnection(Socket fd) override;
+
 private:
     Socket createServerSocket(const std::string& ip, const std::string& port);
     bool setupNonblock(Socket fd);
@@ -94,6 +99,7 @@ private:
     epoll_event* events = nullptr;
 #else
     fd_set activeFds;
+    fd_set writeFds;
 #endif
     ClientCallback* callback = nullptr;
     std::string ip;

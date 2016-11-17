@@ -23,6 +23,9 @@ list(APPEND ECHOSERVICE_SOURCES ${ECHOSERVICE_CODEGEN_SOURCES})
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(echoservice MODULE ${ECHOSERVICE_SOURCES})
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(echoservice PROPERTIES SUFFIX ".dylib")
+endif()
 
 set_target_properties(echoservice PROPERTIES PREFIX "")
 set_target_properties(echoservice PROPERTIES

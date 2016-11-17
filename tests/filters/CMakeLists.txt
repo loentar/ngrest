@@ -16,3 +16,6 @@ set_target_properties(ngresttestfilter PROPERTIES
 )
 
 target_link_libraries(ngresttestfilter ngrestutils ngrestcommon ngrestengine)
+if (APPLE) # cmake sets .so extension for modules under mac os x
+    set_target_properties(ngresttestfilter PROPERTIES SUFFIX ".dylib")
+endif()

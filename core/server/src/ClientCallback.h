@@ -21,7 +21,7 @@
 #ifndef NGREST_CLIENTCALLBACK_H
 #define NGREST_CLIENTCALLBACK_H
 
-#ifdef USE_GET_WRITE_QUEUE
+#ifndef HAS_EPOLL
 #ifndef WIN32
 #include <sys/select.h>
 #else
@@ -34,6 +34,33 @@
 struct sockaddr_storage;
 
 namespace ngrest {
+
+/**
+ * @brief write status code
+ */
+enum class WriteStatus {
+    Success, //!< no action
+    Done,    //!< response finished, remove socket from write queue
+    Again,   //!< response processedd partially, add socket to write queue
+    Close    //!< close client connection
+};
+
+/**
+ * @brief callback to close connections from handler
+ */
+class CloseConnectionCallback {
+public:
+    /**
+     * @brief virtual destructor
+     */
+    virtual ~CloseConnectionCallback() {}
+
+    /**
+     * @brief close connection to client
+     * @param fd client socket descriptor
+     */
+    virtual void closeConnection(Socket fd) = 0;
+};
 
 /**
  * @brief callback class to process events from client
@@ -76,18 +103,15 @@ public:
     /**
      * @brief client socket is ready for writing
      * @param fd client socket descriptor
-     * @return true - write success
+     * @return write status code
      */
-    virtual bool readyWrite(Socket fd) = 0;
+    virtual WriteStatus readyWrite(Socket fd) = 0;
 
-#ifdef USE_GET_WRITE_QUEUE
     /**
-     * @brief gets list of sockets ready to write
-     *   compatibility function for systems without epoll support
-     * @return sockets ready to write
+     * @brief set calback to close connection
+     * @param callback callback
      */
-    virtual const fd_set& getWriteQueue() const = 0;
-#endif
+    virtual void setCloseConnectionCallback(CloseConnectionCallback* callback) = 0;
 };
 
 }

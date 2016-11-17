@@ -81,20 +81,15 @@ public:
     /**
      * @brief client socket is ready for writing
      * @param fd client socket descriptor
-     * @return true - write success
+     * @return write status code
      */
-    virtual bool readyWrite(Socket fd) override;
+    virtual WriteStatus readyWrite(Socket fd) override;
 
-#ifdef USE_GET_WRITE_QUEUE
     /**
-     * @brief gets list of sockets ready to write
-     *   compatibility function for systems without epoll support
-     * @return sockets ready to write
+     * @brief set calback to close connection
+     * @param callback callback
      */
-    inline virtual const fd_set& getWriteQueue() const override {
-        return writeQueue;
-    }
-#endif
+    virtual void setCloseConnectionCallback(CloseConnectionCallback* callback) override;
 
     /**
      * @brief parse http header from buffer
@@ -126,7 +121,7 @@ public:
     void processError(Socket clientFd, MessageData* messageData, const Exception& error);
 
 private:
-    bool writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData);
+    WriteStatus writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData);
 
 private:
     uint64_t lastId = 0;
@@ -134,9 +129,7 @@ private:
     Engine& engine;
     Transport& transport;
     MemPooler* pooler;
-#ifdef USE_GET_WRITE_QUEUE
-    fd_set writeQueue;
-#endif
+    CloseConnectionCallback* closeCallback = nullptr;
 };
 
 }

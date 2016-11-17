@@ -125,7 +125,7 @@ $($callbackType) result\
                 // no need to "delete this" - it's in mempool
             }
 
-            virtual void error(const ::ngrest::Exception& error)
+            virtual void error(const ::ngrest::Exception& error) override
             {
                 context->callback->error(error);
                 // no need to "delete this" - it's in mempool

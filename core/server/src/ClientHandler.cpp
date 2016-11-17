@@ -74,10 +74,12 @@ struct MessageData
     MemPool* poolBody;
     bool usePoolBody = false;
     bool isChunked = false;
+    bool keepAliveConnection = true;
     uint64_t contentLength = INVALID_VALUE;
     uint64_t httpBodyOffset = 0;
     uint64_t httpBodyRemaining = INVALID_VALUE;
     bool processing = false;
+    uint8_t httpVersion = 0; // 0=unknown, 10 = 1.0, 11 = 1.1 ...
 
     // response data
     bool writing = false;
@@ -146,9 +148,6 @@ public:
 ClientHandler::ClientHandler(Engine& engine_, Transport& transport_):
     engine(engine_), transport(transport_), pooler(new MemPooler())
 {
-#ifdef USE_GET_WRITE_QUEUE
-    FD_ZERO(&writeQueue);
-#endif
 }
 
 ClientHandler::~ClientHandler()
@@ -181,13 +180,16 @@ void ClientHandler::connected(Socket fd, const sockaddr_storage* addr)
 
 void ClientHandler::disconnected(Socket fd)
 {
-    ClientInfo* clientInfo = clients[fd];
-    if (clientInfo->requests.empty()) {
-        delete clientInfo;
-    } else {
-        clientInfo->deleteLater = true;
+    auto it = clients.find(fd);
+    if (it != clients.end()) {
+        ClientInfo* clientInfo = clients[fd];
+        if (clientInfo->requests.empty()) {
+            delete clientInfo;
+        } else {
+            clientInfo->deleteLater = true;
+        }
+        clients.erase(fd);
     }
-    clients.erase(fd);
     LogDebug() << "client #" << fd << " disconnected";
 }
 
@@ -290,6 +292,16 @@ bool ClientHandler::readyRead(Socket fd)
                     return false; // close connection to client
                 }
 
+                const Header* headerConnection = httpRequest->getHeader("connection");
+                switch (messageData->httpVersion) {
+                case 10: // HTTP 1.0 defaults connection to close
+                    messageData->keepAliveConnection = headerConnection && !strcmp(headerConnection->value, "Keep-Alive");
+                    break;
+                case 11: // HTTP 1.1 defaults connection to keep-alive
+                    messageData->keepAliveConnection = !headerConnection || !strcmp(headerConnection->value, "Keep-Alive");
+                    break;
+                }
+
                 const Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
                 if (headerEncoding && !strcmp(headerEncoding->value, "chunked")) {
                     // FIXME: add support for chunked encoding
@@ -361,12 +373,12 @@ bool ClientHandler::readyRead(Socket fd)
     return true;
 }
 
-bool ClientHandler::readyWrite(Socket fd)
+WriteStatus ClientHandler::readyWrite(Socket fd)
 {
     auto it = clients.find(fd);
     if (it == clients.end()) {
         LogWarning() << "Failed to process request: non-existing client: " << fd;
-        return false;
+        return WriteStatus::Close;
     }
 
     ClientInfo* clientData = it->second;
@@ -374,7 +386,7 @@ bool ClientHandler::readyWrite(Socket fd)
 
     // nothing to write: all requests already finished
     if (clientData->requests.empty())
-        return false;
+        return WriteStatus::Success;
 
     MessageData* messageData = nullptr;
     // find first unfinished write
@@ -387,9 +399,23 @@ bool ClientHandler::readyWrite(Socket fd)
 
     // nothing to write: no requests to write but some to read
     if (!messageData)
-        return false;
+        return WriteStatus::Success;
 
-    return !writeNextPart(fd, clientData, messageData);
+    // close connection if this is a last request and connection set to close
+    bool closeConnection = !messageData->keepAliveConnection &&
+            clientData->requests.size() == 1;
+
+    WriteStatus res = writeNextPart(fd, clientData, messageData);
+    // clientData and messageData is freed here when res=Done
+    if (res == WriteStatus::Done && closeConnection)
+        res = WriteStatus::Close;
+
+    return res;
+}
+
+void ClientHandler::setCloseConnectionCallback(CloseConnectionCallback* callback)
+{
+    closeCallback = callback;
 }
 
 void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
@@ -411,10 +437,22 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
     httpRequest->path = token(curr);
     NGREST_ASSERT(httpRequest->path > buffer, "Failed to get request URL");
 
+    skipWs(curr);
+    char* httpVersionStr = curr;
+
     // seek to the first http header
     NGREST_ASSERT(seekTo(curr, '\n'), "Failed to seek to first HTTP header");
-    skipWs(curr);
 
+    // parse http version;
+    if (!strncmp(httpVersionStr, "HTTP/", 5)) {
+        httpVersionStr += 5;
+        int len = curr - httpVersionStr;
+        if ((len == 4 || len == 3) && httpVersionStr[1] == '.') { // "1.0\r"
+            messageData->httpVersion = (httpVersionStr[0] - '0') * 10 + (httpVersionStr[2] - '0');
+        }
+    }
+
+    skipWs(curr);
 
     // read http headers
 
@@ -523,7 +561,7 @@ void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
 
     // build response
     HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
-    messageData->poolStr->putData("HTTP/1.1 ", 9);
+    messageData->poolStr->putData(messageData->httpVersion == 10 ? "HTTP/1.0 " : "HTTP/1.1 ", 9);
     if (response->statusCode == HTTP_STATUS_UNDEFINED)
         response->statusCode = HTTP_STATUS_200_OK;
     messageData->poolStr->putCString(HttpStatusInfo::httpStatusToString(
@@ -543,7 +581,7 @@ void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
     writeHttpHeader(messageData->poolStr, "Content-Length", buff);
     if (getServerTime(buff))
         writeHttpHeader(messageData->poolStr, "Date", buff);
-    writeHttpHeader(messageData->poolStr, "Connection", "keep-alive");
+    writeHttpHeader(messageData->poolStr, "Connection", messageData->keepAliveConnection ? "Keep-Alive" : "Close");
 
     // split body
     messageData->poolStr->putData("\r\n", 2);
@@ -557,7 +595,16 @@ void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
         messageData->bodyState.pos = 0;
     }
 
-    writeNextPart(clientFd, clientInfo, messageData);
+    bool closeConnection = !messageData->keepAliveConnection &&
+            clientInfo->requests.size() == 1;
+
+    WriteStatus res = writeNextPart(clientFd, clientInfo, messageData);
+    // clientData and messageData is freed here when res=Done
+    if (res == WriteStatus::Done && closeConnection) {
+        NGREST_ASSERT_NULL(closeCallback);
+        LogDebug() << "Closing connection to client";
+        closeCallback->closeConnection(clientFd);
+    }
 }
 
 void ClientHandler::processError(Socket clientFd, MessageData* messageData, const Exception& error)
@@ -607,31 +654,19 @@ inline bool writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
     return true;
 }
 
-bool ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
+WriteStatus ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
 {
     ssize_t res = 0;
 
     // write header to client
-    if (!writeChunks(clientFd, res, messageData->headerState)) {
-#ifdef USE_GET_WRITE_QUEUE
-        FD_SET(clientFd, &writeQueue);
-#endif
-        return false;  // EAGAIN
-    }
+    if (!writeChunks(clientFd, res, messageData->headerState))
+        return WriteStatus::Again;
 
     if (res != -1 && messageData->bodyState.chunk) {
         // write response body to client
-        if (!writeChunks(clientFd, res, messageData->bodyState)) {
-#ifdef USE_GET_WRITE_QUEUE
-            FD_SET(clientFd, &writeQueue);
-#endif
-            return false;  // EAGAIN
-        }
+        if (!writeChunks(clientFd, res, messageData->bodyState))
+            return WriteStatus::Again;
     }
-
-#ifdef USE_GET_WRITE_QUEUE
-    FD_CLR(clientFd, &writeQueue);
-#endif
 
     LogDebug() << "Request " << messageData->id << " handled in "
                << messageData->timer.elapsed() << " microsecond(s)";
@@ -645,7 +680,7 @@ bool ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, Messa
         delete clientInfo;
 
     // response is to be freed by engine
-    return true;
+    return WriteStatus::Done;
 }
 
 }
