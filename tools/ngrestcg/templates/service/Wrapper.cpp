@@ -251,5 +251,5 @@ const ::ngrest::ServiceDescription* $(service.name)Wrapper::getDescription() con
 
 
 ##endfor
-$($lastNsEnd)
 ##endif // ##ifneq($(interface.services.$count),0)
+$($lastNsEnd)
