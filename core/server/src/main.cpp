@@ -31,6 +31,7 @@
 #include <ngrest/engine/FilterDeployment.h>
 #include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
+#include <ngrest/engine/Looper.h>
 
 #include "servercommon.h"
 #include "Server.h"
@@ -73,8 +74,8 @@ int main(int argc, char* argv[])
     ngrest::ClientHandler clientHandler(engine, transport);
 
     engine.setFilterDispatcher(&filterDispatcher);
-
     server.setClientCallback(&clientHandler);
+    ngrest::Looper::setMainLooper(&server);
 
     if (!server.create(args))
         return 1;

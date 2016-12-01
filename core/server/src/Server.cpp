@@ -46,6 +46,7 @@
 #include "Server.h"
 
 #define MAXEVENTS 64
+#define NGREST_EVENT_LOOP_CHECK_PERIOD 200
 
 #ifndef HAS_EPOLL
 #warning No epoll support - switching to compatibility mode
@@ -83,6 +84,9 @@ static SocketInitializer socketInitializer;
 
 
 Server::Server()
+#if !defined NGREST_THREAD_LOCK && defined DEBUG
+    : mainThreadId(std::this_thread::get_id())
+#endif
 {
 #ifdef HAS_EPOLL
     event = reinterpret_cast<epoll_event*>(calloc(1, sizeof(epoll_event)));
@@ -185,10 +189,12 @@ int Server::exec()
     FD_ZERO(&writeFds);
 #endif
 
+    Task task;
+
     // The event loop
     while (!isStopping) {
 #ifdef HAS_EPOLL
-        int n = epoll_wait(fdEpoll, events, MAXEVENTS, -1);
+        int n = epoll_wait(fdEpoll, events, MAXEVENTS, NGREST_EVENT_LOOP_CHECK_PERIOD);
         for (int i = 0; i < n && !isStopping; ++i) {
             const uint32_t event = events[i].events;
             if ((events[i].events & EPOLLERR) ||
@@ -221,67 +227,79 @@ int Server::exec()
         }
 #else
         // Block until input arrives on one or more active sockets.
-        timeout.tv_sec = 1; // limit timeout to just one second to check isStopping flag
-        timeout.tv_usec = 0;
+        timeout.tv_sec = 0;
+        timeout.tv_usec = NGREST_EVENT_LOOP_CHECK_PERIOD * 1000;
         readFds = activeFds;
         FD_SET(fdServer, &readFds); // add server socket
         int readyFds = select(FD_SETSIZE, &readFds, &writeFds, NULL, &timeout);
-        if (readyFds == 0)
-            continue;
+        if (readyFds != 0) {
+            if (readyFds < 0) {
+                if (errno != EINTR)
+                    LogError() << "select: " << Error::getLastError();
+                return EXIT_FAILURE;
+            }
 
-        if (readyFds < 0) {
-            if (errno != EINTR)
-                LogError() << "select: " << Error::getLastError();
-            return EXIT_FAILURE;
+            int processedFds = 0;
+            // Service all the sockets with input pending.
+            for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
+    #ifdef WIN32
+                Socket fd = readFds.fd_array[i];
+    #else
+                Socket fd = i;
+    #endif
+                if (FD_ISSET(fd, &readFds)) {
+                    if (fd == fdServer) {
+                        handleIncomingConnection();
+                    } else {
+                        handleRequest(fd);
+                    }
+                    ++processedFds;
+                }
+
+                if (processedFds == readyFds)
+                    break;
+
+#ifdef WIN32
+                fd = writeFds.fd_array[i];
+#endif
+                if (FD_ISSET(fd, &writeFds)) {
+                    WriteStatus status = callback->readyWrite(fd);
+                    switch (status) {
+                    case WriteStatus::Again:
+#ifndef HAS_EPOLL
+                        FD_SET(fd, &writeFds);
+#endif
+                        break;
+
+                    case WriteStatus::Done:
+#ifndef HAS_EPOLL
+                        FD_CLR(fd, &writeFds);
+#endif
+                        break;
+
+                    case WriteStatus::Close:
+                        closeConnection(fd);
+                        break;
+
+                    default:
+                        break;
+                    }
+                    ++processedFds;
+                }
+            }
         }
-
-        int processedFds = 0;
-        // Service all the sockets with input pending.
-        for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
-#ifdef WIN32
-            Socket fd = readFds.fd_array[i];
-#else
-            Socket fd = i;
 #endif
-            if (FD_ISSET(fd, &readFds)) {
-                if (fd == fdServer) {
-                    handleIncomingConnection();
-                } else {
-                    handleRequest(fd);
-                }
-                ++processedFds;
+#ifdef NGREST_THREAD_LOCK
+        if (hasTasks) {
+            std::lock_guard<std::mutex> lock(mutex);
+            hasTasks = false;
+#endif
+            while (!taskQueue.empty()) {
+                task = taskQueue.front();
+                taskQueue.pop();
+                task();
             }
-
-            if (processedFds == readyFds)
-                break;
-
-#ifdef WIN32
-            fd = writeFds.fd_array[i];
-#endif
-            if (FD_ISSET(fd, &writeFds)) {
-                WriteStatus status = callback->readyWrite(fd);
-                switch (status) {
-                case WriteStatus::Again:
-#ifndef HAS_EPOLL
-                    FD_SET(fd, &writeFds);
-#endif
-                    break;
-
-                case WriteStatus::Done:
-#ifndef HAS_EPOLL
-                    FD_CLR(fd, &writeFds);
-#endif
-                    break;
-
-                case WriteStatus::Close:
-                    closeConnection(fd);
-                    break;
-
-                default:
-                    break;
-                }
-                ++processedFds;
-            }
+#ifdef NGREST_THREAD_LOCK
         }
 #endif
     }
@@ -304,6 +322,20 @@ void Server::closeConnection(Socket fd)
 
     close(fd);
     callback->disconnected(fd);
+}
+
+void Server::post(Task task)
+{
+#ifdef NGREST_THREAD_LOCK
+    std::lock_guard<std::mutex> lock(mutex);
+    hasTasks = true;
+#else
+    NGREST_DEBUG_ASSERT(std::this_thread::get_id() == mainThreadId,
+                        "You trying to post task from non-main thread, "
+                        "but ngrest is not compiled with WITH_THREAD_LOCK flag."
+                        "This may cause undefined behavior and because of that restricted.");
+#endif
+    taskQueue.push(task);
 }
 
 Socket Server::createServerSocket(const std::string& ip, const std::string& port)

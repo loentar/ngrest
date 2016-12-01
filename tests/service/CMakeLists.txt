@@ -33,6 +33,9 @@ set_target_properties(ngresttestservice PROPERTIES
 )
 
 target_link_libraries(ngresttestservice ngrestutils ngrestcommon ngrestjson ngrestengine)
+if (LINK_PTHREAD)
+    target_link_libraries(ngresttestservice pthread)
+endif()
 
 add_custom_command(TARGET ngresttestservice POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy

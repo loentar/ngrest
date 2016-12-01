@@ -14,3 +14,7 @@ target_link_libraries(ngrestserver ngrestutils ngrestcommon ngrestjson ngresteng
 if (MINGW)
     target_link_libraries(ngrestserver ws2_32)
 endif()
+
+if (LINK_PTHREAD)
+    target_link_libraries(ngrestserver pthread)
+endif()

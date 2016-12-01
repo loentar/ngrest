@@ -29,6 +29,14 @@
 #endif
 #endif
 
+#include <queue>
+#ifdef NGREST_THREAD_LOCK
+#include <mutex>
+#include <atomic>
+#elif defined DEBUG
+#include <thread>
+#endif
+#include <ngrest/engine/Looper.h>
 #include "servercommon.h"
 #include "ClientHandler.h"
 
@@ -41,7 +49,7 @@ namespace ngrest {
 /**
  * @brief simple socket server class with support of epoll or select
  */
-class Server: public CloseConnectionCallback
+class Server: public CloseConnectionCallback, public Looper
 {
 public:
     /**
@@ -84,6 +92,13 @@ public:
      */
     virtual void closeConnection(Socket fd) override;
 
+    /**
+     * @brief post task to event loop (main thread).
+     * This function is thread-safe if ngrest is compiled with WITH_THREAD_LOCK
+     * @param task
+     */
+    virtual void post(Task task) override;
+
 private:
     Socket createServerSocket(const std::string& ip, const std::string& port);
     bool setupNonblock(Socket fd);
@@ -104,6 +119,13 @@ private:
     ClientCallback* callback = nullptr;
     std::string ip;
     std::string port;
+#ifdef NGREST_THREAD_LOCK
+    std::atomic<bool> hasTasks;
+    std::mutex mutex;
+#elif defined DEBUG
+    std::thread::id mainThreadId;
+#endif
+    std::queue<Task> taskQueue;
 };
 
 }

@@ -18,7 +18,12 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
+#ifdef NGREST_THREAD_LOCK
+#include <chrono>
+#include <thread>
+#endif
 #include <ngrest/utils/Log.h>
+#include <ngrest/engine/Handler.h>
 
 #include "TestService.h"
 
@@ -36,7 +41,23 @@ std::string TestService::echoSync(const std::string& value)
 
 void TestService::echoASync(const std::string& value, ngrest::Callback<const std::string&>& callback)
 {
-    callback.success("You said " + value);
+    // take callback by reference because it's allocated in mempool
+    // take argument(s) by value because it's allocated in stack
+
+#ifdef NGREST_THREAD_LOCK
+    std::thread([&callback, value]{
+        // perform some long synchronous operation
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+#endif
+        // post to event loop
+        Handler::post([&callback, value]{
+            // this will be executed from main thread
+            callback.success("You said " + value);
+        });
+#ifdef NGREST_THREAD_LOCK
+    })
+    .detach();
+#endif
 }
 
 int TestService::add(int a, int b)

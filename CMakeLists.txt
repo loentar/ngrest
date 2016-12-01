@@ -41,8 +41,17 @@ if (MINGW)
     add_definitions(-D_WIN32_WINNT=0x0501)
 endif()
 
+check_library_exists(pthread pthread_create "" HAS_PTHREAD)
+if ("$ENV{WITH_THREAD_LOCK}" STREQUAL "1")
+    add_definitions(-DNGREST_THREAD_LOCK)
+    set(LINK_PTHREAD "${HAS_PTHREAD}")
+endif()
+
 if (CMAKE_BUILD_TYPE MATCHES "DEBUG")
     add_definitions(-DDEBUG)
+    # link pthread in debug/single thread version
+    # to detect incorrect posting to event loop from non-main thread
+    set(LINK_PTHREAD "${HAS_PTHREAD}")
 endif()
 
 set(PROJECT_DEPLOY_DIR ${PROJECT_BINARY_DIR}/deploy)

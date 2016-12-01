@@ -31,8 +31,12 @@ core/engine/src/FilterDispatcher.h
 core/engine/src/FilterGroup.cpp
 core/engine/src/FilterGroup.h
 core/engine/src/Filter.h
+core/engine/src/Handler.cpp
+core/engine/src/Handler.h
 core/engine/src/HttpTransport.cpp
 core/engine/src/HttpTransport.h
+core/engine/src/Looper.cpp
+core/engine/src/Looper.h
 core/engine/src/ngrestengineexport.h
 core/engine/src/Phase.cpp
 core/engine/src/Phase.h
