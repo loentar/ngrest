@@ -23,6 +23,8 @@
 
 #include <string>
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 class FilterDispatcher;
@@ -31,7 +33,7 @@ class FilterGroup;
 /**
  * @brief Filterdeployment management class
  */
-class FilterDeployment
+class NGREST_ENGINE_EXPORT FilterDeployment
 {
 public:
     /**

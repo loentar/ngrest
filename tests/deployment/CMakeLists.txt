@@ -18,3 +18,8 @@ set_target_properties(ngrestdeployment PROPERTIES
 )
 
 target_link_libraries(ngrestdeployment ngrestutils ngrestcommon ngrestjson ngrestengine)
+
+# ws2_32 detection fails on mingw32
+if (MINGW)
+    target_link_libraries(ngrestdeployment ws2_32)
+endif()

@@ -27,6 +27,8 @@
 
 #include <ngrest/utils/EnumClassHash.h>
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 enum class Phase;
@@ -37,7 +39,7 @@ typedef std::unordered_map<Phase, std::list<Filter*>, EnumClassHash> FiltersMap;
 /**
  * @brief Group of filters to deploy from shared library
  */
-class FilterGroup
+class NGREST_ENGINE_EXPORT FilterGroup
 {
 public:
     FilterGroup();

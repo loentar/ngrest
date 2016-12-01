@@ -22,6 +22,7 @@
 #define NGREST_SERVICEDISPATCHER_H
 
 #include <vector>
+#include "ngrestengineexport.h"
 
 namespace ngrest {
 
@@ -32,7 +33,7 @@ struct MessageContext;
  * @brief service dispatcher
  * manages the services and dispatches message to services
  */
-class ServiceDispatcher
+class NGREST_ENGINE_EXPORT ServiceDispatcher
 {
 public:
     /**

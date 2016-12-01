@@ -24,6 +24,8 @@
 #include <string>
 #include <list>
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 enum class Phase;
@@ -32,7 +34,7 @@ struct MessageContext;
 /**
  * @brief Message Filter
  */
-class Filter
+class NGREST_ENGINE_EXPORT Filter
 {
 public:
     /**

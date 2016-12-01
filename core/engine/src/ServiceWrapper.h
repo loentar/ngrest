@@ -21,6 +21,8 @@
 #ifndef NGREST_SERVICEWRAPPER_H
 #define NGREST_SERVICEWRAPPER_H
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 class Service;
@@ -32,7 +34,7 @@ struct MessageContext;
 /**
  * @brief Service wrapper. Base class for codegenerated services wrappers
  */
-class ServiceWrapper
+class NGREST_ENGINE_EXPORT ServiceWrapper
 {
 public:
     /**

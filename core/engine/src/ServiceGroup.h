@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include "ngrestengineexport.h"
 
 namespace ngrest {
 
@@ -31,7 +32,7 @@ class ServiceWrapper;
 /**
  * @brief Group of services to deploy from shared library
  */
-class ServiceGroup
+class NGREST_ENGINE_EXPORT ServiceGroup
 {
 public:
     ServiceGroup();

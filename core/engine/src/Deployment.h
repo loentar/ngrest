@@ -23,6 +23,8 @@
 
 #include <string>
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 class ServiceDispatcher;
@@ -31,7 +33,7 @@ class ServiceGroup;
 /**
  * @brief deployment management class
  */
-class Deployment
+class NGREST_ENGINE_EXPORT Deployment
 {
 public:
     /**

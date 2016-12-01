@@ -21,6 +21,8 @@
 #ifndef NGREST_ENGINE_H
 #define NGREST_ENGINE_H
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 enum class Phase;
@@ -34,7 +36,7 @@ class FilterDispatcher;
  * - dispatch message using service dispatcher
  * - write response and pass it to the transport
  */
-class Engine
+class NGREST_ENGINE_EXPORT Engine
 {
 public:
     /**

@@ -22,13 +22,14 @@
 #define NGREST_HTTPTRANSPORT_H
 
 #include "Transport.h"
+#include "ngrestengineexport.h"
 
 namespace ngrest {
 
 /**
  * @brief provides serialization/deserialization for the message
  */
-class HttpTransport: public Transport
+class NGREST_ENGINE_EXPORT HttpTransport: public Transport
 {
 public:
     /**

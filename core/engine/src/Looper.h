@@ -22,6 +22,7 @@
 #define NGREST_LOOPER_H
 
 #include <functional>
+#include "ngrestengineexport.h"
 
 namespace ngrest {
 
@@ -30,7 +31,7 @@ typedef std::function<void()> Task; //!< a task to execute on event loop
 /**
  * @brief Base class for event loop
  */
-class Looper
+class NGREST_ENGINE_EXPORT Looper
 {
 public:
     /**

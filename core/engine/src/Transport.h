@@ -21,6 +21,8 @@
 #ifndef NGREST_TRANSPORT_H
 #define NGREST_TRANSPORT_H
 
+#include "ngrestengineexport.h"
+
 namespace ngrest {
 
 class MemPool;
@@ -31,7 +33,7 @@ struct Node;
 /**
  * @brief abstract transport to translate request to OM and OM to response
  */
-class Transport
+class NGREST_ENGINE_EXPORT Transport
 {
 public:
     /**

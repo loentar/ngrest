@@ -22,13 +22,14 @@
 #define NGREST_HANDLER_H
 
 #include "Looper.h"
+#include "ngrestengineexport.h"
 
 namespace ngrest {
 
 /**
  * @brief Handler class to post task to event loop
  */
-class Handler
+class NGREST_ENGINE_EXPORT Handler
 {
 public:
     /**
