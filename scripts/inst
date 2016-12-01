@@ -45,7 +45,7 @@ then
     # detect package manager
     for p in apt-get yum port brew
     do
-      if $p -v >/dev/null 2>&1
+      if which $p >/dev/null 2>&1
       then
         pkg=$p
         break
