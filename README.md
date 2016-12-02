@@ -8,6 +8,8 @@ ngrest allow you to deploy C++ RESTful webservices under [Apache2](https://githu
 
 ngrest is written on C++11 and uses CMake for build.
 
+Documentation and how-to's are available from [Wiki](https://github.com/loentar/ngrest/wiki).
+
 ## Quick tour
 
 ### Hello world
