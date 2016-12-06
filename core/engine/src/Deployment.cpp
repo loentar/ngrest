@@ -59,7 +59,7 @@ void Deployment::deployAll(const std::string& servicesPath)
 {
     // find service libraries
     StringList libs;
-    File(servicesPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeRegularFile);
+    File(servicesPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeAnyFile);
 
     if (libs.empty()) {
         LogError() << "No services found";

@@ -57,7 +57,7 @@ void FilterDeployment::deployAll(const std::string& filtersPath)
 {
     // find filter libraries
     StringList libs;
-    File(filtersPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeRegularFile);
+    File(filtersPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeAnyFile);
 
     if (libs.empty()) {
         LogDebug() << "No filters found";
