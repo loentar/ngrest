@@ -8,7 +8,7 @@ TO_INSTALL_OPT=
 # detect OS
 OS=
 case $(uname -s) in
-  MSYS*)
+  MSYS*|MINGW*)
     OS=MSYS
     export PATH="/mingw64/bin:$PATH"
     ;;
