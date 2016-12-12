@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.4)
 project (ngrest)
 
 set(NGREST_VERSION "0.2.0")
@@ -37,8 +37,10 @@ if (HAS_EPOLL)
     add_definitions(-DHAS_EPOLL)
 endif()
 
-if (MINGW)
+if (MSYS)
     add_definitions(-D_WIN32_WINNT=0x0501)
+    set(CMAKE_SHARED_LIBRARY_PREFIX "")
+    set(CMAKE_SHARED_MODULE_PREFIX "")
 endif()
 
 check_library_exists(pthread pthread_create "" HAS_PTHREAD)

@@ -8,8 +8,9 @@ TO_INSTALL_OPT=
 # detect OS
 OS=
 case $(uname -s) in
-  MINGW*)
-    OS=MINGW
+  MSYS*)
+    OS=MSYS
+    export PATH="/mingw64/bin:$PATH"
     ;;
   Linux)
     OS=Linux
@@ -18,56 +19,72 @@ case $(uname -s) in
     OS=Darwin
     ;;
   *)
-    echo "This OS is not yet supported" >&2
+    echo "This OS is not supported: $(uname -s)" >&2
     exit 1
 esac
 
-for app in git cmake g++
+for app in git make cmake g++
 do
   $app --version >/dev/null 2>&1 || TO_INSTALL+="$app "
 done
 
-inotifywait --help >/dev/null 2>&1 || ERR=$?
-if [ $ERR == 127 ] # command not found
+if [ $OS = Linux ]
 then
-  TO_INSTALL_OPT+="inotify-tools "
-fi
-
-if [ -n "$TO_INSTALL" ]
-then
-  if [ $OS = MINGW ]
+  inotifywait --help >/dev/null 2>&1 || ERR=$?
+  if [ $ERR == 127 ] # command not found
   then
-    echo "Cannot detect installation of: $TO_INSTALL"
-    exit 1
-  else
-    pkg=
-
-    # detect package manager
-    for p in apt-get yum port brew
-    do
-      if which $p >/dev/null 2>&1
-      then
-        pkg=$p
-        break
-      fi
-    done
-
-    if [ -z "$pkg" ]
-    then
-      echo "Cannot detect package manager"
-      exit 1
-    fi
-
-    ( [ $pkg == port ] || [ $pkg == brew ] ) && YES= || YES=-y
-
-    echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
-    echo "To continue please enter your password, or press Ctrl+C to install it manually."
-    sudo $pkg install $YES $TO_INSTALL </dev/null
-    [ $OS == Darwin ] || sudo $pkg install $YES $TO_INSTALL_OPT </dev/null || true
+    TO_INSTALL_OPT+="inotify-tools "
   fi
 fi
 
-if [ $OS = MINGW ]
+[ $OS = MSYS ] && SUDO= || SUDO=sudo
+
+if [ -n "$TO_INSTALL" ]
+then
+  pkg=
+
+  # detect package manager
+  for p in apt-get yum port brew pacman
+  do
+    if which $p >/dev/null 2>&1
+    then
+      pkg=$p
+      break
+    fi
+  done
+
+  if [ -z "$pkg" ]
+  then
+    echo "Cannot detect package manager"
+    exit 1
+  fi
+
+  case $pkg in
+  brew|port)
+    YES=
+    INSTALL=install
+    ;;
+  pacman)
+    YES=--noconfirm
+    INSTALL=-S
+    TO_INSTALL=${TO_INSTALL//g++/mingw-w64-$(uname -m)-gcc}
+    ;;
+  *)
+    YES=-y
+    INSTALL=install
+    ;;
+  esac
+
+  if [ -n "$SUDO" ]
+  then
+    echo "This script will install missing dependencies for you: $TO_INSTALL$TO_INSTALL_OPT..."
+    echo "To continue please enter your password, or press Ctrl+C to install it manually."
+  fi
+  $SUDO $pkg $INSTALL $YES $TO_INSTALL </dev/null
+  [ -n "$TO_INSTALL_OPT" ] || $SUDO $pkg $INSTALL $YES $TO_INSTALL_OPT </dev/null || true
+fi
+
+if [ $OS = MSYS ]
 then
   export NGREST_HOME=$APPDATA/ngrest
 else
@@ -93,30 +110,15 @@ cd "$BUILD_DIR"
 
 rm -f .build_ok
 echo "Configuring ngrest for the build..."
-if [ $OS = MINGW ]
-then
-  OLDPATH=$PATH
-  # CMAKE don't like to find sh.exe in path, removing it from path
-  PATH="${PATH//\/usr\/bin/}"
-  PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
-  export PATH
-  cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$SRC_DIR" >cmake-build.log
-  MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
-else
-  cmake "${CMAKE_FLAGS:-}" "$SRC_DIR" >cmake-build.log
-  MAKE=make
-fi
+[ $OS = MSYS ] && GENERATOR="-GUnix Makefiles" || GENERATOR=
+cmake "$GENERATOR" ${CMAKE_FLAGS:-} ../ngrest >cmake-build.log
 
 echo "Building ngrest. It may take few minutes..."
-$MAKE >make-build.log
-if [ $OS = MINGW ]
-then
-  PATH="$OLDPATH"
-fi
+make >make-build.log
 touch .build_ok
 echo "Build OK"
 
-if [ $OS = MINGW ]
+if [ $OS = MSYS ]
 then
   mkdir -p "$APPDATA/ngrest/bin/"
   cp -f "$SRC_DIR/scripts/ngrest" "$SRC_DIR/scripts/ngrest.cmd" "$APPDATA/ngrest/bin/"

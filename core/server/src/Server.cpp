@@ -242,11 +242,11 @@ int Server::exec()
             int processedFds = 0;
             // Service all the sockets with input pending.
             for (int i = 0; (i < FD_SETSIZE) && (processedFds < readyFds); ++i) {
-    #ifdef WIN32
+#ifdef WIN32
                 Socket fd = readFds.fd_array[i];
-    #else
+#else
                 Socket fd = i;
-    #endif
+#endif
                 if (FD_ISSET(fd, &readFds)) {
                     if (fd == fdServer) {
                         handleIncomingConnection();
@@ -371,7 +371,7 @@ Socket Server::createServerSocket(const std::string& ip, const std::string& port
             break;
         }
 
-        lastError = strerror(errno);
+        lastError = Error::getLastError();
         close(sock);
     }
 
@@ -424,11 +424,16 @@ bool Server::handleIncomingConnection()
         socklen_t inLen = sizeof(inAddr);
         Socket fdIn = accept(fdServer, reinterpret_cast<sockaddr*>(&inAddr), &inLen);
         if (fdIn == NGREST_SOCKET_ERROR) {
+#ifndef WIN32
             if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+#else
+            int err = WSAGetLastError();
+            if (err == WSATRY_AGAIN || err == WSAEWOULDBLOCK) {
+#endif
                 // We have processed all incoming connections.
                 break;
             } else {
-                LogError() << "accept" << Error::getLastError();
+                LogError() << "accept: " << Error::getLastError();
                 break;
             }
         }

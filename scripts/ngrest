@@ -5,8 +5,8 @@ set -eu
 # detect OS
 OS=
 case $(uname -s) in
-  MINGW*|MSYS*)
-    OS=MINGW
+  MSYS*)
+    OS=MSYS
     ;;
   Linux)
     OS=Linux
@@ -16,14 +16,13 @@ case $(uname -s) in
     export DISABLE_WATCHER=1
     ;;
   *)
-    echo "This OS is not yet supported" >&2
+    echo "This OS is not supported: $(uname -s)" >&2
     exit 1
 esac
 
-if [ $OS = MINGW ]
+if [ $OS = MSYS ]
 then
   export NGREST_ROOT=$(cd "$APPDATA\\ngrest"; pwd)
-  export PATH=/c/MinGW/bin:$PATH
 else
   export NGREST_ROOT=~/.ngrest
 fi
@@ -69,7 +68,7 @@ else
 fi
 
 
-if [ $OS = MINGW -o $OS = Darwin ]
+if [ $OS = MSYS -o $OS = Darwin ]
 then
   mktemp() {
     n=/tmp/$(date +%Y%m%d%H%M%S)
@@ -519,22 +518,14 @@ build() {
   echo "Building project $(<$PROJECT_DIR/.ngrest/name)..."
   CMAKE_FLAGS=${CMAKE_FLAGS:-'-DCMAKE_BUILD_TYPE=DEBUG'}
 
-  if [ $OS = MINGW ]
+  if [ $OS = MSYS ]
   then
-    OLDPATH=$PATH
-    # CMAKE don't like to find sh.exe in path, removing it from path
-    PATH="${PATH//\/usr\/bin/}"
-    PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
-    export PATH
-    cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$PROJECT_DIR" >cmake.log || return $?
-    MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
-  else
-    cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
-    MAKE=make
+    CMAKE_FLAGS+=" '-GUnix Makefiles'"
   fi
 
-  $MAKE ${MAKE_FLAGS:-} >make.log || return $?
-  [ $OS != MINGW ] || PATH="$OLDPATH"
+  cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
+
+  make ${MAKE_FLAGS:-} >make.log || return $?
   mkdir -p services
   rm -f services/*
   cp $PWD/deploy/share/ngrest/services/* services/
@@ -672,7 +663,7 @@ run() {
     export NGREST_LOG_VERBOSITY="LEVEL DATETIME TEXT"
   fi
 
-  if [ $OS = MINGW ]
+  if [ $OS = MSYS ]
   then
     DISABLE_WATCHER=1
   fi
@@ -755,26 +746,10 @@ run() {
 
 build_package() {
   echo "Configuring $1 for the build..."
-  if [ $OS = MINGW ]
-  then
-    OLDPATH=$PATH
-    # CMAKE don't like to find sh.exe in path, removing it from path
-    PATH="${PATH//\/usr\/bin/}"
-    PATH="${PATH//\/c\/Program Files*\/Git\/bin}"
-    export PATH
-    cmake -G'MinGW Makefiles' "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
-    MAKE=$(PATH="$OLDPATH" sed -n '/CMAKE_MAKE_PROGRAM:FILEPATH/s/.*=//p' CMakeCache.txt)
-  else
-    cmake "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
-    MAKE=make
-  fi
-
+  [ $OS != MSYS ] || CMAKE_FLAGS="'-GUnix Makefiles' ${CMAKE_FLAGS:-}"
+  cmake "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
   echo "Building $1. It may take few minutes..."
   $MAKE >make-build.log
-  if [ $OS = MINGW ]
-  then
-    PATH="$OLDPATH"
-  fi
   touch .build_ok
   echo "Build OK"
 }
@@ -1007,9 +982,9 @@ upgrade() {
 }
 
 check_not_mingw() {
-  if [ $OS = MINGW ]
+  if [ $OS = MSYS ]
   then
-    echo "This command not supported under MinGW. Sorry." >&2
+    echo "This command is not supported under MSYS. Sorry." >&2
     exit 1
   fi
 }
