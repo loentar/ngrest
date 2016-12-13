@@ -110,7 +110,12 @@ cd "$BUILD_DIR"
 
 rm -f .build_ok
 echo "Configuring ngrest for the build..."
-[ $OS = MSYS ] && GENERATOR="-GUnix Makefiles" || GENERATOR=
+if [ $OS = MSYS ]
+then
+  # supress platform warnings
+  touch /usr/share/cmake-$(cmake --version | sed '1{s/cmake version //;q}')/Modules/Platform/$(uname -s).cmake
+  CMAKE_FLAGS="${CMAKE_FLAGS:-} '-GUnix Makefiles' -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc"
+fi
 cmake "$GENERATOR" ${CMAKE_FLAGS:-} ../ngrest >cmake-build.log
 
 echo "Building ngrest. It may take few minutes..."
@@ -122,6 +127,7 @@ if [ $OS = MSYS ]
 then
   mkdir -p "$APPDATA/ngrest/bin/"
   cp -f "$SRC_DIR/scripts/ngrest" "$SRC_DIR/scripts/ngrest.cmd" "$APPDATA/ngrest/bin/"
+  cp -f "$SRC_DIR/scripts/ngrest" /usr/bin/  # to be accessible from msys terminal
 else
   # install to ~/bin if user already created it
   if [[ $PATH =~ ~/bin ]]

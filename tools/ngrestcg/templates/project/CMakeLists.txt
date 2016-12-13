@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8.4)
 project ($(project.name))
 
 include(CheckCXXCompilerFlag)
@@ -78,6 +78,9 @@ set(NGREST_BIN_PATH "${NGREST_HOME}/bin/")
 add_subdirectory($($service.!tolower))
 if (APPLE) # cmake sets .so extension for modules under mac os x
     set_target_properties($($service.!tolower) PROPERTIES SUFFIX ".dylib")
+endif()
+if (MINGW) # cmake sets .so extension for modules under windows
+    set_target_properties($($service.!tolower) PROPERTIES SUFFIX ".dll")
 endif()
 ##var servicesTmp $($servicesTmp.!cutlast/ /)
 ##done
