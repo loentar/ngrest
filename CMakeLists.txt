@@ -37,10 +37,12 @@ if (HAS_EPOLL)
     add_definitions(-DHAS_EPOLL)
 endif()
 
-if (MSYS)
+if (MINGW)
     add_definitions(-D_WIN32_WINNT=0x0501)
     set(CMAKE_SHARED_LIBRARY_PREFIX "")
     set(CMAKE_SHARED_MODULE_PREFIX "")
+    set(CMAKE_SHARED_LIBRARY_SUFFIX ".dll")
+    set(CMAKE_SHARED_MODULE_SUFFIX ".dll")
 endif()
 
 check_library_exists(pthread pthread_create "" HAS_PTHREAD)
