@@ -87,6 +87,9 @@ int main(int argc, char* argv[])
 
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
+#ifndef WIN32
+    ::signal(SIGPIPE, SIG_IGN);
+#endif
 
     const std::string& filtersPath = ngrest::Runtime::getSharePath()
         + NGREST_PATH_SEPARATOR "filters" NGREST_PATH_SEPARATOR;

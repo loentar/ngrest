@@ -83,6 +83,9 @@ int main(int argc, char* argv[])
 
     ::signal(SIGINT, signalHandler);
     ::signal(SIGTERM, signalHandler);
+#ifndef WIN32
+    ::signal(SIGPIPE, SIG_IGN);
+#endif
 
 
     /*

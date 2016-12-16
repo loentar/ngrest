@@ -202,10 +202,12 @@ int Server::exec()
                    (!(events[i].events & (EPOLLIN | EPOLLOUT)))) {
                 /* An error has occured on this fd, or the socket is not
                  ready for reading/writing(why were we notified then?) */
-                LogError() << "epoll error" << Error::getLastError();
-                if (callback)
-                    callback->error(events[i].data.fd);
-                close(events[i].data.fd);
+                if (errno != EAGAIN && errno != EPIPE) {
+                    LogError() << "epoll error: " << Error::getLastError() << ". Client# " << events[i].data.fd;
+                    if (callback)
+                        callback->error(events[i].data.fd);
+                }
+                closeConnection(events[i].data.fd);
             } else if (fdServer == events[i].data.fd) {
                 /* We have a notification on the listening socket, which
                  means one or more incoming connections. */
@@ -315,7 +317,13 @@ void Server::quit()
 
 void Server::closeConnection(Socket fd)
 {
-#ifndef HAS_EPOLL
+#ifdef HAS_EPOLL
+    event->data.fd = fd;
+    event->events = EPOLLIN | EPOLLOUT | EPOLLET;
+    int res = epoll_ctl(fdEpoll, EPOLL_CTL_DEL, fd, event);
+    if (res == -1)
+        LogError() << "Failed to remove client " << Error::getLastError();
+#else
     FD_CLR(fd, &activeFds);
     FD_CLR(fd, &writeFds);
 #endif

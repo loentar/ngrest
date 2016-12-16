@@ -195,7 +195,7 @@ void ClientHandler::disconnected(Socket fd)
 
 void ClientHandler::error(Socket fd)
 {
-    LogError() << "Error client #" << fd;
+//    LogError() << "Error client #" << fd;
 }
 
 bool ClientHandler::readyRead(Socket fd)
@@ -628,18 +628,19 @@ void ClientHandler::processError(Socket clientFd, MessageData* messageData, cons
     processResponse(clientFd, messageData);
 }
 
-inline bool writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
+inline WriteStatus writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
 {
     while (state.chunk != state.end) {
         res = ::send(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos, 0);
         if (res == -1) {
             // output buffer is full.
             if (errno == EAGAIN)
-                return false;
+                return WriteStatus::Again;
 
             // other error
-            LogError() << "Failed to write response:" << Error::getLastError();
-            break;
+            if (errno != EPIPE)
+                LogError() << "Failed to write response: " << Error::getLastError();
+            return WriteStatus::Close;
         }
 
         if (static_cast<uint64_t>(res) != state.chunk->size) {
@@ -651,7 +652,7 @@ inline bool writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
         ++state.chunk;
     }
 
-    return true;
+    return WriteStatus::Success;
 }
 
 WriteStatus ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
@@ -659,13 +660,18 @@ WriteStatus ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo
     ssize_t res = 0;
 
     // write header to client
-    if (!writeChunks(clientFd, res, messageData->headerState))
-        return WriteStatus::Again;
+    WriteStatus writeStatus = writeChunks(clientFd, res, messageData->headerState);
 
-    if (res != -1 && messageData->bodyState.chunk) {
-        // write response body to client
-        if (!writeChunks(clientFd, res, messageData->bodyState))
-            return WriteStatus::Again;
+    if (writeStatus == WriteStatus::Again)
+        return writeStatus;
+
+    if (writeStatus == WriteStatus::Success) {
+        if (res != -1 && messageData->bodyState.chunk) {
+            // write response body to client
+            writeStatus = writeChunks(clientFd, res, messageData->bodyState);
+            if (writeStatus == WriteStatus::Again)
+                return writeStatus;
+        }
     }
 
     LogDebug() << "Request " << messageData->id << " handled in "
