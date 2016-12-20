@@ -19,6 +19,7 @@
  */
 
 #include <unistd.h>
+#include <string.h>
 #ifndef WIN32
 #ifndef __APPLE__
 #include <error.h>
@@ -73,7 +74,6 @@ struct MessageData
     MemPool* poolStr;
     MemPool* poolBody;
     bool usePoolBody = false;
-    bool isChunked = false;
     bool keepAliveConnection = true;
     uint64_t contentLength = INVALID_VALUE;
     uint64_t httpBodyOffset = 0;
@@ -292,68 +292,46 @@ bool ClientHandler::readyRead(Socket fd)
                     return false; // close connection to client
                 }
 
-                const Header* headerConnection = httpRequest->getHeader("connection");
-                switch (messageData->httpVersion) {
-                case 10: // HTTP 1.0 defaults connection to close
-                    messageData->keepAliveConnection = headerConnection && !strcmp(headerConnection->value, "Keep-Alive");
-                    break;
-                case 11: // HTTP 1.1 defaults connection to keep-alive
-                    messageData->keepAliveConnection = !headerConnection || !strcmp(headerConnection->value, "Keep-Alive");
-                    break;
-                }
-
-                const Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
-                if (headerEncoding && !strcmp(headerEncoding->value, "chunked")) {
-                    // FIXME: add support for chunked encoding
-                    NGREST_THROW_ASSERT("Chunked encoding is not yet supported");
-/*
- HTTP/1.1 200 OK
- Server: nginx/1.0.4
- Date: Thu, 06 Oct 2011 16:14:01 GMT
- Content-Type: text/html
- Transfer-Encoding: chunked
- Connection: keep-alive
- Vary: Accept-Encoding
- X-Powered-By: PHP/5.3.6
-
- 23
- This is the data in the first chunk
- 1A
- and this is the second one
- 3
- con
- 8
- sequence
- 0
- */
-                    messageData->isChunked = true;
+                Header* headerConnection = httpRequest->getHeader("connection");
+                if (headerConnection) {
+                    messageData->keepAliveConnection = !strcasecmp(headerConnection->value, "keep-alive");
                 } else {
-                    const Header* headerLength = httpRequest->getHeader("content-length");
-                    if (headerLength) {
-                        NGREST_ASSERT(fromCString(headerLength->value, messageData->contentLength),
-                                      "Failed to get content length of request");
-                        NGREST_ASSERT(messageData->contentLength < MAX_REQUEST_SIZE,
-                                      "Request is too large!");
-                        const uint64_t totalRequestLength = messageData->httpBodyOffset +
-                                messageData->contentLength;
-                        messageData->httpBodyRemaining = totalRequestLength - pool->getSize();
-                        messageData->poolBody->reserve(totalRequestLength + 1);
-
-                        // if we didn't receive the whole body yet
-                        // store received part of body to another pool to avoid
-                        // Header* pointers damage on poolStr->flatten
-                        if (messageData->httpBodyRemaining) {
-                            // copy already received part of data to poolBody
-                            messageData->poolBody->putData(chunk->buffer + messageData->httpBodyOffset,
-                                                          chunk->size - messageData->httpBodyOffset);
-                            messageData->usePoolBody = true;
-                        }
-                    } else {
-                        // message has no body and ready to process now
-                        messageData->httpBodyRemaining = 0;
-                    }
+                    // HTTP 1.0 defaults connection to close
+                    // HTTP 1.1 defaults connection to keep-alive
+                    messageData->keepAliveConnection = messageData->httpVersion >= 11;
                 }
 
+                const Header* headerLength = httpRequest->getHeader("content-length");
+                if (headerLength) {
+                    NGREST_ASSERT(fromCString(headerLength->value, messageData->contentLength),
+                                  "Failed to get content length of request");
+                    NGREST_ASSERT(messageData->contentLength < MAX_REQUEST_SIZE,
+                                  "Request is too large!");
+                    const uint64_t totalRequestLength = messageData->httpBodyOffset +
+                            messageData->contentLength;
+                    messageData->httpBodyRemaining = totalRequestLength - pool->getSize();
+                    messageData->poolBody->reserve(totalRequestLength + 1);
+
+                    // if we didn't receive the whole body yet
+                    // store received part of body to another pool to avoid
+                    // Header* pointers damage on poolStr->flatten
+                    if (messageData->httpBodyRemaining) {
+                        // copy already received part of data to poolBody
+                        messageData->poolBody->putData(chunk->buffer + messageData->httpBodyOffset,
+                                                      chunk->size - messageData->httpBodyOffset);
+                        messageData->usePoolBody = true;
+                    }
+                } else {
+                    Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
+                    if (headerEncoding) {
+                        if (!!strcasecmp(headerEncoding->value, "identity")) {
+                            // FIXME: add support for transfer encodings
+                            NGREST_THROW_ASSERT("This transfer-encoding is not supported:" + std::string(headerEncoding->value));
+                        }
+                    }
+                    // message has no body and ready to process now
+                    messageData->httpBodyRemaining = 0;
+                }
             }
         }
 
