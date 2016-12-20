@@ -515,33 +515,47 @@ inline void writeHttpHeader(MemPool* pool, const char* name, const char* value)
     pool->putData("\r\n", 2);
 }
 
-template <int size>
-inline bool getServerTime(char(&timeStr)[size])
+const char* ClientHandler::getServerDate()
 {
-    struct tm localTime;
+#ifdef WIN32
+    SYSTEMTIME date;
+    GetSystemTime(&date);
 
-#if defined WIN32
-    SYSTEMTIME systemTime;
-    GetLocalTime(&systemTime);
+    if (date.wSecond != lastDate.wSecond ||
+            date.wMinute != lastDate.wMinute ||
+            date.wHour != lastDate.wHour ||
+            date.wDay != lastDate.wDay ||
+            date.wMonth != lastDate.wMonth ||
+            date.wYear != lastDate.wYear ||
+            date.wDayOfWeek != lastDate.wDayOfWeek) {
 
-    localTime.tm_sec = systemTime.wSecond;
-    localTime.tm_min = systemTime.wMinute;
-    localTime.tm_hour = systemTime.wHour;
-    localTime.tm_mday = systemTime.wDay;
-    localTime.tm_mon = systemTime.wMonth - 1;
-    localTime.tm_year = systemTime.wYear - 1900;
-    localTime.tm_wday = systemTime.wDayOfWeek;
-    localTime.tm_yday = 0;
-    localTime.tm_isdst = 0;
+        struct tm gmt;
+
+        gmt.tm_sec = date.wSecond;
+        gmt.tm_min = date.wMinute;
+        gmt.tm_hour = date.wHour;
+        gmt.tm_mday = date.wDay;
+        gmt.tm_mon = date.wMonth - 1;
+        gmt.tm_year = date.wYear - 1900;
+        gmt.tm_wday = date.wDayOfWeek;
+        gmt.tm_yday = 0;
+        gmt.tm_isdst = 0;
 #else
-    time_t timeT;
-
-    time(&timeT);
-    if (!gmtime_r(&timeT, &localTime))
-        return false;
+    time_t date;
+    time(&date);
+    if (date != lastDate) {
+        struct tm gmt;
+        if (!gmtime_r(&date, &gmt))
+            return nullptr;
 #endif
 
-    return strftime(timeStr, size, "%a, %b %d %Y %H:%M:%S GMT", &localTime) < size;
+        if (strftime(dateBuff, dateBuffSize, "%a, %b %d %Y %H:%M:%S GMT", &gmt) >= dateBuffSize)
+            return nullptr;
+
+        lastDate = date;
+    }
+
+    return dateBuff;
 }
 
 void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
@@ -579,8 +593,9 @@ void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
     char buff[buffSize];
     NGREST_ASSERT(toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
     writeHttpHeader(messageData->poolStr, "Content-Length", buff);
-    if (getServerTime(buff))
-        writeHttpHeader(messageData->poolStr, "Date", buff);
+    const char* serverDate = getServerDate();
+    if (serverDate)
+        writeHttpHeader(messageData->poolStr, "Date", serverDate);
     writeHttpHeader(messageData->poolStr, "Connection", messageData->keepAliveConnection ? "Keep-Alive" : "Close");
 
     // split body

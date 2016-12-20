@@ -122,6 +122,7 @@ public:
 
 private:
     WriteStatus writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData);
+    const char* getServerDate();
 
 private:
     uint64_t lastId = 0;
@@ -130,6 +131,13 @@ private:
     Transport& transport;
     MemPooler* pooler;
     CloseConnectionCallback* closeCallback = nullptr;
+#ifdef WIN32
+    SYSTEMTIME lastDate = {0, 0, 0, 0, 0, 0, 0, 0};
+#else
+    time_t lastDate = 0;
+#endif
+    static constexpr int dateBuffSize = 32;
+    char dateBuff[dateBuffSize];
 };
 
 }
