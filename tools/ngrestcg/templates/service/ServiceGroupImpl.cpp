@@ -7,8 +7,10 @@
 #include "$(interface.filePath)$(interface.name)Wrapper.h"
 ##endfor
 #include "ServiceGroupImpl.h"
+##ifeq($($dont_declare_plugin),)
 
 NGREST_DECLARE_PLUGIN($(project.ns)ServiceGroupImpl)
+##endif
 
 $(project.startCppNs)
 
