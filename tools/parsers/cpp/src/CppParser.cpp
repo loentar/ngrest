@@ -781,9 +781,13 @@ public:
                 LogWarning() << "all operations of interface class must be only public!";
             } else if (tmp.substr(0, service.name.size()) == service.name) {
                 // constructor-ignore it
+                if (tmp.back() == ';') // to prevent skipping of meta comments after ctor
+                    file.unget();
                 ignoreFunction();
             } else if (tmp.substr(0, service.name.size() + 1) == "~" + service.name) {
                 // destructor
+                if (tmp.back() == ';') // to prevent skipping of meta comments after ctor
+                    file.unget();
                 ignoreFunction();
             } else if (tmp == "enum") {
                 // enum -ignore
