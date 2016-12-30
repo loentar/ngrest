@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/loentar/ngrest.png?branch=master)](https://travis-ci.org/loentar/ngrest)
 
-ngrest is a simple C++ REST framework. It has small footprint, [extremely fast](https://docs.google.com/spreadsheets/d/1M8qtkO6dBa6Q2UPTeDApaohBF1_zTleF5XajcYipSG0/edit) and very easy in use.
+ngrest is a simple C++ REST framework. It has small footprint, [fast](https://github.com/loentar/ngrest/wiki/Benchmark-results) and very easy in use.
 
 ngrest allow you to deploy C++ RESTful webservices under [Apache2](https://github.com/loentar/ngrest/wiki/Deploy-ngrest-under-Apache2-Web-Server), [Nginx](https://github.com/loentar/ngrest/wiki/Deploy-ngrest-under-Nginx) or under simple ngrest http server.
 
