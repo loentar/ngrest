@@ -749,7 +749,7 @@ build_package() {
   [ $OS != MSYS ] || CMAKE_FLAGS="'-GUnix Makefiles' ${CMAKE_FLAGS:-}"
   cmake "${CMAKE_FLAGS:-}" "$2" >cmake-build.log
   echo "Building $1. It may take few minutes..."
-  $MAKE >make-build.log
+  make ${MAKE_FLAGS:-} >make-build.log
   touch .build_ok
   echo "Build OK"
 }
