@@ -621,11 +621,11 @@ void ClientHandler::processError(Socket clientFd, MessageData* messageData, cons
     processResponse(clientFd, messageData);
 }
 
-inline WriteStatus writeChunks(Socket fd, ssize_t& res, MessageWriteState& state)
+inline WriteStatus writeChunks(Socket fd, MessageWriteState& state)
 {
     while (state.chunk != state.end) {
-        res = ::send(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos, 0);
-        if (res == -1) {
+        ssize_t sent = ::send(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos, 0);
+        if (sent == -1) {
             // output buffer is full.
             if (errno == EAGAIN)
                 return WriteStatus::Again;
@@ -636,10 +636,9 @@ inline WriteStatus writeChunks(Socket fd, ssize_t& res, MessageWriteState& state
             return WriteStatus::Close;
         }
 
-        if (static_cast<uint64_t>(res) != state.chunk->size) {
-            state.pos += static_cast<uint64_t>(res);
+        state.pos += static_cast<uint64_t>(sent);
+        if (state.pos != state.chunk->size)
             continue;
-        }
 
         state.pos = 0;
         ++state.chunk;
@@ -650,18 +649,16 @@ inline WriteStatus writeChunks(Socket fd, ssize_t& res, MessageWriteState& state
 
 WriteStatus ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
 {
-    ssize_t res = 0;
-
     // write header to client
-    WriteStatus writeStatus = writeChunks(clientFd, res, messageData->headerState);
+    WriteStatus writeStatus = writeChunks(clientFd, messageData->headerState);
 
     if (writeStatus == WriteStatus::Again)
         return writeStatus;
 
     if (writeStatus == WriteStatus::Success) {
-        if (res != -1 && messageData->bodyState.chunk) {
+        if (messageData->bodyState.chunk) {
             // write response body to client
-            writeStatus = writeChunks(clientFd, res, messageData->bodyState);
+            writeStatus = writeChunks(clientFd, messageData->bodyState);
             if (writeStatus == WriteStatus::Again)
                 return writeStatus;
         }
