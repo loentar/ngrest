@@ -1086,7 +1086,7 @@ public:
                 // read value
                 file.ignore();
                 skipWs();
-                readBefore(member.value, " ,}\r\n\t");
+                readBefore(member.value, " ,}/\r\n\t");
                 skipWsOnly();
                 if (!en.members.empty())
                     readDescrComment(en.members.back().description);
