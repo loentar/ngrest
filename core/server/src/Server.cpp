@@ -265,21 +265,21 @@ int Server::exec()
                 fd = writeFds.fd_array[i];
 #endif
                 if (FD_ISSET(fd, &writeFds)) {
-                    WriteStatus status = callback->readyWrite(fd);
+                    Status status = callback->readyWrite(fd);
                     switch (status) {
-                    case WriteStatus::Again:
+                    case Status::Again:
 #ifndef HAS_EPOLL
                         FD_SET(fd, &writeFds);
 #endif
                         break;
 
-                    case WriteStatus::Done:
+                    case Status::Done:
 #ifndef HAS_EPOLL
                         FD_CLR(fd, &writeFds);
 #endif
                         break;
 
-                    case WriteStatus::Close:
+                    case Status::Close:
                         closeConnection(fd);
                         break;
 
@@ -490,9 +490,7 @@ void Server::handleRequest(Socket fd)
         try {
             if (callback->readyRead(fd))
                 return;
-        } NGREST_CATCH_ALL {
-            // close client connection
-        }
+        } NGREST_CATCH_ALL
     }
 
     closeConnection(fd);

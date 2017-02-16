@@ -36,9 +36,9 @@ struct sockaddr_storage;
 namespace ngrest {
 
 /**
- * @brief write status code
+ * @brief status code
  */
-enum class WriteStatus {
+enum class Status {
     Success, //!< no action
     Done,    //!< response finished, remove socket from write queue
     Again,   //!< response processedd partially, add socket to write queue
@@ -105,7 +105,7 @@ public:
      * @param fd client socket descriptor
      * @return write status code
      */
-    virtual WriteStatus readyWrite(Socket fd) = 0;
+    virtual Status readyWrite(Socket fd) = 0;
 
     /**
      * @brief set calback to close connection

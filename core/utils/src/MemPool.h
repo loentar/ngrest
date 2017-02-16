@@ -163,6 +163,15 @@ public:
     }
 
     /**
+     * @brief get chunks allocated
+     * @return chunks
+     */
+    inline Chunk* getChunks()
+    {
+        return chunks;
+    }
+
+    /**
      * @brief get number of chunks allocated
      * @return number of chunks
      */
@@ -176,6 +185,15 @@ public:
      * @return last chunk used
      */
     inline Chunk const* getLastChunk() const
+    {
+        return currChunk;
+    }
+
+    /**
+     * @brief get last chunk used
+     * @return last chunk used
+     */
+    inline Chunk* getLastChunk()
     {
         return currChunk;
     }

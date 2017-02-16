@@ -31,8 +31,8 @@ class Exception;
 class Engine;
 class Transport;
 class MemPooler;
-struct MessageData;
-struct ClientInfo;
+class MemPool;
+struct ClientContext;
 
 /**
  * @brief Client handler. Manages clients messages
@@ -77,13 +77,14 @@ public:
      * @return true - read success, false - close connection
      */
     virtual bool readyRead(Socket fd) override;
+    virtual bool readyRead(ClientContext* clientContext);
 
     /**
      * @brief client socket is ready for writing
      * @param fd client socket descriptor
      * @return write status code
      */
-    virtual WriteStatus readyWrite(Socket fd) override;
+    virtual Status readyWrite(Socket fd) override;
 
     /**
      * @brief set calback to close connection
@@ -94,39 +95,38 @@ public:
     /**
      * @brief parse http header from buffer
      * @param buffer mutable buffer which stores http header
-     * @param messageData message data to write header to
+     * @param clientContext message data to write header to
      */
-    void parseHttpHeader(char* buffer, MessageData* messageData);
+    void parseHttpHeader(char* buffer, ClientContext* clientContext);
 
     /**
      * @brief prepare and process received request from client
-     * @param clientFd client socket descriptor
-     * @param messageData client message data
+     * @param clientContext client message data
      */
-    void processRequest(Socket clientFd, MessageData* messageData);
+    void processRequest(ClientContext* clientContext);
 
     /**
      * @brief build response and send it to client
-     * @param clientFd client socket descriptor
-     * @param messageData client message data
+     * @param clientContext client message data
      */
-    void processResponse(Socket clientFd, MessageData* messageData);
+    void processResponse(ClientContext* clientContext);
 
     /**
      * @brief build error response and send it to client
-     * @param clientFd client socket descriptor
-     * @param messageData client message data
+     * @param clientContext client message data
      * @param error error description
      */
-    void processError(Socket clientFd, MessageData* messageData, const Exception& error);
+    void processError(ClientContext* clientContext, const Exception& error);
 
 private:
-    WriteStatus writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData);
+    Status tryParseHeaders(ClientContext* clientContext, MemPool* pool, uint64_t findOffset);
+    Status writeNextPart(ClientContext* clientContext);
     const char* getServerDate();
+    Status tryNextRequest(ClientContext* clientContext);
 
 private:
     uint64_t lastId = 0;
-    std::unordered_map<Socket, ClientInfo*> clients;
+    std::unordered_map<Socket, ClientContext*> clients;
     Engine& engine;
     Transport& transport;
     MemPooler* pooler;

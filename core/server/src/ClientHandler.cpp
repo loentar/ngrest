@@ -65,20 +65,36 @@ struct MessageWriteState
     uint64_t pos = 0;
 };
 
-struct MessageData
+struct ClientContext
 {
+    Socket fd;
+    char host[NI_MAXHOST];
+    char port[NI_MAXSERV];
+    bool deleteLater = false;
+
+    // due to http only one message can be processed at once per client
+    // so we reuse just one message for all requests for this client
+
     ElapsedTimer timer;
-    uint64_t id;
+    uint64_t id = 0;
     MessageContext context;
+    HttpRequest request;
+    HttpResponse response;
     MemPooler* pooler;
-    MemPool* poolStr;
-    MemPool* poolBody;
+    MemPool* poolRead; // buffer to receive request
+    MemPool* poolBody; // store request body and response headers
+    MemPool* poolWrite; // response body
     bool usePoolBody = false;
     bool keepAliveConnection = true;
+    uint64_t readOffset = 0;
+    uint64_t currentRequestOffset = 0;
+    uint64_t nextRequestOffset = INVALID_VALUE;
     uint64_t contentLength = INVALID_VALUE;
     uint64_t httpBodyOffset = 0;
     uint64_t httpBodyRemaining = INVALID_VALUE;
     bool processing = false;
+    bool pipeline = false;
+    bool needTryNext = false;
     uint8_t httpVersion = 0; // 0=unknown, 10 = 1.0, 11 = 1.1 ...
 
     // response data
@@ -86,62 +102,77 @@ struct MessageData
     MessageWriteState headerState;
     MessageWriteState bodyState;
 
-    MessageData(uint64_t id_, Transport* transport, Engine* engine, MemPooler* pooler_):
-        timer(true),
-        id(id_),
+    ClientContext(Socket fd_, Transport* transport, Engine* engine, MemPooler* pooler_):
+        fd(fd_),
         pooler(pooler_),
-        poolStr(pooler_->obtain(2048)),
-        poolBody(pooler_->obtain(1024))
+        poolRead(pooler->obtain(2048)),
+        poolBody(pooler->obtain(1024)),
+        poolWrite(pooler->obtain(4096))
     {
-        LogDebug() << "Start handling request " << id;
+        request.clientHost = host;
+        request.clientPort = port;
+        response.poolBody = poolWrite;
+
         context.pool = pooler->obtain();
         context.engine = engine;
         context.transport = transport;
-        context.request = context.pool->alloc<HttpRequest>();
-        context.response = context.pool->alloc<HttpResponse>();
-        context.response->poolBody = pooler->obtain(65536); // 64 KB chunks for output buffer
+        context.request = &request;
+        context.response = &response;
     }
 
-    ~MessageData()
+    ~ClientContext()
     {
-        pooler->recycle(poolStr);
+        pooler->recycle(poolRead);
         pooler->recycle(poolBody);
-        pooler->recycle(context.response->poolBody);
+        pooler->recycle(poolWrite);
         pooler->recycle(context.pool);
     }
-};
 
-struct ClientInfo
-{
-    char host[NI_MAXHOST];
-    char port[NI_MAXSERV];
-    bool deleteLater = false;
+    void reset()
+    {
+        // keep data in poolRead for the next request
+        usePoolBody = false;
+        contentLength = INVALID_VALUE;
+        httpBodyOffset = 0;
+        httpBodyRemaining = INVALID_VALUE;
+        httpVersion = 0;
+        writing = false;
+        needTryNext = false;
+        headerState = MessageWriteState();
+        bodyState = MessageWriteState();
 
-    std::list<MessageData*> requests;
+        poolBody->reset();
+        poolWrite->reset();
+        context.pool->reset();
+        request = HttpRequest();
+        request.clientHost = host;
+        request.clientPort = port;
+        response = HttpResponse();
+        response.poolBody = poolWrite;
+    }
 };
 
 
 class ClientHandlerCallback: public MessageCallback
 {
 public:
-    ClientHandlerCallback(ClientHandler* handler_, Socket clientFd_, MessageData* messageData_):
-        handler(handler_), clientFd(clientFd_), messageData(messageData_)
+    ClientHandlerCallback(ClientHandler* handler_, ClientContext* clientContext_):
+        handler(handler_), clientContext(clientContext_)
     {
     }
 
     void success()
     {
-        handler->processResponse(clientFd, messageData);
+        handler->processResponse(clientContext);
     }
 
     void error(const Exception& error)
     {
-        handler->processError(clientFd, messageData, error);
+        handler->processError(clientContext, error);
     }
 
     ClientHandler* handler;
-    Socket clientFd;
-    MessageData* messageData;
+    ClientContext* clientContext;
 };
 
 
@@ -157,21 +188,21 @@ ClientHandler::~ClientHandler()
 
 void ClientHandler::connected(Socket fd, const sockaddr_storage* addr)
 {
-    ClientInfo*& client = clients[fd];
-    if (client == nullptr) {
-        client = new ClientInfo();
+    ClientContext*& clientContext = clients[fd];
+    if (clientContext == nullptr) {
+        clientContext = new ClientContext(fd, &transport, &engine, pooler);
 
         int res = getnameinfo(reinterpret_cast<const sockaddr*>(addr), sizeof(*addr),
-                              client->host, sizeof(client->host),
-                              client->port, sizeof(client->port),
+                              clientContext->host, sizeof(clientContext->host),
+                              clientContext->port, sizeof(clientContext->port),
                               NI_NUMERICHOST | NI_NUMERICSERV);
         if (res == 0) {
             LogDebug() << "Accepted connection on client #" << fd
-                       << " (host=" << client->host << ", port=" << client->port << ")";
+                       << " (host=" << clientContext->host << ", port=" << clientContext->port << ")";
         } else {
             LogWarning() << "Failed to get client info: " << gai_strerror(res);
-            client->host[0] = '\0';
-            client->port[0] = '\0';
+            clientContext->host[0] = '\0';
+            clientContext->port[0] = '\0';
         }
     } else {
         LogError() << "Client #" << fd << " is already connected";
@@ -182,11 +213,11 @@ void ClientHandler::disconnected(Socket fd)
 {
     auto it = clients.find(fd);
     if (it != clients.end()) {
-        ClientInfo* clientInfo = clients[fd];
-        if (clientInfo->requests.empty()) {
-            delete clientInfo;
+        ClientContext* clientContext = clients[fd];
+        if (!clientContext->processing && !clientContext->pipeline) {
+            delete clientContext;
         } else {
-            clientInfo->deleteLater = true;
+            clientContext->deleteLater = true;
         }
         clients.erase(fd);
     }
@@ -206,45 +237,32 @@ bool ClientHandler::readyRead(Socket fd)
         return false;
     }
 
-    ClientInfo* clientData = it->second;
-    NGREST_ASSERT_NULL(clientData);
+    ClientContext* clientContext = it->second;
+    NGREST_ASSERT_NULL(clientContext);
 
-    MessageData* messageData;
+    return readyRead(clientContext);
+}
 
-    if (clientData->requests.empty()) {
-        messageData = new MessageData(++lastId, &transport, &engine, pooler);
-        clientData->requests.push_back(messageData);
-    } else {
-        messageData = clientData->requests.back();
-        NGREST_ASSERT_NULL(messageData);
-
-        if (messageData->processing) {
-            // request is finished to read and now processing.
-            // creating new request
-            messageData = new MessageData(++lastId, &transport, &engine, pooler);
-            clientData->requests.push_back(messageData);
-        }
-    }
-
-    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+bool ClientHandler::readyRead(ClientContext* clientContext)
+{
     for (;;) {
-        MemPool* pool = messageData->usePoolBody ? messageData->poolBody : messageData->poolStr;
+        MemPool* pool = clientContext->usePoolBody ? clientContext->poolBody : clientContext->poolRead;
         uint64_t prevSize = pool->getSize();
-        uint64_t sizeToRead = (messageData->httpBodyRemaining != INVALID_VALUE)
-                ? messageData->httpBodyRemaining : TRY_BLOCK_SIZE;
+        uint64_t sizeToRead = (clientContext->httpBodyRemaining != INVALID_VALUE)
+                ? clientContext->httpBodyRemaining : TRY_BLOCK_SIZE;
         char* buffer = pool->grow(sizeToRead);
-        ssize_t count = ::recv(fd, buffer, sizeToRead, 0);
-        if (count == 0) {
+        ssize_t received = ::recv(clientContext->fd, buffer, sizeToRead, 0);
+        if (received == 0) {
             // this should only happen in case of ioctl(fd, FIONREAD...) failure
             // EOF. The remote has closed the connection.
-            LogDebug() << "client #" << fd << " closed connection";
+            LogDebug() << "client #" << clientContext->fd << " closed connection";
             return false;
         }
 
-        if (count == -1) {
+        if (received == -1) {
             // some error
             if (errno != EAGAIN) {
-                LogError() << "failed to read block from client #" << fd
+                LogError() << "failed to read block from client #" << clientContext->fd
                            << ": " << strerror(errno);
                 return false;
             }
@@ -254,94 +272,31 @@ bool ClientHandler::readyRead(Socket fd)
             break;
         }
 
-        if (count < static_cast<int64_t>(sizeToRead))
-            pool->shrinkLastChunk(sizeToRead - count);
+        if (received < static_cast<int64_t>(sizeToRead))
+            pool->shrinkLastChunk(sizeToRead - received);
 
-        if (messageData->httpBodyRemaining != INVALID_VALUE)
-            messageData->httpBodyRemaining -= count;
+        if (clientContext->httpBodyRemaining != INVALID_VALUE)
+            clientContext->httpBodyRemaining -= received;
 
-        if (messageData->httpBodyOffset == 0) {
-            MemPool::Chunk* chunk = pool->flatten(false);
-            // pool == poolStr until header is not fully read
-            buffer = chunk->buffer + prevSize;
+        if (clientContext->httpBodyOffset == 0) {
+            pool->flatten();
 
-            const char* startFind;
-            uint64_t searchSize;
-            if (prevSize) {
-                startFind = buffer - 3;
-                searchSize = count + 3;
-            } else {
-                startFind = buffer;
-                searchSize = count;
-            }
-
-            const char* pos = strnstrn(startFind, "\r\n\r\n", searchSize, 4);
-            if (pos) {
-                uint64_t httpHeaderSize = prevSize + (pos - buffer);
-                messageData->httpBodyOffset = httpHeaderSize + 4;
-
-                chunk->buffer[httpHeaderSize + 2] = '\0'; // terminate HTTP header
-
-                // parse HTTP header
-                parseHttpHeader(chunk->buffer, messageData);
-
-                try {
-                    engine.runPhase(Phase::Header, &messageData->context);
-                } catch (const Exception& ex) {
-                    processError(fd, messageData, ex);
-                    return false; // close connection to client
-                }
-
-                Header* headerConnection = httpRequest->getHeader("connection");
-                if (headerConnection) {
-                    messageData->keepAliveConnection = !strcasecmp(headerConnection->value, "keep-alive");
-                } else {
-                    // HTTP 1.0 defaults connection to close
-                    // HTTP 1.1 defaults connection to keep-alive
-                    messageData->keepAliveConnection = messageData->httpVersion >= 11;
-                }
-
-                const Header* headerLength = httpRequest->getHeader("content-length");
-                if (headerLength) {
-                    NGREST_ASSERT(fromCString(headerLength->value, messageData->contentLength),
-                                  "Failed to get content length of request");
-                    NGREST_ASSERT(messageData->contentLength < MAX_REQUEST_SIZE,
-                                  "Request is too large!");
-                    const uint64_t totalRequestLength = messageData->httpBodyOffset +
-                            messageData->contentLength;
-                    messageData->httpBodyRemaining = totalRequestLength - pool->getSize();
-                    messageData->poolBody->reserve(totalRequestLength + 1);
-
-                    // if we didn't receive the whole body yet
-                    // store received part of body to another pool to avoid
-                    // Header* pointers damage on poolStr->flatten
-                    if (messageData->httpBodyRemaining) {
-                        // copy already received part of data to poolBody
-                        messageData->poolBody->putData(chunk->buffer + messageData->httpBodyOffset,
-                                                      chunk->size - messageData->httpBodyOffset);
-                        messageData->usePoolBody = true;
-                    }
-                } else {
-                    Header* headerEncoding = httpRequest->getHeader("transfer-encoding");
-                    if (headerEncoding) {
-                        if (!!strcasecmp(headerEncoding->value, "identity")) {
-                            // FIXME: add support for transfer encodings
-                            NGREST_THROW_ASSERT("This transfer-encoding is not supported:" + std::string(headerEncoding->value));
-                        }
-                    }
-                    // message has no body and ready to process now
-                    messageData->httpBodyRemaining = 0;
-                }
+            uint64_t findOffset = prevSize ? (prevSize - 3) : 0;
+            Status res = tryParseHeaders(clientContext, pool, findOffset);
+            switch (res) {
+            case Status::Again:
+                return true;
+            case Status::Close:
+                return false;
+            default:;
             }
         }
 
-        if (messageData->httpBodyRemaining == 0) {
-            httpRequest->clientHost = clientData->host;
-            httpRequest->clientPort = clientData->port;
+        if (clientContext->httpBodyRemaining == 0) {
             try {
-                processRequest(fd, messageData);
+                processRequest(clientContext);
             } catch (const Exception& ex) {
-                processError(fd, messageData, ex);
+                processError(clientContext, ex);
                 return false; // close connection to client
             }
             break;
@@ -351,42 +306,95 @@ bool ClientHandler::readyRead(Socket fd)
     return true;
 }
 
-WriteStatus ClientHandler::readyWrite(Socket fd)
+Status ClientHandler::tryParseHeaders(ClientContext* clientContext, MemPool* pool, uint64_t findOffset)
+{
+    MemPool::Chunk* chunk = pool->getChunks();
+
+    const char* pos = strstr(chunk->buffer + findOffset, "\r\n\r\n");
+    if (pos) {
+        uint64_t httpHeaderSize = pos - chunk->buffer - clientContext->currentRequestOffset;
+        clientContext->httpBodyOffset = clientContext->currentRequestOffset + httpHeaderSize + 4;
+
+        chunk->buffer[clientContext->httpBodyOffset - 2] = '\0'; // terminate HTTP header
+
+        // parse HTTP header
+        parseHttpHeader(chunk->buffer + clientContext->currentRequestOffset, clientContext);
+
+        try {
+            engine.runPhase(Phase::Header, &clientContext->context);
+        } catch (const Exception& ex) {
+            processError(clientContext, ex);
+            return Status::Close; // close connection to client
+        }
+
+        Header* headerConnection = clientContext->request.getHeader("connection");
+        if (headerConnection) {
+            clientContext->keepAliveConnection = !strcasecmp(headerConnection->value, "keep-alive");
+        } else {
+            // HTTP 1.0 defaults connection to close
+            // HTTP 1.1 defaults connection to keep-alive
+            clientContext->keepAliveConnection = clientContext->httpVersion >= 11;
+        }
+
+        const Header* headerLength = clientContext->request.getHeader("content-length");
+        if (headerLength) {
+            NGREST_ASSERT(fromCString(headerLength->value, clientContext->contentLength), "Invalid value of content-length");
+            NGREST_ASSERT(clientContext->contentLength < MAX_REQUEST_SIZE, "Request is too large!");
+            const uint64_t totalRequestLength = clientContext->httpBodyOffset + clientContext->contentLength;
+            clientContext->httpBodyRemaining = totalRequestLength - chunk->size;
+
+            // if we didn't receive the whole body yet and chunk don't have enough space
+            // store received part of body to another pool to avoid
+            // Header* pointers damage on poolStr->flatten
+            if (clientContext->httpBodyRemaining && (clientContext->httpBodyRemaining > (chunk->bufferSize - chunk->size))) {
+                clientContext->poolBody->reserve(clientContext->contentLength + 1);
+                // copy already received part of data to poolBody
+                clientContext->poolBody->putData(chunk->buffer + clientContext->httpBodyOffset,
+                                                 chunk->size - clientContext->httpBodyOffset);
+                clientContext->usePoolBody = true;
+                clientContext->nextRequestOffset = INVALID_VALUE; // no next request
+            } else {
+                clientContext->nextRequestOffset = totalRequestLength;
+            }
+        } else {
+            Header* headerEncoding = clientContext->request.getHeader("transfer-encoding");
+            if (headerEncoding) {
+                if (!!strcasecmp(headerEncoding->value, "identity")) {
+                    // FIXME: add support for transfer encodings
+                    NGREST_THROW_ASSERT("This transfer-encoding is not supported:" + std::string(headerEncoding->value));
+                }
+            }
+            // message has no body and ready to process now
+            clientContext->httpBodyRemaining = 0;
+            clientContext->nextRequestOffset = clientContext->httpBodyOffset;
+        }
+
+        return Status::Success;
+    } else {
+        return Status::Again;
+    }
+}
+
+Status ClientHandler::readyWrite(Socket fd)
 {
     auto it = clients.find(fd);
     if (it == clients.end()) {
         LogWarning() << "Failed to process request: non-existing client: " << fd;
-        return WriteStatus::Close;
+        return Status::Close;
     }
 
-    ClientInfo* clientData = it->second;
-    NGREST_ASSERT_NULL(clientData);
+    ClientContext* clientContext = it->second;
+    NGREST_ASSERT_NULL(clientContext);
 
-    // nothing to write: all requests already finished
-    if (clientData->requests.empty())
-        return WriteStatus::Success;
-
-    MessageData* messageData = nullptr;
-    // find first unfinished write
-    for (MessageData* message : clientData->requests) {
-        if (message->writing) {
-            messageData = message;
-            break;
-        }
-    }
-
-    // nothing to write: no requests to write but some to read
-    if (!messageData)
-        return WriteStatus::Success;
+    if (!clientContext->writing)
+        return Status::Success;
 
     // close connection if this is a last request and connection set to close
-    bool closeConnection = !messageData->keepAliveConnection &&
-            clientData->requests.size() == 1;
+    bool closeConnection = !clientContext->keepAliveConnection;
 
-    WriteStatus res = writeNextPart(fd, clientData, messageData);
-    // clientData and messageData is freed here when res=Done
-    if (res == WriteStatus::Done && closeConnection)
-        res = WriteStatus::Close;
+    Status res = writeNextPart(clientContext);
+    if (res == Status::Done && closeConnection)
+        res = Status::Close;
 
     return res;
 }
@@ -396,7 +404,7 @@ void ClientHandler::setCloseConnectionCallback(CloseConnectionCallback* callback
     closeCallback = callback;
 }
 
-void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
+void ClientHandler::parseHttpHeader(char* buffer, ClientContext* clientContext)
 {
     char* curr = buffer;
 
@@ -404,7 +412,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
 
     const char* method = token(curr);
     NGREST_ASSERT(method >= buffer, "Failed to get HTTP method");
-    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(clientContext->context.request);
     NGREST_ASSERT_NULL(httpRequest);
 
     httpRequest->setMethod(method);
@@ -426,7 +434,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
         httpVersionStr += 5;
         int len = curr - httpVersionStr;
         if ((len == 4 || len == 3) && httpVersionStr[1] == '.') { // "1.0\r"
-            messageData->httpVersion = (httpVersionStr[0] - '0') * 10 + (httpVersionStr[2] - '0');
+            clientContext->httpVersion = (httpVersionStr[0] - '0') * 10 + (httpVersionStr[2] - '0');
         }
     }
 
@@ -444,7 +452,7 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
         NGREST_ASSERT(*curr, "Failed to parse HTTP header: unable to read value");
         char* value = token(curr, '\n');
         trimRight(value, curr - 2);
-        Header* header = messageData->context.pool->alloc<Header>();
+        Header* header = clientContext->context.pool->alloc<Header>();
         header->name = name;
         header->value = value;
         if (lastHeader == nullptr) {
@@ -456,33 +464,40 @@ void ClientHandler::parseHttpHeader(char* buffer, MessageData* messageData)
     }
 }
 
-void ClientHandler::processRequest(Socket clientFd, MessageData* messageData)
+void ClientHandler::processRequest(ClientContext* clientContext)
 {
-    messageData->processing = true;
+    clientContext->processing = true;
+    ++clientContext->id;
+    clientContext->timer.start();
 
-    HttpRequest* httpRequest = static_cast<HttpRequest*>(messageData->context.request);
+    HttpRequest* httpRequest = static_cast<HttpRequest*>(clientContext->context.request);
     NGREST_ASSERT_NULL(httpRequest);
 
-    if (messageData->usePoolBody) {
+    if (clientContext->usePoolBody) {
         // handle body from poolBody with zero offset
-        MemPool::Chunk* chunk = messageData->poolBody->flatten();
+        MemPool::Chunk* chunk = clientContext->poolBody->flatten();
         httpRequest->bodySize = chunk->size;
         httpRequest->body = chunk->buffer;
-        httpRequest->poolBody = messageData->poolBody;
+        httpRequest->poolBody = clientContext->poolBody;
     } else {
-        // handle body from poolStr with offset
-        NGREST_ASSERT_NULL(messageData->poolStr->getChunkCount() == 1); // should never happen
+        if (clientContext->contentLength != INVALID_VALUE) {
+            // handle body from poolStr with offset
+            NGREST_ASSERT_NULL(clientContext->poolRead->getChunkCount() == 1); // should never happen
 
-        const MemPool::Chunk* chunk = messageData->poolStr->flatten(); // already flat, but we need NUL
-        NGREST_ASSERT(messageData->httpBodyOffset <= chunk->size, "Request > size");
-        httpRequest->bodySize = chunk->size - messageData->httpBodyOffset;
-        if (httpRequest->bodySize)
-            httpRequest->body = chunk->buffer + messageData->httpBodyOffset;
+            const MemPool::Chunk* chunk = clientContext->poolRead->flatten(); // already flat, but we need NUL
+            NGREST_ASSERT(clientContext->httpBodyOffset <= chunk->size, "Request > size");
+            httpRequest->bodySize = chunk->size - clientContext->httpBodyOffset;
+            if (httpRequest->bodySize)
+                httpRequest->body = chunk->buffer + clientContext->httpBodyOffset;
+        } else {
+            httpRequest->bodySize = 0;
+            httpRequest->body = nullptr;
+        }
     }
 
-    messageData->context.callback = messageData->context.pool
-            ->alloc<ClientHandlerCallback>(this, clientFd, messageData);
-    engine.dispatchMessage(&messageData->context);
+    clientContext->context.callback = clientContext->context.pool
+            ->alloc<ClientHandlerCallback>(this, clientContext);
+    engine.dispatchMessage(&clientContext->context);
 }
 
 inline void writeHttpHeader(MemPool* pool, const char* name, const char* value)
@@ -536,75 +551,110 @@ const char* ClientHandler::getServerDate()
     return dateBuff;
 }
 
-void ClientHandler::processResponse(Socket clientFd, MessageData* messageData)
+Status ClientHandler::tryNextRequest(ClientContext* clientContext)
 {
-    auto it = clients.find(clientFd);
-    if (it == clients.end()) {
-        LogWarning() << "Failed to process response: non-existing client: " << clientFd;
-        return;
+    clientContext->reset();
+
+    clientContext->currentRequestOffset = clientContext->nextRequestOffset;
+    NGREST_ASSERT(clientContext->poolRead->getChunkCount() == 1, "Inconsistent mempool");
+    MemPool::Chunk* chunk = clientContext->poolRead->getChunks();
+    uint64_t remaining = chunk->size - clientContext->currentRequestOffset;
+    if (!remaining) {
+        // no data remaining - reset all
+        clientContext->currentRequestOffset = 0;
+        clientContext->nextRequestOffset = 0;
+        clientContext->poolRead->reset();
+        return Status::Again;
     }
 
-    ClientInfo* clientInfo = it->second;
-    NGREST_ASSERT_NULL(clientInfo);
+    // some data remaining in the read buffer
+    // there is a part of the next request or even the next full request
 
-    messageData->writing = true;
+    Status status = tryParseHeaders(clientContext, clientContext->poolRead, clientContext->currentRequestOffset);
+    switch (status) {
+    case Status::Again:
+        // only part of the next request, copy it to the beginning of mempool
+        memmove(chunk->buffer, chunk->buffer + clientContext->currentRequestOffset, remaining);
+        clientContext->currentRequestOffset = 0;
+        clientContext->nextRequestOffset = 0;
+        chunk->size = remaining;
+        return Status::Again; // process to readyRead
+    case Status::Close:
+        return Status::Close;
+    default:; // full request or at least full header
+    }
 
-    messageData->poolStr->reset();
+    if (clientContext->httpBodyRemaining == 0) {
+        // parse full request
+        try {
+            processRequest(clientContext);
+            return Status::Success;
+        } catch (const Exception& ex) {
+            processError(clientContext, ex);
+            return Status::Close;
+        }
+    }
+
+    return Status::Again;
+}
+
+void ClientHandler::processResponse(ClientContext* clientContext)
+{
+    clientContext->writing = true;
+    clientContext->poolBody->reset();
 
     // build response
-    HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
-    messageData->poolStr->putData(messageData->httpVersion == 10 ? "HTTP/1.0 " : "HTTP/1.1 ", 9);
+    HttpResponse* response = static_cast<HttpResponse*>(clientContext->context.response);
+    clientContext->poolBody->putData(clientContext->httpVersion == 10 ? "HTTP/1.0 " : "HTTP/1.1 ", 9);
     if (response->statusCode == HTTP_STATUS_UNDEFINED)
         response->statusCode = HTTP_STATUS_200_OK;
-    messageData->poolStr->putCString(HttpStatusInfo::httpStatusToString(
-                                    static_cast<HttpStatus>(response->statusCode)));
-    messageData->poolStr->putData("\r\n", 2);
+    clientContext->poolBody->putCString(HttpStatusInfo::httpStatusToString(static_cast<HttpStatus>(response->statusCode)));
+    clientContext->poolBody->putData("\r\n", 2);
     for (const Header* header = response->headers; header; header = header->next)
-        writeHttpHeader(messageData->poolStr, header->name, header->value);
+        writeHttpHeader(clientContext->poolBody, header->name, header->value);
 
     // server
-    writeHttpHeader(messageData->poolStr, "Server", "ngrest");
+    writeHttpHeader(clientContext->poolBody, "Server", "ngrest");
 
     // content-length
     uint64_t bodySize = response->poolBody->getSize();
     const int buffSize = 32;
     char buff[buffSize];
     NGREST_ASSERT(toCString(bodySize, buff, buffSize), "Failed to write Content-Length");
-    writeHttpHeader(messageData->poolStr, "Content-Length", buff);
+    writeHttpHeader(clientContext->poolBody, "Content-Length", buff);
     const char* serverDate = getServerDate();
     if (serverDate)
-        writeHttpHeader(messageData->poolStr, "Date", serverDate);
-    writeHttpHeader(messageData->poolStr, "Connection", messageData->keepAliveConnection ? "Keep-Alive" : "Close");
+        writeHttpHeader(clientContext->poolBody, "Date", serverDate);
+    writeHttpHeader(clientContext->poolBody, "Connection", clientContext->keepAliveConnection ? "Keep-Alive" : "Close");
 
     // split body
-    messageData->poolStr->putData("\r\n", 2);
+    clientContext->poolBody->putData("\r\n", 2);
 
-    messageData->headerState.chunk = messageData->poolStr->getChunks();
-    messageData->headerState.end = messageData->poolStr->getLastChunk() + 1;
-    messageData->headerState.pos = 0;
+    clientContext->headerState.chunk = clientContext->poolBody->getChunks();
+    clientContext->headerState.end = clientContext->poolBody->getLastChunk() + 1;
+    clientContext->headerState.pos = 0;
     if (!response->poolBody->isClean()) {
-        messageData->bodyState.chunk = response->poolBody->getChunks();
-        messageData->bodyState.end = response->poolBody->getLastChunk() + 1;
-        messageData->bodyState.pos = 0;
+        clientContext->bodyState.chunk = response->poolBody->getChunks();
+        clientContext->bodyState.end = response->poolBody->getLastChunk() + 1;
+        clientContext->bodyState.pos = 0;
     }
 
-    bool closeConnection = !messageData->keepAliveConnection &&
-            clientInfo->requests.size() == 1;
+    bool closeConnection = !clientContext->keepAliveConnection;
 
-    WriteStatus res = writeNextPart(clientFd, clientInfo, messageData);
-    // clientData and messageData is freed here when res=Done
-    if (res == WriteStatus::Done && closeConnection) {
+    Status res = writeNextPart(clientContext);
+    // clientContext and clientContext is freed here when res=Done
+    if (res == Status::Done && closeConnection) {
         NGREST_ASSERT_NULL(closeCallback);
         LogDebug() << "Closing connection to client";
-        closeCallback->closeConnection(clientFd);
+        closeCallback->closeConnection(clientContext->fd);
     }
 }
 
-void ClientHandler::processError(Socket clientFd, MessageData* messageData, const Exception& error)
+void ClientHandler::processError(ClientContext* clientContext, const Exception& error)
 {
-    LogDebug() << "Error while handling request " << messageData->context.request->path;
+    LogDebug() << "Error while handling request " << clientContext->context.request->path;
 
-    HttpResponse* response = static_cast<HttpResponse*>(messageData->context.response);
+    HttpResponse* response = static_cast<HttpResponse*>(clientContext->context.response);
     if (response->statusCode == HTTP_STATUS_UNDEFINED) {
         try {
              throw; // we're called from catch block
@@ -618,22 +668,22 @@ void ClientHandler::processError(Socket clientFd, MessageData* messageData, cons
     response->headers = &headerContentType;
     response->poolBody->reset();
     response->poolBody->putCString(error.what());
-    processResponse(clientFd, messageData);
+    processResponse(clientContext);
 }
 
-inline WriteStatus writeChunks(Socket fd, MessageWriteState& state)
+inline Status writeChunks(Socket fd, MessageWriteState& state)
 {
     while (state.chunk != state.end) {
         ssize_t sent = ::send(fd, state.chunk->buffer + state.pos, state.chunk->size - state.pos, 0);
         if (sent == -1) {
             // output buffer is full.
             if (errno == EAGAIN)
-                return WriteStatus::Again;
+                return Status::Again;
 
             // other error
-            if (errno != EPIPE)
+            if (errno != EPIPE && errno != ECONNRESET)
                 LogError() << "Failed to write response: " << Error::getLastError();
-            return WriteStatus::Close;
+            return Status::Close;
         }
 
         state.pos += static_cast<uint64_t>(sent);
@@ -644,39 +694,66 @@ inline WriteStatus writeChunks(Socket fd, MessageWriteState& state)
         ++state.chunk;
     }
 
-    return WriteStatus::Success;
+    return Status::Success;
 }
 
-WriteStatus ClientHandler::writeNextPart(Socket clientFd, ClientInfo* clientInfo, MessageData* messageData)
+Status ClientHandler::writeNextPart(ClientContext* clientContext)
 {
     // write header to client
-    WriteStatus writeStatus = writeChunks(clientFd, messageData->headerState);
-
-    if (writeStatus == WriteStatus::Again)
+    Status writeStatus = writeChunks(clientContext->fd, clientContext->headerState);
+    if (writeStatus == Status::Again)
         return writeStatus;
 
-    if (writeStatus == WriteStatus::Success) {
-        if (messageData->bodyState.chunk) {
+    if (writeStatus == Status::Success) {
+        if (clientContext->bodyState.chunk) {
             // write response body to client
-            writeStatus = writeChunks(clientFd, messageData->bodyState);
-            if (writeStatus == WriteStatus::Again)
+            writeStatus = writeChunks(clientContext->fd, clientContext->bodyState);
+            if (writeStatus == Status::Again)
                 return writeStatus;
         }
     }
 
-    LogDebug() << "Request " << messageData->id << " handled in "
-               << messageData->timer.elapsed() << " microsecond(s)";
+    LogDebug() << "Request " << clientContext->id << " handled in "
+               << clientContext->timer.elapsed() << " microsecond(s)";
 
-    clientInfo->requests.remove(messageData);
+    if (!clientContext->pipeline) {
+        // delayed deleting ClientContext after connection is closed while processing
+        if (clientContext->deleteLater) {
+            delete clientContext;
+        } else {
+            Status res;
+            do {
+                clientContext->pipeline = true;
+                do {
+                    res = tryNextRequest(clientContext);
+                    if (res == Status::Again)
+                        break;
+                    if (res == Status::Close) {
+                        clientContext->pipeline = false;
+                        clientContext->processing = false;
+                        return Status::Close;
+                    }
+                } while (clientContext->needTryNext);
 
-    delete messageData;
+                if (res == Status::Again) {
+                    clientContext->nextRequestOffset = INVALID_VALUE;
+                    // request with body read, try to continue reqding the next request
+                    // we don't get event for it in edge trigger mode
 
-    // delayed deleting ClientInfo after all requests are processed
-    if (clientInfo->deleteLater && clientInfo->requests.empty())
-        delete clientInfo;
+                    if (!readyRead(clientContext)) {
+                        clientContext->pipeline = false;
+                        clientContext->processing = false;
+                        return Status::Close;
+                    }
+                }
+            } while (clientContext->needTryNext);
+            clientContext->pipeline = false;
+        }
+    } else {
+        clientContext->needTryNext = true;
+    }
 
-    // response is to be freed by engine
-    return WriteStatus::Done;
+    return Status::Done;
 }
 
 }
