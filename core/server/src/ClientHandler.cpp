@@ -467,7 +467,7 @@ void ClientHandler::parseHttpHeader(char* buffer, ClientContext* clientContext)
 void ClientHandler::processRequest(ClientContext* clientContext)
 {
     clientContext->processing = true;
-    ++clientContext->id;
+    clientContext->id = ++lastId;
     clientContext->timer.start();
 
     HttpRequest* httpRequest = static_cast<HttpRequest*>(clientContext->context.request);
