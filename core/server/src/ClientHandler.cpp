@@ -643,7 +643,7 @@ void ClientHandler::processResponse(ClientContext* clientContext)
 
     Status res = writeNextPart(clientContext);
     // clientContext and clientContext is freed here when res=Done
-    if (res == Status::Done && closeConnection) {
+    if (res == Status::Close || (res == Status::Done && closeConnection)) {
         NGREST_ASSERT_NULL(closeCallback);
         LogDebug() << "Closing connection to client";
         closeCallback->closeConnection(clientContext->fd);
@@ -715,45 +715,48 @@ Status ClientHandler::writeNextPart(ClientContext* clientContext)
 
     LogDebug() << "Request " << clientContext->id << " handled in "
                << clientContext->timer.elapsed() << " microsecond(s)";
+    clientContext->processing = false;
 
-    if (!clientContext->pipeline) {
-        // delayed deleting ClientContext after connection is closed while processing
-        if (clientContext->deleteLater) {
-            delete clientContext;
-        } else {
-            Status res;
-            do {
-                clientContext->pipeline = true;
-                do {
-                    res = tryNextRequest(clientContext);
-                    if (res == Status::Again)
-                        break;
-                    if (res == Status::Close) {
-                        clientContext->pipeline = false;
-                        clientContext->processing = false;
-                        return Status::Close;
-                    }
-                } while (clientContext->needTryNext);
+    Status res = Status::Done;
 
-                if (res == Status::Again) {
-                    clientContext->nextRequestOffset = INVALID_VALUE;
-                    // request with body read, try to continue reqding the next request
-                    // we don't get event for it in edge trigger mode
-
-                    if (!readyRead(clientContext)) {
-                        clientContext->pipeline = false;
-                        clientContext->processing = false;
-                        return Status::Close;
-                    }
-                }
-            } while (clientContext->needTryNext);
-            clientContext->pipeline = false;
-        }
-    } else {
+    if (clientContext->pipeline) {
         clientContext->needTryNext = true;
+        return res;
     }
 
-    return Status::Done;
+    // delayed deletion of ClientContext if connection was closed meanwhile processing
+    if (clientContext->deleteLater) {
+        delete clientContext;
+        return res;
+    }
+
+    clientContext->pipeline = true;
+    do {
+        Status tryRes = Status::Done;
+        do {
+            tryRes = tryNextRequest(clientContext);
+            if (tryRes == Status::Again)
+                break;
+            if (tryRes == Status::Close) {
+                res = Status::Close;
+                clientContext->needTryNext = false;
+            }
+        } while (clientContext->needTryNext);
+
+        if (tryRes == Status::Again) {
+            clientContext->nextRequestOffset = INVALID_VALUE;
+            // request with body read, try to continue reqding the next request
+            // we don't get event for it in edge trigger mode
+
+            if (!readyRead(clientContext)) {
+                clientContext->needTryNext = false;
+                res = Status::Close;
+            }
+        }
+    } while (clientContext->needTryNext);
+    clientContext->pipeline = false;
+
+    return res;
 }
 
 }
