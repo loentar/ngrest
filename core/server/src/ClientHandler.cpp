@@ -109,6 +109,8 @@ struct ClientContext
         poolBody(pooler->obtain(1024)),
         poolWrite(pooler->obtain(4096))
     {
+        host[0] = '\0';
+        port[0] = '\0';
         request.clientHost = host;
         request.clientPort = port;
         response.poolBody = poolWrite;
@@ -201,8 +203,6 @@ void ClientHandler::connected(Socket fd, const sockaddr_storage* addr)
                        << " (host=" << clientContext->host << ", port=" << clientContext->port << ")";
         } else {
             LogWarning() << "Failed to get client info: " << gai_strerror(res);
-            clientContext->host[0] = '\0';
-            clientContext->port[0] = '\0';
         }
     } else {
         LogError() << "Client #" << fd << " is already connected";
