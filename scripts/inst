@@ -63,6 +63,7 @@ then
   brew|port)
     YES=
     INSTALL=install
+    [ $pkg != brew ] || SUDO=
     ;;
   pacman)
     YES=--noconfirm
@@ -82,6 +83,7 @@ then
   fi
   $SUDO $pkg $INSTALL $YES $TO_INSTALL </dev/null
   [ -n "$TO_INSTALL_OPT" ] || $SUDO $pkg $INSTALL $YES $TO_INSTALL_OPT </dev/null || true
+  [ $pkg != brew ] || SUDO=sudo
 fi
 
 if [ $OS = MSYS ]
