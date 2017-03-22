@@ -299,3 +299,5 @@ Here is a list of packages to extend ngrest functinality:
 ## Support
 
 Feel free to ask ngrest related questions here on the [Google groups](https://groups.google.com/forum/#!forum/ngrest).
+
+There also a chat on: gitter.im/ngrest
