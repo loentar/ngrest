@@ -300,4 +300,4 @@ Here is a list of packages to extend ngrest functinality:
 
 Feel free to ask ngrest related questions here on the [Google groups](https://groups.google.com/forum/#!forum/ngrest).
 
-There also a chat on: [gitter.im/ngrest](gitter.im/ngrest)
+There also a chat on: [gitter.im/ngrest](https://gitter.im/ngrest)
