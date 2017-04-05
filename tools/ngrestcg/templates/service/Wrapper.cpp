@@ -97,7 +97,7 @@ $(param.name)\
 ##ifeq($($callbackType),void)
 VoidCallback
 ##else
-Callback< $($callbackType) >
+::ngrest::Callback< $($callbackType) >
 ##endif
         {
         public:
