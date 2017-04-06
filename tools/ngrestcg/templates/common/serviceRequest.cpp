@@ -2,7 +2,7 @@
 ##var callbackParam
 ##ifneq($(operation.params.$count),0)
 /// ######### deserialize request ###########
-##ifneq($(operation.params.$count)-$(operation.params.param.dataType.name),1-MessageContext)
+##ifneq($(operation.params.$count)-$(operation.params.param.dataType.name),1-MessageContext||1-Callback)
         NGREST_ASSERT(context->request->node, "Request expected for $(service.serviceNsName)/$(operation.name)");
         NGREST_ASSERT_PARAM(context->request->node->type == ::ngrest::NodeType::Object);
 
