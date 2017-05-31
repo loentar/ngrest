@@ -81,6 +81,17 @@ char* MemPool::putData(const char* data, uint64_t size)
     return reinterpret_cast<char*>(memcpy(grow(size), data, size));
 }
 
+void MemPool::trim()
+{
+    if (chunkIndex + 1 >= chunksCount)
+        return;
+
+    for (Chunk *curr = currChunk + 1; chunksCount > chunkIndex + 1; ++curr, --chunksCount) {
+        ::free(curr->buffer);
+        memset(curr, 0, sizeof(Chunk));
+    }
+}
+
 MemPool::Chunk* MemPool::flatten(bool terminate)
 {
     if (!chunksCount)
