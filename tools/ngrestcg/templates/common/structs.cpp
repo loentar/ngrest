@@ -11,6 +11,7 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::serialize(::ngrest
     $(struct.parentNs)$(struct.parentName.!replace/::/Serializer::/)Serializer::serialize(context, value, node);
 
 ##endif
+    ::ngrest::NamedNode* oldFirstChildNode = static_cast< ::ngrest::Object*>(node)->firstChild;
 ##var lastNodeName
 ##foreach $(struct.fields)
     ::ngrest::NamedNode* $(field.name)Node = context->pool->alloc< ::ngrest::NamedNode>("$(field.name)");
@@ -29,6 +30,9 @@ void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::serialize(::ngrest
 ##endcontext
 ##popvars
 ##endfor
+##ifneq($($lastNodeName),)
+    $($lastNodeName)->nextSibling = oldFirstChildNode;
+##endif
 }
 
 void $(.ns)$(.ownerName.!replace/::/Serializer::/)Serializer::deserialize(const ::ngrest::Node* node, $(struct.ownerName)& value)
