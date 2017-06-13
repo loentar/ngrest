@@ -268,6 +268,11 @@ public:
         return chunkSize;
     }
 
+    /**
+     * @brief remove chunks after currChunk
+     */
+    void trim();
+
 private:
     void newChunk(uint64_t size = NGREST_MEMPOOL_CHUNK_SIZE);
 

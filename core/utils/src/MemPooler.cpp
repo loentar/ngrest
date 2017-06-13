@@ -75,9 +75,8 @@ void MemPooler::recycle(MemPool* pool)
     if (poolsByChunk.unused.size() >= MAX_POOLS_COUNT) {
         delete pool;
     } else {
-        // TODO: trim ?
-        // pool->trim();
         pool->reset();
+        pool->trim();
         poolsByChunk.unused.push_back(pool);
     }
 }
