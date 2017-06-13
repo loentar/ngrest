@@ -285,6 +285,9 @@ bool ClientHandler::readyRead(ClientContext* clientContext)
             Status res = tryParseHeaders(clientContext, pool, findOffset);
             switch (res) {
             case Status::Again:
+                // if HTTP header is larger than default read size
+                if (received == static_cast<int64_t>(sizeToRead))
+                    continue;
                 return true;
             case Status::Close:
                 return false;
@@ -558,8 +561,8 @@ Status ClientHandler::tryNextRequest(ClientContext* clientContext)
     clientContext->currentRequestOffset = clientContext->nextRequestOffset;
     NGREST_ASSERT(clientContext->poolRead->getChunkCount() == 1, "Inconsistent mempool");
     MemPool::Chunk* chunk = clientContext->poolRead->getChunks();
-    uint64_t remaining = chunk->size - clientContext->currentRequestOffset;
-    if (!remaining) {
+    if (clientContext->currentRequestOffset == INVALID_VALUE
+            || chunk->size == clientContext->currentRequestOffset) {
         // no data remaining - reset all
         clientContext->currentRequestOffset = 0;
         clientContext->nextRequestOffset = 0;
@@ -570,6 +573,7 @@ Status ClientHandler::tryNextRequest(ClientContext* clientContext)
     // some data remaining in the read buffer
     // there is a part of the next request or even the next full request
 
+    uint64_t remaining = chunk->size - clientContext->currentRequestOffset;
     Status status = tryParseHeaders(clientContext, clientContext->poolRead, clientContext->currentRequestOffset);
     switch (status) {
     case Status::Again:

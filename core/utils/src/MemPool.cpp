@@ -110,8 +110,7 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
 
     char* pos = chunks->buffer + oldFirstChunkSize;
 
-    Chunk* curr = chunks + 1;
-    for (int i = 1; i < chunksCount; ++i, pos += curr->size, ++curr) {
+    for (Chunk* curr = (chunks + 1); curr != (currChunk + 1); pos += curr->size, ++curr) {
         memcpy(pos, curr->buffer, curr->size);
         ::free(curr->buffer);
     }
@@ -146,8 +145,13 @@ void MemPool::reserve(uint64_t size)
 
 void MemPool::newChunk(uint64_t size)
 {
-    if ((chunkIndex + 1) < chunksCount) {
-        Chunk* chunk = chunks + chunkIndex + 1;
+    if ((chunkIndex + 1) <= chunksCount) {
+        Chunk* chunk = chunks + chunkIndex;
+        if (chunk->size != 0) {
+            ++chunk;
+            ++chunkIndex;
+        } // else try to resize existing empty chunk
+
         if (chunk->bufferSize < size) {
             char* newBuffer = reinterpret_cast<char*>(realloc(chunk->buffer, size));
             if (!newBuffer)
@@ -158,7 +162,6 @@ void MemPool::newChunk(uint64_t size)
         }
         chunk->size = 0;
         currChunk = chunk;
-        ++chunkIndex;
         return;
     }
 
