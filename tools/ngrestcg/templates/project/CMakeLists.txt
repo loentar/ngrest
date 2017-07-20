@@ -81,6 +81,7 @@ if (APPLE) # cmake sets .so extension for modules under mac os x
 endif()
 if (MINGW) # cmake sets .so extension for modules under windows
     set_target_properties($($service.!tolower) PROPERTIES SUFFIX ".dll")
+    link_directories("${NGREST_HOME}/bin")
 endif()
 ##var servicesTmp $($servicesTmp.!cutlast/ /)
 ##done
