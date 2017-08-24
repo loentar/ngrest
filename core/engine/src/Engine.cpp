@@ -26,6 +26,7 @@
 #include "ServiceDispatcher.h"
 #include "Transport.h"
 #include "Engine.h"
+#include "SnapShots.h"
 
 namespace ngrest {
 
@@ -64,6 +65,11 @@ public:
 Engine::Engine(ServiceDispatcher& serviceDispatcher_):
     serviceDispatcher(serviceDispatcher_)
 {
+}
+
+void Engine::setSnapShots(SnapShots* snapShots)
+{
+    this->snapShots = snapShots;
 }
 
 void Engine::setFilterDispatcher(FilterDispatcher* filterDispatcher)
@@ -110,6 +116,12 @@ ServiceDispatcher& Engine::getServiceDispatcher()
 FilterDispatcher* Engine::getFilterDispatcher()
 {
     return filterDispatcher;
+}
+
+void Engine::writeDeploymentInfo(MemPool* out)
+{
+    if (snapShots) snapShots->dumpHtml(out);
+    else out->putCString("<span class=\"nocontent\">Hot deployments unavailable</span>");
 }
 
 } // namespace ngrest

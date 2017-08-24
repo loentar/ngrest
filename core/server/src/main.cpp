@@ -93,15 +93,15 @@ int main(int argc, char* argv[])
 
     const std::string& filtersPath = ngrest::Runtime::getSharePath()
         + NGREST_PATH_SEPARATOR "filters" NGREST_PATH_SEPARATOR;
-    filterDeployment.deployAll(filtersPath);
+    filterDeployment.deployAll(filtersPath, nullptr);
 
     const std::string& servicesPath = ngrest::Runtime::getSharePath()
         + NGREST_PATH_SEPARATOR "services" NGREST_PATH_SEPARATOR;
-    deployment.deployAll(servicesPath);
+    deployment.deployAll(servicesPath, nullptr);
 
     auto itPath = args.find("s");
     if (itPath != args.end())
-        deployment.deployAll(itPath->second + NGREST_PATH_SEPARATOR);
+        deployment.deployAll(itPath->second + NGREST_PATH_SEPARATOR, nullptr);
 
     ngrest::LogInfo() << "Server startup time: " << (timer.elapsed() / 1000.) << "ms";
 

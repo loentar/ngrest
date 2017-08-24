@@ -21,6 +21,7 @@
 #ifndef NGREST_ENGINE_H
 #define NGREST_ENGINE_H
 
+#include "string"
 #include "ngrestengineexport.h"
 
 namespace ngrest {
@@ -29,6 +30,8 @@ enum class Phase;
 struct MessageContext;
 class ServiceDispatcher;
 class FilterDispatcher;
+class MemPool;
+class SnapShots;
 
 /**
  * @brief Message processing engine.
@@ -44,6 +47,12 @@ public:
      * @param serviceDispatcher service dispatcher to use
      */
     Engine(ServiceDispatcher& serviceDispatcher);
+
+    /**
+     * @brief set snapShots for status
+     * @param snapShots for status
+     */
+    void setSnapShots(SnapShots* snapShots);
 
     /**
      * @brief set filter dispatcher for engine
@@ -76,9 +85,16 @@ public:
      */
     FilterDispatcher* getFilterDispatcher();
 
+    /**
+     * @brief write deployment info as html table to ostream
+     * @return deployment info
+     */
+    void writeDeploymentInfo(MemPool*);
+
 private:
     ServiceDispatcher& serviceDispatcher;
     FilterDispatcher* filterDispatcher = nullptr;
+    SnapShots* snapShots = nullptr;
 };
 
 } // namespace ngrest

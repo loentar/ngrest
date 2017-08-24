@@ -51,7 +51,7 @@ public:
      * @brief deploy all filter libraries from path given
      * @param filtersPath path to directory where filter libraries are placed
      */
-    void deployAll(const std::string& filtersPath);
+    void deployAll(const std::string& filtersPath, FilterDeployment* oldDeployment);
 
     /**
      * @brief deploy one filter from library

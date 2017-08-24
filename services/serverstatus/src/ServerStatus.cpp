@@ -18,6 +18,8 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
+#include <sstream>
+#include <string>
 #include <unordered_map>
 
 #include <ngrest/utils/Log.h>
@@ -32,12 +34,19 @@
 #include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Filter.h>
 #include <ngrest/engine/FilterDispatcher.h>
+#include <ngrest/engine/SnapShots.h>
 
 #include "ServerStatus.h"
 
 namespace ngrest {
 
 typedef std::unordered_map<std::string, std::string> ParamsMap;
+
+static const char* menu =
+    "<h1>ngrest</h1>"
+    "&nbsp;<a href='deployments'>deployments</a>&nbsp;"
+    "&nbsp;<a href='services'>services</a>&nbsp;"
+    "&nbsp;<a href='filters'>filters</a>";
 
 static const char* css = R"(
 html {
@@ -187,6 +196,29 @@ const char* paramTypeToString(ParameterDescription::Type type)
     }
 }
 
+void ServerStatus::getDeployments(MessageContext& context)
+{
+    NGREST_ASSERT_HTTP(context.transport->getType() == Transport::Type::Http,
+                       HTTP_STATUS_501_NOT_IMPLEMENTED,
+                       "This service only supports HTTP transport");
+
+    HttpResponse* response = static_cast<HttpResponse*>(context.response);
+    Header* headerContentType = context.pool->alloc<Header>("Content-Type", "text/html");
+    response->headers = headerContentType;
+
+    MemPool* pool = context.response->poolBody;
+
+    pool->putCString("<html><head>"
+                    "<title>Hot Deployments - ngrest</title>"
+                    "<style>");
+    pool->putCString(css);
+    pool->putCString("</style></head><body>");
+    pool->putCString(menu);
+    pool->putCString("<h2>Hot Deployments:</h2>");
+    context.engine->writeDeploymentInfo(pool);
+    pool->putCString("</body></html>");
+}
+
 void ServerStatus::getFilters(MessageContext& context)
 {
     NGREST_ASSERT_HTTP(context.transport->getType() == Transport::Type::Http,
@@ -203,10 +235,9 @@ void ServerStatus::getFilters(MessageContext& context)
                     "<title>Deployed filters - ngrest</title>"
                     "<style>");
     pool->putCString(css);
-    pool->putCString("</style></head><body>"
-                     "<h1>ngrest</h1>&nbsp;<a href='/ngrest/services'>services</a>"
-                     "&nbsp;&nbsp;<a href='/ngrest/filters'>filters</a>"
-                    "<h2>Deployed filters:</h2>");
+    pool->putCString("</style></head><body>");
+    pool->putCString(menu);
+    pool->putCString("<h2>Deployed filters:</h2>");
     FilterDispatcher* filterDispatcher = context.engine->getFilterDispatcher();
     if (filterDispatcher) {
         for (int i = 0; i < static_cast<int>(Phase::Count); ++i) {
@@ -257,19 +288,18 @@ void ServerStatus::getServices(MessageContext& context)
                     "<title>Deployed services - ngrest</title>"
                     "<style>");
     pool->putCString(css);
-    pool->putCString("</style></head><body>"
-                     "<h1>ngrest</h1>&nbsp;<a href='/ngrest/services'>services</a>"
-                     "&nbsp;&nbsp;<a href='/ngrest/filters'>filters</a>"
-                     "<h2>Deployed services:</h2>");
+    pool->putCString("</style></head><body>");
+    pool->putCString(menu);
+    pool->putCString("<h2>Deployed services:</h2>");
     const std::vector<ServiceWrapper*>& services = context.engine->getServiceDispatcher().getServices();
     for (const ServiceWrapper* service : services) {
         const ServiceDescription* serviceDescr = service->getDescription();
         pool->putCString("<p><h3>");
-        pool->putCString(("<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
+        pool->putCString(("<a href=\"service/" + serviceDescr->name + "\">"
                          + serviceDescr->name + "</a>").c_str());
         pool->putCString("</h3><ul>");
         for (const OperationDescription& opDescr : serviceDescr->operations) {
-            pool->putCString(("<li><a href=\"/ngrest/operation/" + serviceDescr->name + "/"
+            pool->putCString(("<li><a href=\"operation/" + serviceDescr->name + "/"
                              + opDescr.name + "\">" + opDescr.name + "</a></li>").c_str());
         }
         pool->putCString("</ul></p>");
@@ -300,9 +330,9 @@ void ServerStatus::getService(const std::string& name, MessageContext& context)
     pool->putCString(" - ngrest</title><style>");
     pool->putCString(css);
     pool->putCString("</style></head><body>"
-                    "<h1><a href='/ngrest/services'>ngrest</a><h1>"
+                    "<h1><a href='../services'>ngrest</a><h1>"
                     "<h2>");
-    pool->putCString(("<a href=\"/ngrest/service/" + descr->name + "\">"
+    pool->putCString(("<a href=\"" + descr->name + "\">"
                     + descr->name + "</a>").c_str());
     pool->putCString("</h2><p><h3>");
     pool->putCString(descr->description.c_str());
@@ -310,7 +340,7 @@ void ServerStatus::getService(const std::string& name, MessageContext& context)
     pool->putCString(descr->details.c_str());
     pool->putCString("</pre></p><ul>");
     for (const OperationDescription& opDescr : descr->operations) {
-        pool->putCString(("<li><hr/><p><a href=\"/ngrest/operation/" + descr->name + "/"
+        pool->putCString(("<li><hr/><p><a href=\"../operation/" + descr->name + "/"
                          + opDescr.name + "\">" + opDescr.name + "</a>").c_str());
         pool->putCString("<h4>");
         pool->putCString(opDescr.description.c_str());
@@ -362,7 +392,7 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
   <style>{{css}}</style>
 </head>
 <body>
-  <h1><a href='/ngrest/services'>ngrest</a><h1>
+  <h1><a href='../../services'>ngrest</a><h1>
   <h2>{{serviceHref}} / {{operationHref}}</h2>
   <p>
   <h3>{{serviceDescr}}</h3>
@@ -376,7 +406,7 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
   {{form}}
   <script language='javascript'>
     var method = '{{method}}';
-    var resLocation = '{{location}}';
+    var resLocation = location.pathname.replace(/\/ngrest\/operation.*/, '{{location}}');
     {{jsutil}}
     {{jsform}}
   </script>
@@ -521,10 +551,9 @@ void ServerStatus::getOperation(const std::string& serviceName, const std::strin
         {"operation", opDescr->name},
         {"operationDescr", opDescr->description},
         {"operationDetails", opDescr->details},
-        {"serviceHref", "<a href=\"/ngrest/service/" + serviceDescr->name + "\">"
+        {"serviceHref", "<a href=\"../../service/" + serviceDescr->name + "\">"
                         + serviceDescr->name + "</a>"},
-        {"operationHref", "<a href=\"/ngrest/operation/" + serviceDescr->name + "/"
-                          + opDescr->name + "\">" + opDescr->name + "</a>"},
+        {"operationHref", "<a href=\"" + opDescr->name + "\">" + opDescr->name + "</a>"},
         {"method", opDescr->methodStr},
         {"location", "/" + serviceLocation + "/" + location},
         {"locationHref", "<a href='/" + serviceLocation + "/" + location

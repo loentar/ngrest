@@ -56,6 +56,11 @@ public:
     virtual ~DynamicLibrary();
 
     /**
+     * @brief move assigment
+     */
+    DynamicLibrary& operator=(DynamicLibrary&& src);
+
+    /**
      * @brief load dynamic library
      * @param libName library name
      * @param raw if true libName contains full path to library

@@ -34,6 +34,13 @@ template <typename PluginType>
 class Plugin: public DynamicLibrary
 {
 public:
+    Plugin& operator=(Plugin&& src)
+    {
+        DynamicLibrary::operator=(std::move(src));
+        pluginSymbol = src.pluginSymbol;
+        return *this;
+    }
+
     /**
      * @brief load shared library by given path
      * @param path path to shared library

@@ -48,10 +48,10 @@ public:
     ~Deployment();
 
     /**
-     * @brief deploy all service libraries from path given
+     * @brief deploy all service libraries from path given, takes unchanged libs from oldDeployment
      * @param servicesPath path to directory where service libraries are placed
      */
-    void deployAll(const std::string& servicesPath);
+    void deployAll(const std::string& servicesPath, Deployment* oldDeployment);
 
     /**
      * @brief deploy one service from library
