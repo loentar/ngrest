@@ -25,6 +25,7 @@
 #include "../../share/ngrest_server.h"
 
 
+static ngx_str_t ngrestUriPrefix = { 0, NULL };
 static const char* ngrestServicesPath = NULL;
 static const char* ngrestFiltersPath = NULL;
 static int initialized = 0;
@@ -235,27 +236,6 @@ static void mod_ngrest_handler(ngx_http_request_t* req)
 {
     LOGLABEL;
 
-    if (!initialized) {
-        if (!ngrestServicesPath) {
-            LOG("ngrestServicesPath = NULL");
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, req->connection->log, 0, "ngrestServicesPath = NULL");
-            return;
-        }
-
-        LOG1("Using ngrest services path: %s", ngrestServicesPath);
-        LOG1("Using ngrest filters path: %s", ngrestFiltersPath);
-
-        if (ngrest_server_startup(ngrestServicesPath, ngrestFiltersPath)) {
-            LOG("failed to start ngrest");
-            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, req->connection->log, 0, "failed to start ngrest");
-            return;
-        }
-
-        LOG("ngrest has been started");
-        initialized = 1;
-    }
-
-
     LOG("Dispatching request");
 
     char clientHost[NI_MAXHOST];
@@ -287,10 +267,15 @@ static void mod_ngrest_handler(ngx_http_request_t* req)
     if (req->request_body)
         ctx.inChain = req->request_body->bufs;
 
+    const char* uri = mod_ngrest_to_cstring(&req->unparsed_uri, req->pool);
+    if (ngrestUriPrefix.len > 0 && !strncmp(uri, ngrestUriPrefix.data, ngrestUriPrefix.len)) {
+        uri += ngrestUriPrefix.len;
+    }
+
     struct ngrest_server_request request = {
         &ctx,
         mod_ngrest_to_cstring(&req->method_name, req->pool),
-        mod_ngrest_to_cstring(&req->unparsed_uri, req->pool),
+        uri,
         clientHost,
         clientPort,
         !!req->request_body,
@@ -304,6 +289,26 @@ static void mod_ngrest_handler(ngx_http_request_t* req)
 
 static ngx_int_t mod_ngrest_request_handler(ngx_http_request_t* req)
 {
+    if (!initialized) {
+        if (!ngrestServicesPath) {
+            LOG("ngrestServicesPath = NULL");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, req->connection->log, 0, "ngrestServicesPath = NULL");
+            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+       }
+
+        LOG1("Using ngrest services path: %s", ngrestServicesPath);
+        LOG1("Using ngrest filters path: %s", ngrestFiltersPath);
+
+        if (ngrest_server_startup(ngrestServicesPath, ngrestFiltersPath)) {
+            LOG("failed to start ngrest");
+            ngx_log_debug0(NGX_LOG_DEBUG_HTTP, req->connection->log, 0, "failed to start ngrest");
+            return NGX_HTTP_INTERNAL_SERVER_ERROR;
+        }
+
+        LOG("ngrest has been started");
+        initialized = 1;
+    }
+
     if (req->headers_in.content_length_n > 0) {
         // read body and call handler
         ngx_int_t rc = ngx_http_read_client_request_body(req, mod_ngrest_handler);
@@ -331,6 +336,10 @@ static char* mod_ngrest_set_conf(ngx_conf_t* conf, ngx_command_t* cmd, void* unu
 
     ngx_http_core_loc_conf_t* httpConf = ngx_http_conf_get_module_loc_conf(conf, ngx_http_core_module);
     httpConf->handler = mod_ngrest_request_handler;
+
+    ngx_str_t name = httpConf->name;
+    if (name.len > 0 && name.data[name.len - 1] == '/') name.len--;
+    ngrestUriPrefix = name;
 
     ngrestServicesPath = mod_ngrest_to_cstring(&(((ngx_str_t*) conf->args->elts)[1]), conf->pool);
     LOG1("Using ngrest services path: %s", ngrestServicesPath);

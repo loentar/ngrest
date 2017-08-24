@@ -31,10 +31,21 @@ namespace ngrest {
 
 DynamicLibrary::DynamicLibrary()
 {
+    handle = nullptr;
 }
 
 DynamicLibrary::~DynamicLibrary()
 {
+    if (handle) unload();
+}
+
+DynamicLibrary& DynamicLibrary::operator=(DynamicLibrary&& src)
+{
+    libName = std::move(src.libName);
+    raw = src.raw;
+    handle = src.handle;
+    src.handle = nullptr;
+    return *this;
 }
 
 void DynamicLibrary::load(const std::string& libName, bool raw /*= false*/)

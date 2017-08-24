@@ -32,6 +32,9 @@ namespace ngrest {
 class ServerStatus: public Service
 {
 public:
+    // *location: deployments
+    void getDeployments(MessageContext& context);
+
     // *location: filters
     void getFilters(MessageContext& context);
 

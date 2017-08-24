@@ -18,6 +18,7 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
+#include <string.h>
 #include <unordered_map>
 
 #include <ngrest/utils/File.h>
@@ -25,9 +26,10 @@
 #include <ngrest/utils/Plugin.h>
 #include <ngrest/engine/ServiceDescription.h>
 
+#include "Deployment.h"
+#include "LatestLibs.h"
 #include "ServiceGroup.h"
 #include "ServiceWrapper.h"
-#include "Deployment.h"
 #include "ServiceDispatcher.h"
 
 namespace ngrest {
@@ -55,21 +57,33 @@ Deployment::~Deployment()
     delete impl;
 }
 
-void Deployment::deployAll(const std::string& servicesPath)
+void Deployment::deployAll(const std::string& servicesPath, Deployment* oldDeployment)
 {
     // find service libraries
     StringList libs;
-    File(servicesPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeAnyFile);
+    File(servicesPath).list(libs, "*", File::AttributeAnyFile);
 
-    if (libs.empty()) {
+    LatestLibs latestLibs(libs);
+
+    if (latestLibs.map.empty()) {
         LogError() << "No services found";
         return;
     }
 
-    for (const std::string& lib : libs) {
-        const std::string& servicePath = servicesPath + lib;
+    auto* oldLibs = oldDeployment ? &oldDeployment->impl->serviceLibs : 0;
+
+    for (const auto& lib : latestLibs.map) {
+        const std::string& servicePath = servicesPath + lib.second.filename;
         try {
-            deploy(servicePath);
+            if (oldLibs) {
+                const auto iterOldLib = oldLibs->find(servicePath);
+                if (iterOldLib != oldLibs->end())
+                    impl->serviceLibs[servicePath] = std::move(iterOldLib->second);
+                else
+                    deploy(servicePath);
+            }
+            else
+                deploy(servicePath);
         } catch (const Exception& exception) {
             LogWarning() << "Can't load service: " << servicePath << ": " << exception.what();
         } catch (...) {
@@ -91,7 +105,7 @@ void Deployment::deploy(const std::string& servicePath)
 
     deployStatic(serviceGroup);
 
-    impl->serviceLibs[servicePath] = serviceLib;
+    impl->serviceLibs[servicePath] = std::move(serviceLib);
 }
 
 void Deployment::undeploy(const std::string& servicePath)

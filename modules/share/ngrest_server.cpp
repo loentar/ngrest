@@ -32,26 +32,17 @@
 #include <ngrest/utils/tocstring.h>
 #include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Engine.h>
-#include <ngrest/engine/FilterDispatcher.h>
-#include <ngrest/engine/FilterDeployment.h>
-#include <ngrest/engine/ServiceDispatcher.h>
-#include <ngrest/engine/Deployment.h>
 #include <ngrest/engine/HttpTransport.h>
+#include <ngrest/engine/SnapShots.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>
 
 #include "ngrest_server.h"
 
-static ngrest::ServiceDispatcher dispatcher;
-static ngrest::Deployment deployment(dispatcher);
-static ngrest::FilterDispatcher filterDispatcher;
-static ngrest::FilterDeployment filterDeployment(filterDispatcher);
-static ngrest::HttpTransport transport;
-static ngrest::Engine engine(dispatcher);
-static ngrest::MemPooler pooler;
-static std::string deployedServicesPath;
-static std::string deployedFiltersPath;
 static std::ofstream logstream;
+static ngrest::HttpTransport transport;
+static ngrest::MemPooler pooler;
+static ngrest::SnapShots snapShots;
 
 struct HeaderIterateContext
 {
@@ -59,7 +50,6 @@ struct HeaderIterateContext
     ngrest::Header* lastHeader;
     ngrest::MessageContext* context;
 };
-
 
 class ModMessageCallback: public ngrest::MessageCallback
 {
@@ -102,10 +92,21 @@ private:
     ngrest::MemPool* pool;
 };
 
-inline void toLowerCase(char* str)
+static void toLowerCase(char* str)
 {
     for (; *str; ++str)
         *str = tolower(*str);
+}
+
+static std::string ensureSlash(const char* cpath)
+{
+    std::string path;
+    if (cpath && *cpath) {
+        path = cpath;
+        if (path.back() != '/')
+            path.append("/");
+    }
+    return path;
 }
 
 int ngrest_server_startup(const char* servicesPath, const char* filtersPath)
@@ -122,27 +123,9 @@ int ngrest_server_startup(const char* servicesPath, const char* filtersPath)
         ngrest::Log::inst().setLogStreamErr(&logstream);
         ngrest::Log::inst().setLogLevel(ngrest::Log::LogLevelVerbose);
 #endif
-
-        if (!deployedFiltersPath.empty())
-            filterDeployment.undeployAll();
-
-        if (!deployedServicesPath.empty())
-            deployment.undeployAll();
-
-        std::string path = servicesPath;
-        if (path.back() != '/')
-            path.append("/");
-        deployedServicesPath = path;
-
-        deployment.deployAll(path);
-        if (filtersPath) {
-            engine.setFilterDispatcher(&filterDispatcher);
-            path = filtersPath;
-            if (path.back() != '/')
-                path.append("/");
-            filterDeployment.deployAll(path);
-            deployedFiltersPath = path;
-        }
+        snapShots.servicesPath = ensureSlash(servicesPath);
+        snapShots.filtersPath = ensureSlash(filtersPath);
+        snapShots.pollDeploy();
 
     } catch (const std::exception& e) {
         ngrest::LogWarning() << e.what();
@@ -158,8 +141,7 @@ int ngrest_server_startup(const char* servicesPath, const char* filtersPath)
 int ngrest_server_shutdown()
 {
     try {
-        if (!deployedServicesPath.empty())
-            deployment.undeployAll();
+        snapShots.undeployAll();
     } catch (const std::exception& e) {
         ngrest::LogWarning() << e.what();
         return 1;
@@ -195,6 +177,11 @@ int ngrest_server_dispatch(ngrest_server_request* request, ngrest_mod_callbacks 
 
         context.pool = pooler.obtain();
         PoolRecycler recyclerContext(context.pool);
+
+        const auto& snapShotRef = snapShots.latest();
+        ngrest::SnapShot* snapShot = snapShotRef.slot.snapShot;
+        NGREST_ASSERT(snapShot != 0, "Undeployed snapshot")
+        ngrest::Engine& engine = snapShot->engine;
 
         context.engine = &engine;
         context.transport = &transport;

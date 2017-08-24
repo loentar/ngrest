@@ -24,9 +24,10 @@
 #include <ngrest/utils/Log.h>
 #include <ngrest/utils/Plugin.h>
 
-#include "FilterGroup.h"
-#include "FilterDispatcher.h"
 #include "FilterDeployment.h"
+#include "FilterDispatcher.h"
+#include "FilterGroup.h"
+#include "LatestLibs.h"
 
 namespace ngrest {
 
@@ -53,21 +54,33 @@ FilterDeployment::~FilterDeployment()
     delete impl;
 }
 
-void FilterDeployment::deployAll(const std::string& filtersPath)
+void FilterDeployment::deployAll(const std::string& filtersPath, FilterDeployment* oldDeployment)
 {
     // find filter libraries
     StringList libs;
     File(filtersPath).list(libs, "*" NGREST_LIBRARY_EXT, File::AttributeAnyFile);
 
-    if (libs.empty()) {
+    LatestLibs latestLibs(libs);
+
+    if (latestLibs.map.empty()) {
         LogDebug() << "No filters found";
         return;
     }
 
-    for (const std::string& lib : libs) {
-        const std::string& filterPath = filtersPath + lib;
+    auto* oldLibs = oldDeployment ? &oldDeployment->impl->filterLibs : 0;
+
+    for (const auto& lib : latestLibs.map) {
+        const std::string& filterPath = filtersPath + lib.second.filename;
         try {
-            deploy(filterPath);
+            if (oldLibs) {
+                const auto iterOldLib = oldLibs->find(filterPath);
+                if (iterOldLib != oldLibs->end())
+                    impl->filterLibs[filterPath] = std::move(iterOldLib->second);
+                else
+                    deploy(filterPath);
+            }
+            else
+                deploy(filterPath);
         } catch (const Exception& exception) {
             LogWarning() << "Can't load filter: " << filterPath << ": " << exception.what();
         } catch (...) {
@@ -89,7 +102,7 @@ void FilterDeployment::deploy(const std::string& filterPath)
 
     deployStatic(filterGroup);
 
-    impl->filterLibs[filterPath] = filterLib;
+    impl->filterLibs[filterPath] = std::move(filterLib);
 }
 
 void FilterDeployment::undeploy(const std::string& filterPath)
