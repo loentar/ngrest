@@ -1,0 +1,1155 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{E71F3933-D5D5-42FE-8CE9-B1EC70383AFF}</ProjectGuid>
+        <ProjectVersion>17.2</ProjectVersion>
+        <FrameworkType>FMX</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Console</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice32' and '$(Base)'=='true') or '$(Base_iOSDevice32)'!=''">
+        <Base_iOSDevice32>true</Base_iOSDevice32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Base)'=='true') or '$(Base_iOSDevice64)'!=''">
+        <Base_iOSDevice64>true</Base_iOSDevice64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX32' and '$(Base)'=='true') or '$(Base_OSX32)'!=''">
+        <Base_OSX32>true</Base_OSX32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice32' and '$(Cfg_2)'=='true') or '$(Cfg_2_iOSDevice32)'!=''">
+        <Cfg_2_iOSDevice32>true</Cfg_2_iOSDevice32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_2)'=='true') or '$(Cfg_2_iOSDevice64)'!=''">
+        <Cfg_2_iOSDevice64>true</Cfg_2_iOSDevice64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Cfg_2_Win64>true</Cfg_2_Win64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <AllPackageLibs>fmx.lib;rtl.lib</AllPackageLibs>
+        <_TCHARMapping>char</_TCHARMapping>
+        <IncludePath>server\tools\parsers\cpp\src\;server\tools\ngrestcgparser\src\;server\tools\ngrestcg\templates\service\;server\tools\ngrestcg\templates\common\;server\tools\ngrestcg\templates\addservicehpp\;server\tools\ngrestcg\templates\addservice\;server\tools\ngrestcg\src\;server\tests\service\src\;server\tests\json-benchmark\src\;server\tests\json\src\;server\tests\filters\src\;server\tests\deployment\src\;server\services\serverstatus\src\;server\services\favicon\src\;server\modules\share\;server\modules\nginx\src\;server\modules\apache2\src\;server\core\xml\src\;server\core\utils\src\;server\core\server\src\;server\core\json\src\;server\core\engine\src\;server\core\common\src\;..\..\..\Sistemas\Practica profesional\proyecto\;$(IncludePath)</IncludePath>
+        <Multithreaded>true</Multithreaded>
+        <SanitizedProjectName>Project</SanitizedProjectName>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
+        <ProjectType>CppConsoleApplication</ProjectType>
+        <ILINK_LibraryPath>server\tools\parsers\cpp\src\;server\tools\ngrestcgparser\src\;server\tools\ngrestcg\templates\service\;server\tools\ngrestcg\templates\common\;server\tools\ngrestcg\templates\addservicehpp\;server\tools\ngrestcg\templates\addservice\;server\tools\ngrestcg\src\;server\tests\service\src\;server\tests\json-benchmark\src\;server\tests\json\src\;server\tests\filters\src\;server\tests\deployment\src\;server\services\serverstatus\src\;server\services\favicon\src\;server\modules\share\;server\modules\nginx\src\;server\modules\apache2\src\;server\core\xml\src\;server\core\utils\src\;server\core\server\src\;server\core\json\src\;server\core\engine\src\;server\core\common\src\;..\..\..\Sistemas\Practica profesional\proyecto\;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
+        <IntermediateOutputDir>.\$(Platform)\$(Config)</IntermediateOutputDir>
+        <FinalOutputDir>.\$(Platform)\$(Config)</FinalOutputDir>
+        <BCC_wpar>false</BCC_wpar>
+        <BCC_OptimizeForSpeed>true</BCC_OptimizeForSpeed>
+        <BCC_ExtendedErrorInfo>true</BCC_ExtendedErrorInfo>
+        <ILINK_TranslatedLibraryPath>$(BDSLIB)\$(PLATFORM)\release\$(LANGDIR);$(ILINK_TranslatedLibraryPath)</ILINK_TranslatedLibraryPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSDevice32)'!=''">
+        <IncludePath>$(BDSINCLUDE)\ios\fmx;$(IncludePath)</IncludePath>
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+        <PackageImports>bindcomp;bindcompdbx;bindcompfmx;bindengine;CloudService;CustomIPTransport;DataSnapClient;DataSnapCommon;DataSnapFireDAC;DataSnapNativeClient;DataSnapProviderClient;dbexpress;dbrtl;dbxcds;DbxClientDriver;DbxCommonDriver;DBXInterBaseDriver;DBXSqliteDriver;dsnap;dsnapxml;emsclient;emsclientfiredac;FireDAC;FireDACCommon;FireDACCommonDriver;FireDACDBXDriver;FireDACDSDriver;FireDACIBDriver;FireDACSqliteDriver;fmx;fmxase;fmxFireDAC;FMXTee;FmxTeeUI;ibmonitor;ibxpress;IndyCore;IndyIPClient;IndyIPCommon;IndyIPServer;IndyProtocols;IndySystem;inet;RESTBackendComponents;RESTComponents;rtl;soapmidas;soaprtl;soapserver;tethering;xmlrtl;$(PackageImports)</PackageImports>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
+        <IncludePath>$(BDSINCLUDE)\ios\fmx;$(IncludePath)</IncludePath>
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+        <PackageImports>bindcomp;bindcompdbx;bindcompfmx;bindengine;CloudService;CustomIPTransport;DataSnapClient;DataSnapCommon;DataSnapFireDAC;DataSnapNativeClient;DataSnapProviderClient;dbexpress;dbrtl;dbxcds;DbxClientDriver;DbxCommonDriver;DBXInterBaseDriver;DBXSqliteDriver;dsnap;dsnapxml;emsclient;emsclientfiredac;FireDAC;FireDACCommon;FireDACCommonDriver;FireDACDBXDriver;FireDACDSDriver;FireDACIBDriver;FireDACSqliteDriver;fmx;fmxase;fmxFireDAC;FMXTee;FmxTeeUI;ibmonitor;ibxpress;IndyCore;IndyIPClient;IndyIPCommon;IndyIPServer;IndyProtocols;IndySystem;inet;RESTBackendComponents;RESTComponents;rtl;soapmidas;soaprtl;soapserver;tethering;xmlrtl;$(PackageImports)</PackageImports>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_OSX32)'!=''">
+        <IncludePath>$(BDSINCLUDE)\osx\fmx;$(IncludePath)</IncludePath>
+        <PackageImports>bindcomp;bindcompdbx;bindcompfmx;bindengine;CloudService;CustomIPTransport;DataSnapClient;DataSnapCommon;DataSnapFireDAC;DataSnapIndy10ServerTransport;DataSnapNativeClient;DataSnapProviderClient;DataSnapServer;DataSnapServerMidas;dbexpress;dbrtl;dbxcds;DbxClientDriver;DbxCommonDriver;DBXFirebirdDriver;DBXInformixDriver;DBXInterBaseDriver;DBXMySQLDriver;DBXOracleDriver;DBXSqliteDriver;DBXSybaseASADriver;dsnap;dsnapxml;emsclient;emsclientfiredac;FireDAC;FireDACASADriver;FireDACCommon;FireDACCommonDriver;FireDACDBXDriver;FireDACDSDriver;FireDACIBDriver;FireDACMSSQLDriver;FireDACMySQLDriver;FireDACODBCDriver;FireDACOracleDriver;FireDACPgDriver;FireDACSqliteDriver;FireDACTDataDriver;fmx;fmxase;fmxdae;fmxFireDAC;fmxobj;FMXTee;FmxTeeUI;ibmonitor;ibxpress;IndyCore;IndyIPClient;IndyIPCommon;IndyIPServer;IndyProtocols;IndySystem;inet;inetdb;inetdbxpress;RESTBackendComponents;RESTComponents;rtl;soapmidas;soaprtl;soapserver;tethering;xmlrtl;$(PackageImports)</PackageImports>
+        <DynamicRTL>true</DynamicRTL>
+        <UsePackages>true</UsePackages>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <Manifest_File>None</Manifest_File>
+        <IncludePath>$(BDSINCLUDE)\windows\fmx;$(IncludePath)</IncludePath>
+        <ILINK_LibraryPath>C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\Win32\Debug\;C:\Program Files\PostgreSQL\9.6\lib;libs;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <PackageImports>adortl;appanalytics;bcbie;bcbsmp;bindcomp;bindcompdbx;bindcompfmx;bindcompvcl;bindengine;CloudService;CodeSiteExpressPkg;CustomIPTransport;DataSnapClient;DataSnapCommon;DataSnapConnectors;DatasnapConnectorsFreePascal;DataSnapFireDAC;DataSnapIndy10ServerTransport;DataSnapNativeClient;DataSnapProviderClient;DataSnapServer;DataSnapServerMidas;dbexpress;dbrtl;dbxcds;DbxClientDriver;DbxCommonDriver;DBXDb2Driver;DBXFirebirdDriver;DBXInformixDriver;DBXInterBaseDriver;DBXMSSQLDriver;DBXMySQLDriver;DBXOdbcDriver;DBXOracleDriver;DBXSqliteDriver;DBXSybaseASADriver;DBXSybaseASEDriver;dsnap;dsnapcon;dsnapxml;DUnitXRuntime;emsclient;emsclientfiredac;FireDAC;FireDACADSDriver;FireDACASADriver;FireDACCommon;FireDACCommonDriver;FireDACDb2Driver;FireDACDBXDriver;FireDACDSDriver;FireDACIBDriver;FireDACInfxDriver;FireDACMSAccDriver;FireDACMSSQLDriver;FireDACMySQLDriver;FireDACODBCDriver;FireDACOracleDriver;FireDACPgDriver;FireDACSqliteDriver;FireDACTDataDriver;fmx;fmxase;fmxdae;fmxFireDAC;fmxobj;FMXTee;FmxTeeUI;frx22;frxDB22;frxe22;frxTee22;ibmonitor;ibxpress;IndyCore;IndyIPClient;IndyIPCommon;IndyIPServer;IndyProtocols;IndySystem;inet;inetdb;inetdbxpress;Intraweb;RESTBackendComponents;RESTComponents;rtl;soapmidas;soaprtl;soapserver;svn;Tee;TeeDB;TeeUI;tethering;vcl;vclactnband;vcldb;vcldsnap;vclFireDAC;vclib;vclie;vclimg;VCLRESTComponents;vclribbon;VclSmp;vcltouch;vclx;xmlrtl;$(PackageImports)</PackageImports>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <IncludePath>$(BDSINCLUDE)\windows\fmx;$(IncludePath)</IncludePath>
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+        <PackageImports>adortl;appanalytics;bindcomp;bindcompdbx;bindcompfmx;bindcompvcl;bindengine;CloudService;CustomIPTransport;DataSnapClient;DataSnapCommon;DataSnapConnectors;DatasnapConnectorsFreePascal;DataSnapFireDAC;DataSnapIndy10ServerTransport;DataSnapNativeClient;DataSnapProviderClient;DataSnapServer;DataSnapServerMidas;dbexpress;dbrtl;dbxcds;DbxClientDriver;DbxCommonDriver;DBXDb2Driver;DBXFirebirdDriver;DBXInformixDriver;DBXInterBaseDriver;DBXMSSQLDriver;DBXMySQLDriver;DBXOdbcDriver;DBXOracleDriver;DBXSqliteDriver;DBXSybaseASADriver;DBXSybaseASEDriver;dsnap;dsnapcon;dsnapxml;emsclient;emsclientfiredac;FireDAC;FireDACADSDriver;FireDACASADriver;FireDACCommon;FireDACCommonDriver;FireDACDb2Driver;FireDACDBXDriver;FireDACDSDriver;FireDACIBDriver;FireDACInfxDriver;FireDACMSAccDriver;FireDACMSSQLDriver;FireDACMySQLDriver;FireDACODBCDriver;FireDACOracleDriver;FireDACPgDriver;FireDACSqliteDriver;FireDACTDataDriver;fmx;fmxase;fmxdae;fmxFireDAC;fmxobj;FMXTee;FmxTeeUI;ibmonitor;ibxpress;IndyCore;IndyIPClient;IndyIPCommon;IndyIPServer;IndyProtocols;IndySystem;inet;inetdb;inetdbxpress;Intraweb;RESTBackendComponents;RESTComponents;rtl;soapmidas;soaprtl;soapserver;Tee;TeeDB;TeeUI;tethering;vcl;vclactnband;vcldb;vcldsnap;vclFireDAC;vclib;vclie;vclimg;VCLRESTComponents;vclribbon;VclSmp;vcltouch;vclx;xmlrtl;$(PackageImports)</PackageImports>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <BCC_OptimizeForSpeed>false</BCC_OptimizeForSpeed>
+        <BCC_DisableOptimizations>true</BCC_DisableOptimizations>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <Defines>_DEBUG;$(Defines)</Defines>
+        <BCC_InlineFunctionExpansion>false</BCC_InlineFunctionExpansion>
+        <BCC_UseRegisterVariables>None</BCC_UseRegisterVariables>
+        <DCC_Define>DEBUG</DCC_Define>
+        <BCC_DebugLineNumbers>true</BCC_DebugLineNumbers>
+        <TASM_DisplaySourceLines>true</TASM_DisplaySourceLines>
+        <BCC_StackFrames>true</BCC_StackFrames>
+        <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
+        <TASM_Debugging>Full</TASM_Debugging>
+        <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
+        <BCC_EnableCPPExceptions>true</BCC_EnableCPPExceptions>
+        <BCC_DisableFramePtrElimOpt>true</BCC_DisableFramePtrElimOpt>
+        <BCC_DisableSpellChecking>true</BCC_DisableSpellChecking>
+        <CLANG_UnwindTables>true</CLANG_UnwindTables>
+        <ILINK_LibraryPath>$(BDSLIB)\$(PLATFORM)\debug;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <ILINK_TranslatedLibraryPath>$(BDSLIB)\$(PLATFORM)\debug\$(LANGDIR);$(ILINK_TranslatedLibraryPath)</ILINK_TranslatedLibraryPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <LinkPackageStatics>fmx.lib;rtl.lib</LinkPackageStatics>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <Defines>NDEBUG;$(Defines)</Defines>
+        <TASM_Debugging>None</TASM_Debugging>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_iOSDevice32)'!=''">
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_iOSDevice64)'!=''">
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <BCC_PCHName_Clang>Project.h</BCC_PCHName_Clang>
+    </PropertyGroup>
+    <ItemGroup>
+        <CppCompile Include="main.cpp">
+            <BuildOrder>1</BuildOrder>
+        </CppCompile>
+        <PCHCompile Include="Project.h">
+            <BuildOrder>0</BuildOrder>
+        </PCHCompile>
+        <None Include="server\core\common\src\Callback.h">
+            <BuildOrder>2</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\HttpException.cpp">
+            <BuildOrder>3</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\HttpException.h">
+            <BuildOrder>4</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\HttpMessage.cpp">
+            <BuildOrder>5</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\HttpMessage.h">
+            <BuildOrder>6</BuildOrder>
+        </None>
+        <None Include="server\core\common\src\HttpMethod.h">
+            <BuildOrder>7</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\HttpStatus.cpp">
+            <BuildOrder>8</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\HttpStatus.h">
+            <BuildOrder>9</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\Message.cpp">
+            <BuildOrder>10</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\Message.h">
+            <BuildOrder>11</BuildOrder>
+        </None>
+        <None Include="server\core\common\src\ngrestcommonexport.h">
+            <BuildOrder>12</BuildOrder>
+        </None>
+        <None Include="server\core\common\src\Nullable.h">
+            <BuildOrder>13</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\ObjectModel.cpp">
+            <BuildOrder>14</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\ObjectModel.h">
+            <BuildOrder>15</BuildOrder>
+        </None>
+        <None Include="server\core\common\src\ObjectModelUtils.h">
+            <BuildOrder>16</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\common\src\Service.cpp">
+            <BuildOrder>17</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\common\src\Service.h">
+            <BuildOrder>18</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Deployment.cpp">
+            <BuildOrder>19</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Deployment.h">
+            <BuildOrder>20</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Engine.cpp">
+            <BuildOrder>21</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Engine.h">
+            <BuildOrder>22</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Filter.cpp">
+            <BuildOrder>23</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Filter.h">
+            <BuildOrder>24</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\FilterDeployment.cpp">
+            <BuildOrder>25</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\FilterDeployment.h">
+            <BuildOrder>26</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\FilterDispatcher.cpp">
+            <BuildOrder>27</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\FilterDispatcher.h">
+            <BuildOrder>28</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\FilterGroup.cpp">
+            <BuildOrder>29</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\FilterGroup.h">
+            <BuildOrder>30</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Handler.cpp">
+            <BuildOrder>31</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Handler.h">
+            <BuildOrder>32</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\HttpTransport.cpp">
+            <BuildOrder>33</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\HttpTransport.h">
+            <BuildOrder>34</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Looper.cpp">
+            <BuildOrder>35</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Looper.h">
+            <BuildOrder>36</BuildOrder>
+        </None>
+        <None Include="server\core\engine\src\ngrestengineexport.h">
+            <BuildOrder>37</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Phase.cpp">
+            <BuildOrder>38</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Phase.h">
+            <BuildOrder>39</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\ServiceDescription.cpp">
+            <BuildOrder>40</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\ServiceDescription.h">
+            <BuildOrder>41</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\ServiceDispatcher.cpp">
+            <BuildOrder>42</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\ServiceDispatcher.h">
+            <BuildOrder>43</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\ServiceGroup.cpp">
+            <BuildOrder>44</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\ServiceGroup.h">
+            <BuildOrder>45</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\ServiceWrapper.cpp">
+            <BuildOrder>46</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\ServiceWrapper.h">
+            <BuildOrder>47</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\engine\src\Transport.cpp">
+            <BuildOrder>48</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\engine\src\Transport.h">
+            <BuildOrder>49</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\json\src\JsonReader.cpp">
+            <BuildOrder>50</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\json\src\JsonReader.h">
+            <BuildOrder>51</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\json\src\JsonWriter.cpp">
+            <BuildOrder>52</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\json\src\JsonWriter.h">
+            <BuildOrder>53</BuildOrder>
+        </None>
+        <None Include="server\core\server\src\ClientCallback.h">
+            <BuildOrder>54</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\server\src\ClientHandler.cpp">
+            <BuildOrder>55</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\server\src\ClientHandler.h">
+            <BuildOrder>56</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\server\src\main.cpp">
+            <Suffix>_0</Suffix>
+            <BuildOrder>57</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\core\server\src\Server.cpp">
+            <BuildOrder>58</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\server\src\Server.h">
+            <BuildOrder>59</BuildOrder>
+        </None>
+        <None Include="server\core\server\src\servercommon.h">
+            <BuildOrder>60</BuildOrder>
+        </None>
+        <None Include="server\core\server\src\strutils.h">
+            <BuildOrder>61</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\console.cpp">
+            <BuildOrder>62</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\console.h">
+            <BuildOrder>63</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\DynamicLibrary.cpp">
+            <BuildOrder>64</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\DynamicLibrary.h">
+            <BuildOrder>65</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\ElapsedTimer.cpp">
+            <BuildOrder>66</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\ElapsedTimer.h">
+            <BuildOrder>67</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\EnumClassHash.h">
+            <BuildOrder>68</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\Error.cpp">
+            <BuildOrder>69</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\Error.h">
+            <BuildOrder>70</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\Exception.cpp">
+            <BuildOrder>71</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\Exception.h">
+            <BuildOrder>72</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\File.cpp">
+            <BuildOrder>73</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\File.h">
+            <BuildOrder>74</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\fileline.h">
+            <BuildOrder>75</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\fromcstring.h">
+            <BuildOrder>76</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\fromstring.h">
+            <BuildOrder>77</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\likely.h">
+            <BuildOrder>78</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\Log.cpp">
+            <BuildOrder>79</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\Log.h">
+            <BuildOrder>80</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\LogStream.h">
+            <BuildOrder>81</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\MemPool.cpp">
+            <BuildOrder>82</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\MemPool.h">
+            <BuildOrder>83</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\MemPooler.cpp">
+            <BuildOrder>84</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\MemPooler.h">
+            <BuildOrder>85</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\ngrestutilsexport.h">
+            <BuildOrder>86</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\Plugin.h">
+            <BuildOrder>87</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\PluginExport.h">
+            <BuildOrder>88</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\utils\src\Runtime.cpp">
+            <BuildOrder>89</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\utils\src\Runtime.h">
+            <BuildOrder>90</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\static.h">
+            <BuildOrder>91</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\stringutils.h">
+            <BuildOrder>92</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\tocstring.h">
+            <BuildOrder>93</BuildOrder>
+        </None>
+        <None Include="server\core\utils\src\tostring.h">
+            <BuildOrder>94</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Attribute.cpp">
+            <BuildOrder>95</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Attribute.h">
+            <BuildOrder>96</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Declaration.cpp">
+            <BuildOrder>97</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Declaration.h">
+            <BuildOrder>98</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Document.cpp">
+            <BuildOrder>99</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Document.h">
+            <BuildOrder>100</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Element.cpp">
+            <BuildOrder>101</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Element.h">
+            <BuildOrder>102</BuildOrder>
+        </None>
+        <None Include="server\core\xml\src\Exception.h">
+            <BuildOrder>103</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Namespace.cpp">
+            <BuildOrder>104</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Namespace.h">
+            <BuildOrder>105</BuildOrder>
+        </None>
+        <None Include="server\core\xml\src\ngrestxmlexport.h">
+            <BuildOrder>106</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Node.cpp">
+            <BuildOrder>107</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Node.h">
+            <BuildOrder>108</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\Value.cpp">
+            <BuildOrder>109</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\Value.h">
+            <BuildOrder>110</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\XmlReader.cpp">
+            <BuildOrder>111</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\XmlReader.h">
+            <BuildOrder>112</BuildOrder>
+        </None>
+        <CppCompile Include="server\core\xml\src\XmlWriter.cpp">
+            <BuildOrder>113</BuildOrder>
+        </CppCompile>
+        <None Include="server\core\xml\src\XmlWriter.h">
+            <BuildOrder>114</BuildOrder>
+        </None>
+        <None Include="server\modules\apache2\conf\ngrest.conf"/>
+        <None Include="server\modules\apache2\conf\ngrest.load"/>
+        <CppCompile Include="server\modules\apache2\src\mod_ngrest.c">
+            <BuildOrder>117</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\modules\nginx\src\mod_ngrest_nginx.c">
+            <BuildOrder>118</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\modules\share\ngrest_server.cpp">
+            <BuildOrder>119</BuildOrder>
+        </CppCompile>
+        <None Include="server\modules\share\ngrest_server.h">
+            <BuildOrder>120</BuildOrder>
+        </None>
+        <None Include="server\ngrest.config"/>
+        <None Include="server\ngrest.creator"/>
+        <None Include="server\ngrest.files"/>
+        <None Include="server\ngrest.includes"/>
+        <None Include="server\Project.cbproj.local"/>
+        <None Include="server\README.md"/>
+        <None Include="server\scripts\ngrest.cmd"/>
+        <RcItem Include="server\services\favicon\img\favicon.ico">
+            <ResourceType>ICON</ResourceType>
+            <ResourceId>Icon_1</ResourceId>
+        </RcItem>
+        <None Include="server\services\favicon\img\favicon.svg"/>
+        <CppCompile Include="server\services\favicon\src\Favicon.cpp">
+            <BuildOrder>130</BuildOrder>
+        </CppCompile>
+        <None Include="server\services\favicon\src\Favicon.h">
+            <BuildOrder>131</BuildOrder>
+        </None>
+        <None Include="server\services\favicon\src\favicon_ico.h">
+            <BuildOrder>132</BuildOrder>
+        </None>
+        <CppCompile Include="server\services\serverstatus\src\ServerStatus.cpp">
+            <BuildOrder>133</BuildOrder>
+        </CppCompile>
+        <None Include="server\services\serverstatus\src\ServerStatus.h">
+            <BuildOrder>134</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\deployment\src\main.cpp">
+            <Suffix>_1</Suffix>
+            <BuildOrder>135</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tests\deployment\src\TestDeployment.cpp">
+            <BuildOrder>136</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\deployment\src\TestDeployment.h">
+            <BuildOrder>137</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\deployment\src\TestDeploymentWrapper.cpp">
+            <BuildOrder>138</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\deployment\src\TestDeploymentWrapper.h">
+            <BuildOrder>139</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\deployment\src\TestFilterGroup.cpp">
+            <BuildOrder>140</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\deployment\src\TestFilterGroup.h">
+            <BuildOrder>141</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\deployment\src\TestServiceGroup.cpp">
+            <BuildOrder>142</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\deployment\src\TestServiceGroup.h">
+            <BuildOrder>143</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\filters\src\TestFilterGroup.cpp">
+            <Suffix>_0</Suffix>
+            <BuildOrder>144</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\filters\src\TestFilterGroup.h">
+            <BuildOrder>145</BuildOrder>
+        </None>
+        <CppCompile Include="server\tests\json-benchmark\src\jsonbenchmark.cpp">
+            <BuildOrder>147</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\json-benchmark\test.json"/>
+        <CppCompile Include="server\tests\json\src\jsontest.cpp">
+            <BuildOrder>146</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tests\service\src\TestService.cpp">
+            <BuildOrder>149</BuildOrder>
+        </CppCompile>
+        <None Include="server\tests\service\src\TestService.h">
+            <BuildOrder>150</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcgparser\src\CodegenParser.cpp">
+            <BuildOrder>180</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcgparser\src\CodegenParser.h">
+            <BuildOrder>181</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcgparser\src\Interface.cpp">
+            <BuildOrder>182</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcgparser\src\Interface.h">
+            <BuildOrder>183</BuildOrder>
+        </None>
+        <None Include="server\tools\ngrestcgparser\src\ngrestcodegenparserexport.h">
+            <BuildOrder>184</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcgparser\src\tools.cpp">
+            <BuildOrder>185</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcgparser\src\tools.h">
+            <BuildOrder>186</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\src\CodeGen.cpp">
+            <BuildOrder>151</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\src\CodeGen.h">
+            <BuildOrder>152</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\src\main.cpp">
+            <Suffix>_2</Suffix>
+            <BuildOrder>153</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\src\XmlGen.cpp">
+            <BuildOrder>154</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\src\XmlGen.h">
+            <BuildOrder>155</BuildOrder>
+        </None>
+        <None Include="server\tools\ngrestcg\templates\addservicehpp\CMakeLists.txt"/>
+        <None Include="server\tools\ngrestcg\templates\addservicehpp\Service.hpp">
+            <BuildOrder>160</BuildOrder>
+        </None>
+        <None Include="server\tools\ngrestcg\templates\addservice\CMakeLists.txt"/>
+        <CppCompile Include="server\tools\ngrestcg\templates\addservice\Service.cpp">
+            <Suffix>_0</Suffix>
+            <BuildOrder>157</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\addservice\Service.h">
+            <BuildOrder>158</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\deserialization.cpp">
+            <BuildOrder>161</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\enums.cpp">
+            <BuildOrder>162</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\common\enums.h">
+            <BuildOrder>163</BuildOrder>
+        </None>
+        <None Include="server\tools\ngrestcg\templates\common\jsonType.h">
+            <BuildOrder>164</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\nsopt.cpp">
+            <BuildOrder>165</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\serialization.cpp">
+            <BuildOrder>166</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\serviceRequest.cpp">
+            <BuildOrder>167</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\serviceResponse.cpp">
+            <BuildOrder>168</BuildOrder>
+        </CppCompile>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\structs.cpp">
+            <BuildOrder>169</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\common\structs.h">
+            <BuildOrder>170</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\templates\common\typedefs.cpp">
+            <BuildOrder>171</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\common\typedefs.h">
+            <BuildOrder>172</BuildOrder>
+        </None>
+        <None Include="server\tools\ngrestcg\templates\project\CMakeLists.txt"/>
+        <None Include="server\tools\ngrestcg\templates\project\codegen.config"/>
+        <None Include="server\tools\ngrestcg\templates\service\codegen.config"/>
+        <CppCompile Include="server\tools\ngrestcg\templates\service\ServiceGroupImpl.cpp">
+            <BuildOrder>176</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\service\ServiceGroupImpl.h">
+            <BuildOrder>177</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\ngrestcg\templates\service\Wrapper.cpp">
+            <BuildOrder>178</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\ngrestcg\templates\service\Wrapper.h">
+            <BuildOrder>179</BuildOrder>
+        </None>
+        <CppCompile Include="server\tools\parsers\cpp\src\CppParser.cpp">
+            <BuildOrder>187</BuildOrder>
+        </CppCompile>
+        <None Include="server\tools\parsers\cpp\src\CppParser.h">
+            <BuildOrder>188</BuildOrder>
+        </None>
+        <ObjFiles Include="server\Win32\Debug\main.obj" Condition="'$(Platform)'=='Win32'">
+            <BuildOrder>189</BuildOrder>
+            <IgnorePath>true</IgnorePath>
+        </ObjFiles>
+        <None Include="server\Win32\Debug\Project.exe"/>
+        <None Include="server\Win32\Debug\Project.ilc"/>
+        <None Include="server\Win32\Debug\Project.ild"/>
+        <None Include="server\Win32\Debug\Project.ilf"/>
+        <None Include="server\Win32\Debug\Project.ils"/>
+        <None Include="server\Win32\Debug\Project.map"/>
+        <None Include="server\Win32\Debug\Project.tds"/>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>CPlusPlusBuilder.Personality.12</Borland.Personality>
+        <Borland.ProjectType>CppConsoleApplication</Borland.ProjectType>
+        <BorlandProject>
+            <CPlusPlusBuilder.Personality>
+                <ProjectProperties>
+                    <ProjectProperties Name="AutoShowDeps">False</ProjectProperties>
+                    <ProjectProperties Name="ManagePaths">True</ProjectProperties>
+                    <ProjectProperties Name="VerifyPackages">True</ProjectProperties>
+                    <ProjectProperties Name="IndexFiles">False</ProjectProperties>
+                </ProjectProperties>
+                <Folders/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k220.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp220.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k220.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp220.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </CPlusPlusBuilder.Personality>
+            <Deployment Version="1">
+                <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin64\borlndmm.dll" Class="DependencyModule">
+                    <Platform Name="Win64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin64\cc64220mt.dll" Class="DependencyModule">
+                    <Platform Name="Win64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossim32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'=='true'" LocalName="$(BDS)\bin\cc32220mt.dll" Class="DependencyModule">
+                    <Platform Name="Win32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin64\cc64220.dll" Class="DependencyModule">
+                    <Platform Name="Win64">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgcrtl.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true' And '$(Multithreaded)'!='true'" LocalName="$(BDS)\bin\cc32220.dll" Class="DependencyModule">
+                    <Platform Name="Win32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(DynamicRTL)'=='true'" LocalName="$(BDS)\Redist\osx32\libcgstl.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile Condition="'$(UsingDelphiRTL)'=='true'" LocalName="$(BDS)\bin\borlndmm.dll" Class="DependencyModule">
+                    <Platform Name="Win32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\Project.tds" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win32">
+                        <RemoteName>Project.tds</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName=".\Win32\Debug\Project.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>Project.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployClass Required="true" Name="DependencyPackage">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.bpl</Extensions>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyModule">
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.dylib</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                        <Extensions>.dll;.bpl</Extensions>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch2048">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXInfoPList"/>
+                <DeployClass Name="ProjectiOSDeviceDebug">
+                    <Platform Name="iOSDevice64">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <RemoteDir>..\$(PROJECTNAME).app.dSYM\Contents\Resources\DWARF</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage470">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-normal</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeX86File">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\x86</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSResource">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXEntitlements"/>
+                <DeployClass Name="AndroidGDBServer">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch640">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage960">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xlarge</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon96">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch320">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon144">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-xxhdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeMipsFile">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\mips</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashImageDef">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DebugSymbols">
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="DependencyFramework">
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                        <Extensions>.framework</Extensions>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage426">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-small</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSEntitlements"/>
+                <DeployClass Name="AdditionalDebugSymbols">
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <RemoteDir>Contents\MacOS</RemoteDir>
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidClassesDexFile">
+                    <Platform Name="Android">
+                        <RemoteDir>classes</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSInfoPList"/>
+                <DeployClass Name="iPad_Launch1024">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_DefaultAppIcon">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectOSXResource">
+                    <Platform Name="OSX32">
+                        <RemoteDir>Contents\Resources</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectiOSDeviceResourceRules"/>
+                <DeployClass Name="iPad_Launch768">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Required="true" Name="ProjectOutput">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi-v7a</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidLibnativeArmeabiFile">
+                    <Platform Name="Android">
+                        <RemoteDir>library\lib\armeabi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_SplashImage640">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-large</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="File">
+                    <Platform Name="Android">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice64">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="Win32">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="OSX32">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>0</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>0</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPhone_Launch640x1136">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon36">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-ldpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStyles">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="iPad_Launch1536">
+                    <Platform Name="iOSDevice64">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSSimulator">
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="iOSDevice32">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon48">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-mdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="Android_LauncherIcon72">
+                    <Platform Name="Android">
+                        <RemoteDir>res\drawable-hdpi</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="ProjectAndroidManifest">
+                    <Platform Name="Android">
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
+            </Deployment>
+            <Platforms>
+                <Platform value="iOSDevice32">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="OSX32">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Cpp.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Cpp.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+</Project>
