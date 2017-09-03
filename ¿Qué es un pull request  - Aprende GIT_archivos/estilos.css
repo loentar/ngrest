@@ -1,0 +1,314 @@
+/*============================================
+  General
+  ============================================*/
+.cdp-cookies-alerta {
+	
+}
+.cdp-cookies-alerta .cdp-cookies-solapa {
+	display: block;
+	position: fixed;
+	z-index: 100002;
+	width: 120px;
+	text-align: center;
+	font-size:12px;
+	line-height: 18px;
+	padding: 5px 0;
+	font-family: Helvetica, Arial, sans-serif;
+	cursor: pointer;
+  -webkit-border-top-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+  border-top-left-radius: 5px;
+  -webkit-border-top-right-radius: 5px;
+  -moz-border-radius-topright: 5px;
+  border-top-right-radius: 5px;
+}
+.cdp-cookies-alerta.cdp-solapa-der .cdp-cookies-solapa {
+	right:0;
+}
+.cdp-cookies-alerta.cdp-solapa-izq .cdp-cookies-solapa {
+	left:0;
+}
+.cdp-cookies-alerta.cdp-solapa-ocultar .cdp-cookies-solapa {
+	display:none;
+}
+.cdp-cookies-alerta .cdp-cookies-texto {
+	position: fixed;
+	left:0; 
+	width:100%;
+	z-index: 100001;
+	padding: 5px 10px 5px 10px;
+}
+.cdp-cookies-alerta .cdp-cookies-texto h4 {
+	text-align: center;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 16px;
+	color:#ffffff;
+	padding: 0 0 5px 0;
+	margin: 0;
+	text-rendering: optimizeLegibility;
+}
+.cdp-cookies-alerta .cdp-cookies-texto p {
+	padding: 5px 0;
+	margin: 0;
+	text-align: center;
+	color:#bbbbbb;
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	line-height: 11px;
+	text-rendering: optimizeLegibility;
+}
+.cdp-cookies-alerta .cdp-cookies-texto a {
+	font-family: Helvetica, Arial, sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	color: #ff8888;
+	text-decoration: none;
+	border: 0;
+	text-rendering: optimizeLegibility;
+}
+.cdp-cookies-alerta .cdp-cookies-texto a:hover, 
+.cdp-cookies-alerta .cdp-cookies-texto a:active, 
+.cdp-cookies-alerta .cdp-cookies-texto a:visited {
+	color: #ffcccc;
+}
+.cdp-cookies-boton-cerrar {
+	font-size:11px !important;
+	line-height: 20px;
+	display: block;
+	width: 75px;
+	padding: 2px 10px 0 10px;
+	margin:0 auto;
+	text-align: center;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+
+/*============================================
+  Animaciones
+  ============================================*/
+@keyframes animacion_abajo {
+	0% {bottom:0px;}
+	100% {bottom:-200px;}
+}
+@keyframes animacion_arriba {
+	0% {bottom:-200px;}
+	100% {bottom:0px;}
+}
+.cdp-animacion-abajo {
+	animation: animacion_abajo 0.5s forwards;
+    -webkit-animation: animacion_abajo 0.5s forwards;
+}
+.cdp-animacion-arriba {
+	animation: animacion_arriba 0.5s forwards;
+    -webkit-animation: animacion_arriba 0.5s forwards;
+}
+.cdp-mostrar {
+	bottom: 0;
+}
+.cdp-ocultar { 
+	bottom: -200px;
+}
+
+/*============================================
+  Alineación
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-textos-izq .cdp-cookies-texto h4,
+.cdp-cookies-alerta.cdp-cookies-textos-izq .cdp-cookies-texto p {
+	text-align: left;
+}
+
+/*============================================
+  Color gris
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto {
+	background-color: #444444;
+	border-top:1px solid #222222;
+	border-bottom:1px solid #222222;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto h4 {
+	color: #ffffff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto p {
+	color: #bbbbbb;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto a {
+	color: #ff8888 !important;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto a:hover,
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto a:active,
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-texto a:visited {
+	color: #ffcccc !important;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-solapa {
+	background-color: #333;
+	color: #ddd;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-solapa:hover {
+	background-color: #666;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-boton-cerrar {
+	background-color: #000;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-gris .cdp-cookies-boton-cerrar:hover {
+	background-color: #666;
+}
+
+/*============================================
+  Color blanco
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto {
+	background-color: #ffffff;
+	border-top:1px solid #dddddd;
+	border-bottom:1px solid #dddddd;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto h4 {
+	color: #666666;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto p {
+	color: #888888;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto a {
+	color: #cc8888;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto a:hover,
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto a:active,
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-texto a:visited {
+	color: #eeaaaa;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-solapa {
+	background-color: #fff;
+	color: #333;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-solapa:hover {
+	background-color: #ddd;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-boton-cerrar {
+	background-color: #aaa;
+	color: #000 !important;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-blanco .cdp-cookies-boton-cerrar:hover {
+	background-color: #ddd;
+}
+
+/*============================================
+  Color rojo
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto {
+	background-color: #e04729;
+	border-top:1px solid #99301b;
+	border-bottom:1px solid #99301b;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto h4 {
+	color: #ffffff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto p {
+	color: #dddddd;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto a {
+	color: #febebe;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto a:hover,
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto a:active,
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-texto a:visited {
+	color: #ffffff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-solapa {
+	background-color: #e04729;
+	color: #fff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-solapa:hover {
+	background-color: #a5321c;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-boton-cerrar {
+	background-color: #a5321c;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-rojo .cdp-cookies-boton-cerrar:hover {
+	background-color: #85120c;
+}
+
+/*============================================
+  Color azul
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto {
+	background-color: #5492e0;
+	border-top:1px solid #3f6da7;
+	border-bottom:1px solid #3f6da7;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto h4 {
+	color: #ffffff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto p {
+	color: #eeeeee;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto a {
+	color: #b7d7ff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto a:hover,
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto a:active,
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-texto a:visited {
+	color: #dcebff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-solapa {
+	background-color: #5492e0;
+	color: #fff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-solapa:hover {
+	background-color: #3472c0;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-boton-cerrar {
+	background-color: #2462b0;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-azul .cdp-cookies-boton-cerrar:hover {
+	background-color: #64a2f0;
+}
+
+/*============================================
+  Color verde
+  ============================================*/
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto {
+	background-color: #0b7000;
+	border-top:1px solid #064000;
+	border-bottom:1px solid #064000;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto h4 {
+	color: #ffffff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto p {
+	color: #dddddd;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto a {
+	color: #75c76c;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto a:hover,
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto a:active,
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-texto a:visited {
+	color: #c4ffbe;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-solapa {
+	background-color: #0b7000;
+	color: #fff;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-solapa:hover {
+	background-color: #095000;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-boton-cerrar {
+	background-color: #074000;
+	color: #fff !important;
+}
+.cdp-cookies-alerta.cdp-cookies-tema-verde .cdp-cookies-boton-cerrar:hover {
+	background-color: #2b9010;
+}
+
+/*============================================
+  boton créditos
+  ============================================*/
+.cdp-cookies-boton-creditos {
+	font-size: 10px;
+	float:right;
+	padding: 10px 0;
+}
+
