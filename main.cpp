@@ -10,15 +10,16 @@
 
 #include <stdio.h>
 #include <iostream>
-//#include "pqConnect.hpp"
+#include <HttpException.h>
+
+#include "pqConnect.hpp"
 
 using namespace std;
 
 
  int _tmain(int argc, _TCHAR* argv[])
 {
-    //printf("<!DOCTYPE html>\n");
-	//printf("Content-Type: text/json\n\n");
+	//printf("<!DOCTYPE html>\n");
 	printf("Content-Type: text/html; charset=utf-8\n\n") ;
 	printf("<html>\n") ;
 	printf("<head>\n") ;

@@ -44,7 +44,7 @@ namespace xml {
  * @brief ngrest exception
  */
 //class XmlException: public ::ngrest::Exception
-class XmlException: public ::ngrest::Exception
+class XmlException: public Exception
 {
 public:
     /**

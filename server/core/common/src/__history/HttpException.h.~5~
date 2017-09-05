@@ -41,7 +41,7 @@ namespace ngrest {
 /**
  * HTTP exception
  */
-class NGREST_COMMON_EXPORT HttpException: public Exception
+class NGREST_COMMON_EXPORT HttpException: public ::ngrest::Exception
 {
 public:
     /**
