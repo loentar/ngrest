@@ -27,8 +27,8 @@
 #include <fcntl.h>
 #include <string.h>
 
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/MemPool.h>
+#include <core/utils/Exception.h>
+#include <core/utils/MemPool.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/json/JsonReader.h>
 #include <ngrest/json/JsonWriter.h>

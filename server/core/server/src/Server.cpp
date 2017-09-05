@@ -38,9 +38,9 @@
 #include <fcntl.h>
 #include <errno.h>
 
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/Error.h>
-#include <ngrest/utils/Exception.h>
+#include <core/utils/Log.h>
+#include <core/utils/Error.h>
+#include <core/utils/Exception.h>
 
 #include "ClientCallback.h"
 #include "Server.h"

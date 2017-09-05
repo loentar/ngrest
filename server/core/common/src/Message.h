@@ -24,7 +24,7 @@
 #include <stdint.h>
 
 #include <ngrest/common/Callback.h>
-#include <ngrest/utils/MemPool.h>
+#include <core/utils/MemPool.h>
 #include "ngrestcommonexport.h"
 
 namespace ngrest {

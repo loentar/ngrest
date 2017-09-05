@@ -18,8 +18,8 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/Log.h>
+#include <core/utils/Exception.h>
+#include <core/utils/Log.h>
 #include <ngrest/common/Message.h>
 
 #include "FilterDispatcher.h"

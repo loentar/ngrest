@@ -22,7 +22,7 @@
 #include <chrono>
 #include <thread>
 #endif
-#include <ngrest/utils/Log.h>
+#include <core/utils/Log.h>
 #include <ngrest/engine/Handler.h>
 
 #include "TestService.h"

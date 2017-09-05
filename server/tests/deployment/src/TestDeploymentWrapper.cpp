@@ -18,7 +18,7 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#include <ngrest/utils/Exception.h>
+#include <core/utils/Exception.h>
 #include <ngrest/common/HttpMethod.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/ObjectModel.h>

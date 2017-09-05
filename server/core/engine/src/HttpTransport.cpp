@@ -21,10 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/MemPool.h>
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/static.h>
+#include <core/utils/Log.h>
+#include <core/utils/MemPool.h>
+#include <core/utils/Exception.h>
+#include <core/utils/static.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/json/JsonReader.h>

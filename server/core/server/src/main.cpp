@@ -21,10 +21,10 @@
 #include <signal.h>
 #include <iostream>
 
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/ElapsedTimer.h>
-#include <ngrest/utils/Runtime.h>
-#include <ngrest/utils/File.h>
+#include <core/utils/Log.h>
+#include <core/utils/ElapsedTimer.h>
+#include <core/utils/Runtime.h>
+#include <core/utils/File.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/FilterDispatcher.h>

@@ -19,8 +19,8 @@
  */
 
 #include <streambuf>
-#include <ngrest/utils/fromcstring.h>
-#include <ngrest/utils/Error.h>
+#include <core/utils/fromcstring.h>
+#include <core/utils/Error.h>
 #include "Exception.h"
 #include "Document.h"
 #include "Attribute.h"

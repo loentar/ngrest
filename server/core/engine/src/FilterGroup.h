@@ -25,7 +25,7 @@
 #include <unordered_map>
 #include <list>
 
-#include <ngrest/utils/EnumClassHash.h>
+#include <core/utils/EnumClassHash.h>
 
 #include "ngrestengineexport.h"
 

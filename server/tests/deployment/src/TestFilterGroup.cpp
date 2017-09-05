@@ -20,13 +20,13 @@
 
 #include <algorithm>
 
-#include <ngrest/utils/stringutils.h>
+#include <core/utils/stringutils.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/ObjectModel.h>
 #include <ngrest/common/ObjectModelUtils.h>
 #include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Filter.h>
-#include <ngrest/utils/Log.h>
+#include <core/utils/Log.h>
 
 #include "TestFilterGroup.h"
 

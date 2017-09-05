@@ -19,10 +19,10 @@
  */
 
 #include <list>
-#include <ngrest/utils/stringutils.h>
-#include <ngrest/utils/tostring.h>
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/Exception.h>
+#include <core/utils/stringutils.h>
+#include <core/utils/tostring.h>
+#include <core/utils/Log.h>
+#include <core/utils/Exception.h>
 #include <ngrest/xml/Document.h>
 #include <ngrest/xml/Element.h>
 #include <ngrest/codegen/Interface.h>

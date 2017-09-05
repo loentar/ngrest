@@ -18,8 +18,8 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#include <ngrest/utils/tostring.h>
-#include <ngrest/utils/fromstring.h>
+#include <core/utils/tostring.h>
+#include <core/utils/fromstring.h>
 #include "Value.h"
 
 namespace ngrest {
