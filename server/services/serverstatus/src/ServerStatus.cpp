@@ -20,8 +20,8 @@
 
 #include <unordered_map>
 
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/stringutils.h>
+#include <core/utils/Log.h>
+#include <core/utils/stringutils.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>
 #include <ngrest/engine/Transport.h>

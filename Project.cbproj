@@ -178,8 +178,8 @@
         <ILINK_TranslatedLibraryPath>$(BDSLIB)\$(PLATFORM)\debug\$(LANGDIR);$(ILINK_TranslatedLibraryPath)</ILINK_TranslatedLibraryPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <ILINK_LibraryPath>C:\Users\User\Documents\Sistemas\Practica profesional\proyecto;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\libs;$(ILINK_LibraryPath)</ILINK_LibraryPath>
-        <IncludePath>C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\libs;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\core;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\modules;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\scripts;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\services;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\tools;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server\Win32;C:\Program Files\PostgreSQL\9.6\include;$(IncludePath)</IncludePath>
+        <ILINK_LibraryPath>C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\libs;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+        <IncludePath>C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\libs;C:\Program Files\PostgreSQL\9.6\include;C:\Users\User\Documents\Sistemas\Practica profesional\proyecto\server;$(IncludePath)</IncludePath>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <LinkPackageStatics>fmx.lib;rtl.lib</LinkPackageStatics>
     </PropertyGroup>
@@ -851,9 +851,8 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="server\ngrest.includes" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -862,8 +861,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
+                <DeployFile LocalName="server\ngrest.includes" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -1481,14 +1481,14 @@
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>
-                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Android" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSSimulator" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
             </Deployment>
             <Platforms>
                 <Platform value="Android">False</Platform>

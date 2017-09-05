@@ -21,7 +21,7 @@
 #include <signal.h>
 #include <iostream>
 
-#include <ngrest/utils/Log.h>
+#include <core/utils/Log.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/ServiceDispatcher.h>
 #include <ngrest/engine/Deployment.h>

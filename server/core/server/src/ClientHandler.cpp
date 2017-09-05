@@ -34,14 +34,14 @@
 
 #include <list>
 
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/MemPool.h>
-#include <ngrest/utils/MemPooler.h>
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/fromcstring.h>
-#include <ngrest/utils/tocstring.h>
-#include <ngrest/utils/ElapsedTimer.h>
-#include <ngrest/utils/Error.h>
+#include <core/utils/Log.h>
+#include <core/utils/MemPool.h>
+#include <core/utils/MemPooler.h>
+#include <core/utils/Exception.h>
+#include <core/utils/fromcstring.h>
+#include <core/utils/tocstring.h>
+#include <core/utils/ElapsedTimer.h>
+#include <core/utils/Error.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/HttpMessage.h>
 #include <ngrest/common/HttpException.h>

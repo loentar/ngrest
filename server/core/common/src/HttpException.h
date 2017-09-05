@@ -21,8 +21,7 @@
 #ifndef HTTPEXCEPTION_H
 #define HTTPEXCEPTION_H
 
-//#include <ngrest/utils/Exception.h>
-#include <Exception.h>
+#include <core/utils/src/Exception.h>
 #include "ngrestcommonexport.h"
 #include "HttpStatus.h"
 

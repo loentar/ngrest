@@ -25,10 +25,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/stringutils.h>
-#include <ngrest/utils/PluginExport.h>
-#include <ngrest/utils/Exception.h>
+#include <core/utils/Log.h>
+#include <core/utils/stringutils.h>
+#include <core/utils/PluginExport.h>
+#include <core/utils/Exception.h>
 #include <ngrest/codegen/tools.h>
 #include "CppParser.h"
 

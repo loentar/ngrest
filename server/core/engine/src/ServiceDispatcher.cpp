@@ -23,9 +23,9 @@
 #include <string>
 #include <unordered_map>
 
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/stringutils.h>
+#include <core/utils/Exception.h>
+#include <core/utils/Log.h>
+#include <core/utils/stringutils.h>
 #include <ngrest/common/Service.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/ObjectModel.h>

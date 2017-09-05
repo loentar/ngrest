@@ -20,8 +20,8 @@
 
 #include <algorithm>
 
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/Log.h>
+#include <core/utils/Exception.h>
+#include <core/utils/Log.h>
 
 #include "Phase.h"
 #include "Filter.h"

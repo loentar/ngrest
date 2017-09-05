@@ -22,8 +22,8 @@
 #define NGREST_OBJECTMODELUTILS_H
 
 #include <string>
-#include <ngrest/utils/fromcstring.h>
-#include <ngrest/utils/Exception.h>
+#include <core/utils/fromcstring.h>
+#include <core/utils/Exception.h>
 #include "ObjectModel.h"
 
 namespace ngrest {

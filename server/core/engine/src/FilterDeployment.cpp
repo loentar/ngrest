@@ -20,9 +20,9 @@
 
 #include <unordered_map>
 
-#include <ngrest/utils/File.h>
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/Plugin.h>
+#include <core/utils/File.h>
+#include <core/utils/Log.h>
+#include <core/utils/Plugin.h>
 
 #include "FilterGroup.h"
 #include "FilterDispatcher.h"

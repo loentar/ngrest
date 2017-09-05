@@ -18,7 +18,7 @@
  *  This file is part of ngrest: http://github.com/loentar/ngrest
  */
 
-#include <ngrest/utils/tostring.h>
+#include <core/utils/tostring.h>
 #include "Interface.h"
 #include "tools.h"
 #include <set>

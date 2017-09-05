@@ -25,11 +25,11 @@
 #include <exception>
 #include <fstream>
 
-#include <ngrest/utils/Exception.h>
-#include <ngrest/utils/Log.h>
-#include <ngrest/utils/MemPool.h>
-#include <ngrest/utils/MemPooler.h>
-#include <ngrest/utils/tocstring.h>
+#include <core/utils/Exception.h>
+#include <core/utils/Log.h>
+#include <core/utils/MemPool.h>
+#include <core/utils/MemPooler.h>
+#include <core/utils/tocstring.h>
 #include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Engine.h>
 #include <ngrest/engine/FilterDispatcher.h>

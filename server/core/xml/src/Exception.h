@@ -21,7 +21,7 @@
 #ifndef NGREST_XML_EXCEPTION_H
 #define NGREST_XML_EXCEPTION_H
 
-#include <Exception.h>
+#include <core/utils/src/Exception.h>
 #include <tostring.h>
 #include "ngrestxmlexport.h"
 
@@ -43,7 +43,6 @@ namespace xml {
 /**
  * @brief ngrest exception
  */
-//class XmlException: public ::ngrest::Exception
 class XmlException: public ::ngrest::Exception
 {
 public:

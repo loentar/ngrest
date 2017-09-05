@@ -2,7 +2,7 @@
 // For more information, please visit: https://github.com/loentar/ngrest
 // DO NOT EDIT. ANY CHANGES WILL BE LOST
 
-#include <ngrest/utils/PluginExport.h>
+#include <core/utils/PluginExport.h>
 ##foreach $(project.interfaces)
 #include "$(interface.filePath)$(interface.name)Wrapper.h"
 ##endfor

@@ -20,8 +20,8 @@
 
 #include <algorithm>
 
-#include <ngrest/utils/stringutils.h>
-#include <ngrest/utils/PluginExport.h>
+#include <core/utils/stringutils.h>
+#include <core/utils/PluginExport.h>
 #include <ngrest/common/Message.h>
 #include <ngrest/common/HttpException.h>
 #include <ngrest/common/HttpMessage.h>
@@ -30,7 +30,7 @@
 #include <ngrest/engine/Phase.h>
 #include <ngrest/engine/Filter.h>
 #include <ngrest/engine/Transport.h>
-#include <ngrest/utils/Log.h>
+#include <core/utils/Log.h>
 
 #include "TestFilterGroup.h"
 
