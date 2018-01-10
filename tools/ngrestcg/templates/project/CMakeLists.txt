@@ -66,7 +66,12 @@ else()
 endif()
 
 include_directories("${NGREST_HOME}/include")
-link_directories("${NGREST_HOME}/lib")
+if (MINGW)
+    link_directories("${NGREST_HOME}/bin")
+else()
+    link_directories("${NGREST_HOME}/lib")
+endif()
+
 set(NGREST_BIN_PATH "${NGREST_HOME}/bin/")
 
 # services deployed from this project
