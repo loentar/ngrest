@@ -42,7 +42,9 @@ void MemPool::reset()
 {
     if (chunks) {
         currChunk = chunks;
-        currChunk->size = 0;
+        for (int i = 0; i < chunksCount; ++i) {
+            chunks[i].size = 0;
+        }
         chunkIndex = 0;
     }
 }
@@ -113,10 +115,15 @@ MemPool::Chunk* MemPool::flatten(bool terminate)
     for (Chunk* curr = (chunks + 1); curr != (currChunk + 1); pos += curr->size, ++curr) {
         memcpy(pos, curr->buffer, curr->size);
         ::free(curr->buffer);
+        pos += curr->size;
+        curr->buffer = nullptr;
+        curr->size = 0;
+        curr->bufferSize = 0;
     }
     chunksCount = 1;
     currChunk = chunks;
     chunks->size = newSize;
+    chunkIndex = 0;
 
     if (terminate)
         chunks->buffer[newSize] = '\0'; // terminate with \0 for C strings
@@ -160,7 +167,6 @@ void MemPool::newChunk(uint64_t size)
             chunk->buffer = newBuffer;
             chunk->bufferSize = size;
         }
-        chunk->size = 0;
         currChunk = chunk;
         return;
     }
@@ -176,6 +182,8 @@ void MemPool::newChunk(uint64_t size)
             ::free(buffer);
             throw std::bad_alloc();
         }
+
+        memset(newChunks + chunksCount, 0, NGREST_MEMPOOL_CHUNK_RESERVE * sizeof(Chunk));
 
         chunks = newChunks;
         chunksReserved = newChunksReserved;
