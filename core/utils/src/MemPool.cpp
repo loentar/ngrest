@@ -152,49 +152,33 @@ void MemPool::reserve(uint64_t size)
 
 void MemPool::newChunk(uint64_t size)
 {
-    if ((chunkIndex + 1) <= chunksCount) {
-        Chunk* chunk = chunks + chunkIndex;
-        if (chunk->size != 0) {
-            ++chunk;
-            ++chunkIndex;
-        } // else try to resize existing empty chunk
-
-        if (chunk->bufferSize < size) {
-            char* newBuffer = reinterpret_cast<char*>(realloc(chunk->buffer, size));
-            if (!newBuffer)
-                throw std::bad_alloc();
-
-            chunk->buffer = newBuffer;
-            chunk->bufferSize = size;
-        }
-        currChunk = chunk;
-        return;
-    }
-
-    char* buffer = reinterpret_cast<char*>(malloc(size));
-    if (buffer == nullptr)
-        throw std::bad_alloc();
-
-    if (chunksReserved == chunksCount) {
+    if ((chunksCount + 1) > chunksReserved) { // we have ran out of chunks
         const int newChunksReserved = chunksCount + NGREST_MEMPOOL_CHUNK_RESERVE;
         Chunk* newChunks = reinterpret_cast<Chunk*>(realloc(chunks, sizeof(Chunk) * newChunksReserved));
-        if (!newChunks) {
-            ::free(buffer);
+        if (!newChunks)
             throw std::bad_alloc();
-        }
 
         memset(newChunks + chunksCount, 0, NGREST_MEMPOOL_CHUNK_RESERVE * sizeof(Chunk));
 
         chunks = newChunks;
         chunksReserved = newChunksReserved;
-    }
+        currChunk = chunks + chunksCount;
+    } else
+      ++currChunk;
 
-    currChunk = chunks + chunksCount;
-    currChunk->buffer = buffer;
-    currChunk->size = 0;
-    currChunk->bufferSize = size;
     ++chunksCount;
     ++chunkIndex;
+
+    if (currChunk->bufferSize < size) {
+        char* newBuffer = reinterpret_cast<char*>(realloc(currChunk->buffer, size));
+        if (!newBuffer)
+            throw std::bad_alloc();
+
+        currChunk->buffer = newBuffer;
+        currChunk->bufferSize = size;
+    }
+
+    currChunk->size = 0;
 }
 
 }
