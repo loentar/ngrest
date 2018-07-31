@@ -105,6 +105,21 @@ Example 3. Create service calculator which is bound to "/ngrest/example/calculat
 EOF
 }
 
+help_addservice() {
+  cat >&2 << EOF
+Usage: ngrest addservice <service_name> [<service_name>...]
+
+Add one or more services into existing project.
+Service name may optionally contain package name.
+
+
+Example. Add an "extra" service into current project:
+
+  ngrest addservice extra
+
+EOF
+}
+
 help_run() {
   cat >&2 << EOF
 Usage: ngrest [run]
@@ -285,6 +300,10 @@ help() {
     help_create
     ;;
 
+  addservice)
+    help_addservice
+    ;;
+
   run)
     help_run
     ;;
@@ -361,6 +380,7 @@ Usage: ngrest [help] [<command>] [<arguments>]
 
 Commands:
   create           Create a new project.
+  addservice       Add a new service into existing project.
   run              (default) Build and run current project in local deployment mode.
   build            Build current project.
   clean            Clean build and program cache.
@@ -381,7 +401,7 @@ EOF
   esac
 }
 
-create() {
+parse_codegen_options() {
   CODEGEN_OPTIONS=
   if [ "x${1::1}" = "x-" ]
   then
@@ -403,6 +423,32 @@ create() {
     esac
     shift
   fi
+}
+
+parse_services() {
+  SERVICES=
+
+  while [ -n "$SERVICE_NAME" ]
+  do
+    # bash 3.1 compat
+    TEST_NAME=$(sed '/^\([a-z][a-z0-9_]*\.\)*[a-zA-Z]\([a-zA-Z_0-9]*\)$/!d' <<< "$SERVICE_NAME")
+    if [ -z "$TEST_NAME" ]
+    then
+      echo "Invalid service name: [$SERVICE_NAME]" >&2
+      echo "Service name must only contain digits, letters, underscore and dot symbol and must start with a letter" >&2
+      exit 1
+    fi
+
+    SERVICES+="$SERVICE_NAME "
+
+    SERVICE_NAME=${1:-}
+    [ -n "$SERVICE_NAME" ] && shift
+  done
+  SERVICES=${SERVICES% }
+}
+
+create() {
+  parse_codegen_options $@
 
   if [ -z "$1" ]
   then
@@ -446,26 +492,7 @@ create() {
     exit 1
   fi
 
-  SERVICES=
-
-  while [ -n "$SERVICE_NAME" ]
-  do
-    # bash 3.1 compat
-    TEST_NAME=$(sed '/^\([a-z][a-z0-9_]*\.\)*[a-zA-Z]\([a-zA-Z_0-9]*\)$/!d' <<< "$SERVICE_NAME")
-    if [ -z "$TEST_NAME" ]
-    then
-      echo "Invalid service name: [$SERVICE_NAME]" >&2
-      echo "Service name must only contain digits, letters, underscore and dot symbol and must start with a letter" >&2
-      help_create
-      exit 1
-    fi
-
-    SERVICES+="$SERVICE_NAME "
-
-    SERVICE_NAME=${1:-}
-    [ -n "$SERVICE_NAME" ] && shift
-  done
-  SERVICES=${SERVICES% }
+  parse_services
 
   echo "Creating project [$PROJECT_NAME] with services [$SERVICES]..."
   mkdir "$PROJECT_NAME" || (
@@ -493,9 +520,51 @@ EOF
 
 Your new project [$PROJECT_NAME] has been created.
 
-You can start it by typing from "$PROJECT_NAME" directory:
+To start it please cd to "$PROJECT_NAME" and type:
 
   ngrest
+
+EOF
+}
+
+addservice() {
+  if [ ! -d '.ngrest' -o ! -e 'CMakeLists.txt' ]
+  then
+    echo "ngrest addservice must be started from project root." >&2
+    echo "Please cd to your project root and start ngrest addservice again." >&2
+    exit 1
+  fi
+
+  parse_codegen_options $@
+
+  SERVICE_NAME=${1:-}
+  shift
+
+  if [ -z "$SERVICE_NAME" ]
+  then
+    echo "Service name cannot be empty" >&2
+    help_addservice
+    exit 1
+  fi
+
+  parse_services
+
+  mkdir -p .ngrest/local
+  ngrestcg -t addprojectservice -d services="$SERVICES""$CODEGEN_OPTIONS" >.ngrest/local/codegen.log || (
+    echo "Failed to add service(s) [$SERVICES] into project" >&2
+    cat .ngrest/local/codegen.log
+    cd -
+    exit 1
+  )
+
+  echo "${SERVICES// /$nl}" >>.ngrest/services
+  cat CMakeLists.txt.append >> CMakeLists.txt
+  rm -f CMakeLists.txt.append
+
+  cat <<EOF
+
+
+The services [$SERVICES] has been added to the project.
 
 EOF
 }
@@ -1130,6 +1199,10 @@ trap : HUP
 case $COMMAND in
   create)
     create $@
+    ;;
+
+  addservice)
+    addservice $@
     ;;
 
   help)

@@ -187,6 +187,8 @@ tools/ngrestcg/src/CodeGen.h
 tools/ngrestcg/src/main.cpp
 tools/ngrestcg/src/XmlGen.cpp
 tools/ngrestcg/src/XmlGen.h
+tools/ngrestcg/templates/addprojectservice/CMakeLists.txt
+tools/ngrestcg/templates/addprojectservice/codegen.config
 tools/ngrestcg/templates/addservice/CMakeLists.txt
 tools/ngrestcg/templates/addservicehpp/CMakeLists.txt
 tools/ngrestcg/templates/addservicehpp/Service.hpp
