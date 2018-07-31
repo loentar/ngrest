@@ -154,7 +154,7 @@ void MemPool::newChunk(uint64_t size)
 {
     if ((chunksCount + 1) > chunksReserved) { // we have ran out of chunks
         const int newChunksReserved = chunksCount + NGREST_MEMPOOL_CHUNK_RESERVE;
-        Chunk* newChunks = reinterpret_cast<Chunk*>(realloc(chunks, sizeof(Chunk) * newChunksReserved));
+        Chunk* newChunks = reinterpret_cast<Chunk*>(realloc(chunks, sizeof(Chunk) * static_cast<size_t>(newChunksReserved)));
         if (!newChunks)
             throw std::bad_alloc();
 
@@ -164,7 +164,7 @@ void MemPool::newChunk(uint64_t size)
         chunksReserved = newChunksReserved;
         currChunk = chunks + chunksCount;
     } else
-      ++currChunk;
+        ++currChunk;
 
     ++chunksCount;
     ++chunkIndex;

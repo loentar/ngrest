@@ -60,6 +60,13 @@ void TestService::echoASync(const std::string& value, ngrest::Callback<const std
 #endif
 }
 
+std::string TestService::largeResponse()
+{
+    std::string res;
+    res.replace(0, 0, 65536, '_');
+    return res;
+}
+
 int TestService::add(int a, int b)
 {
     return a + b;

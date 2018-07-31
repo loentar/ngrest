@@ -8,11 +8,16 @@ fi
 
 baseurl=${1:-http://localhost:9098/ngrest/test/}
 
+largeResponse="$(printf '_%.0s' {1..65536})"
+
 # [method ]path[ request body]|expected response
 tests=(
   'get|{"result":true}'
   'echoSync?value=test|{"resultValue":"You said test"}'
   'echoASync?value=test|{"result":"You said test"}'
+
+  'largeResponse|{"result":"'"$largeResponse"'"}'
+
   'add?a=1&b=2|{"result":3}'
   'set?val=true|'
   'notify|'
