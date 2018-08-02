@@ -115,7 +115,7 @@ echo "Configuring ngrest for the build..."
 if [ $OS = MSYS ]
 then
   # supress platform warnings
-  touch /usr/share/cmake-$(cmake --version | sed '1{s/cmake version //;q}')/Modules/Platform/$(uname -s).cmake
+  touch /usr/share/cmake-$(cmake --version | sed '1{s/cmake version //;q}')/Modules/Platform/$(uname -s).cmake 2>/dev/null || true
   CMAKE_FLAGS="${CMAKE_FLAGS:-} '-GUnix Makefiles' -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc"
 fi
 cmake ${CMAKE_FLAGS:-} ../ngrest >cmake-build.log
