@@ -1,0 +1,2 @@
+LoadModule ngrest_module /root/.ngrest/ngrest-build/deploy/share/ngrest/modules/apache2/mod_ngrest.so
+
