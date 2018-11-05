@@ -77,8 +77,16 @@ public:
 
     void error(const ngrest::Exception& error) override
     {
-        if (httpResponse->statusCode == ngrest::HTTP_STATUS_UNDEFINED)
-            httpResponse->statusCode = ngrest::HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
+        if (httpResponse->statusCode == ngrest::HTTP_STATUS_UNDEFINED) {
+            try {
+                throw; // we're called from catch block
+            } catch (const ngrest::HttpException& e) {
+                httpResponse->statusCode = e.getHttpStatus();
+            } catch (...) {
+                httpResponse->statusCode = ngrest::HTTP_STATUS_500_INTERNAL_SERVER_ERROR;
+            }
+        }
+
         httpResponse->poolBody->reset();
         httpResponse->poolBody->putCString(error.what());
     }
