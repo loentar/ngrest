@@ -116,9 +116,10 @@ if [ $OS = MSYS ]
 then
   # supress platform warnings
   touch /usr/share/cmake-$(cmake --version | sed '1{s/cmake version //;q}')/Modules/Platform/$(uname -s).cmake 2>/dev/null || true
-  CMAKE_FLAGS="${CMAKE_FLAGS:-} '-GUnix Makefiles' -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc"
+  cmake ${CMAKE_FLAGS:-} -GUnix\ Makefiles -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ../ngrest >cmake-build.log
+else
+  cmake ${CMAKE_FLAGS:-} ../ngrest >cmake-build.log
 fi
-cmake ${CMAKE_FLAGS:-} ../ngrest >cmake-build.log
 
 echo "Building ngrest. It may take few minutes..."
 make >make-build.log
