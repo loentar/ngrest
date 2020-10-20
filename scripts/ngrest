@@ -589,10 +589,10 @@ build() {
 
   if [ $OS = MSYS ]
   then
-    CMAKE_FLAGS+=" '-GUnix Makefiles' -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc"
+    cmake $CMAKE_FLAGS -GUnix\ Makefiles -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc "$PROJECT_DIR" >cmake.log || return $?
+  else
+    cmake $CMAKE_FLAGS "$PROJECT_DIR" >cmake.log || return $?
   fi
-
-  cmake $CMAKE_FLAGS $PROJECT_DIR >cmake.log || return $?
 
   make ${MAKE_FLAGS:-} >make.log || return $?
   mkdir -p services
