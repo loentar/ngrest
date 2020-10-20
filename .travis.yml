@@ -1,14 +1,12 @@
 sudo: required
 dist: trusty
 language: cpp
-env:
-  - WITH_EXAMPLES=1 WITH_TESTS=1
 compiler:
   - gcc
 before_script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=DEBUG ..
+  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DWITH_EXAMPLES=1 -DWITH_TESTS=1 ..
 script:
   - make
   - cd deploy/tests

@@ -97,10 +97,28 @@ add_subdirectory(tools)
 add_subdirectory(services)
 add_subdirectory(modules)
 
-if ("$ENV{WITH_TESTS}" STREQUAL "1")
+if ("${WITH_TESTS}" STREQUAL "1")
     add_subdirectory(tests)
 endif()
 
-if ("$ENV{WITH_EXAMPLES}" STREQUAL "1")
+if ("${WITH_EXAMPLES}" STREQUAL "1")
     add_subdirectory(examples)
 endif()
+
+
+install(DIRECTORY ${PROJECT_DEPLOY_DIR}/bin DESTINATION ${CMAKE_INSTALL_PREFIX}
+        PATTERN "bin/*"
+        PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                    GROUP_EXECUTE GROUP_READ
+)
+install(DIRECTORY
+            ${PROJECT_DEPLOY_DIR}/lib
+            ${PROJECT_DEPLOY_DIR}/include
+            ${PROJECT_DEPLOY_DIR}/share
+        DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+
+enable_testing()
+add_test(NAME json COMMAND ./ngrestjsontest WORKING_DIRECTORY ${TESTS_OUTPUT_DIRECTORY})
+add_test(NAME server_client COMMAND ./test_server_client WORKING_DIRECTORY ${TESTS_OUTPUT_DIRECTORY})
+
