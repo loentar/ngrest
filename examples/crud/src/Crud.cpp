@@ -37,37 +37,56 @@ public:
         return instance;
     }
 
-    std::vector<int> getIds()
+    std::vector<User> getIds()
     {
-        // "select id from storage;"
-        std::vector<int> res;
-        for (const auto& item : storage)
-            res.push_back(item.first);
+        // "select * from storage;"
+        std::vector<User> res;
+        for (const auto& item : storage) {
+            res.push_back(item.second);
+        }
         return res;
     }
 
-    void create(int id, const std::string& data)
+    int create(User user)
     {
-        // "insert into storage(id, data) values (:id, :data);"
-        auto it = storage.find(id);
+        // "insert into storage(id, user) values (:id, :user);"
+        user.id = nextUserId;
+        auto it = storage.find(nextUserId);
         NGREST_ASSERT_HTTP(it == storage.end(), HTTP_STATUS_409_CONFLICT, "Item already exist");
-        storage.insert({id, data});
+        storage.insert({nextUserId, user});
+
+        ++nextUserId;
+        return user.id;
     }
 
-    std::string get(int id)
+    User get(int id)
     {
-        // "select data from storage where id = :id;"
+        // "select user from storage where id = :id;"
         auto it = storage.find(id);
         NGREST_ASSERT_HTTP(it != storage.end(), HTTP_STATUS_404_NOT_FOUND, "Item not found");
         return it->second;
     }
 
-    void update(int id, const std::string& data)
+    void update(int id, User user)
     {
-        // "update storage set data = :data where id = :id;"
+        // "update storage set user = :user where id = :id;"
         auto it = storage.find(id);
         NGREST_ASSERT_HTTP(it != storage.end(), HTTP_STATUS_404_NOT_FOUND, "Item not found");
-        it->second = data;
+        user.id = id;
+        it->second = user;
+    }
+
+    void patch(int id, const UserPatch& user)
+    {
+        // "update storage set user = :user where id = :id;"
+        auto it = storage.find(id);
+        NGREST_ASSERT_HTTP(it != storage.end(), HTTP_STATUS_404_NOT_FOUND, "Item not found");
+        if (user.name.isValid()) {
+            it->second.name = *user.name;
+        }
+        if (user.email.isValid()) {
+            it->second.email = *user.email;
+        }
     }
 
     void del(int id)
@@ -79,28 +98,34 @@ public:
     }
 
 private:
-    std::unordered_map<int, std::string> storage;
+    std::unordered_map<int, User> storage;
+    int nextUserId = 1;
 };
 
 
-std::vector<int> Crud::getIds()
+std::vector<User> Crud::getAll()
 {
     return Db::inst().getIds();
 }
 
-void Crud::create(int id, const std::string& data)
+int Crud::create(const User& user)
 {
-    Db::inst().create(id, data);
+    return Db::inst().create(user);
 }
 
-std::string Crud::read(int id) const
+User Crud::get(int id) const
 {
     return Db::inst().get(id);
 }
 
-void Crud::update(int id, const std::string& data)
+void Crud::update(int id, const User &user)
 {
-    Db::inst().update(id, data);
+    Db::inst().update(id, user);
+}
+
+void Crud::patch(int id, const UserPatch &user)
+{
+    Db::inst().patch(id, user);
 }
 
 void Crud::del(int id)

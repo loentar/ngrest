@@ -35,6 +35,8 @@ void HttpRequest::setMethod(const char* method)
         this->method = HttpMethod::PUT;
     } else if (!strcmp(method, "DELETE")) {
         this->method = HttpMethod::DELETE;
+    } else if (!strcmp(method, "PATCH")) {
+        this->method = HttpMethod::PATCH;
     } else {
         this->method = HttpMethod::UNKNOWN;
     }

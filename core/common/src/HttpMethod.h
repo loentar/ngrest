@@ -32,7 +32,8 @@ enum class HttpMethod
     POST,
     GET,
     PUT,
-    DELETE
+    DELETE,
+    PATCH
 };
 
 } // namespace ngrest
